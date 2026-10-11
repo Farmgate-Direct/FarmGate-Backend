@@ -149,7 +149,7 @@ function quoteDeliveryFee(farm, buyer, opts = {}) {
   // No coordinates needed — same place means no travel.
   if (farmCity === buyerCity && farmBrgy === buyerBrgy) {
     const base = feeForDistance(0);
-    return { distanceKm: 0, fee: base.fee, tier: base.tier };
+    return { distanceKm: 0, fee: base.fee, tier: base.tier, approximate: false };
   }
 
   const farmHit = (data || {})[`${farmCity}|${farmBrgy}`] || null;
@@ -197,7 +197,15 @@ function quoteDeliveryFee(farm, buyer, opts = {}) {
   const straight = haversineKm(farmHit.lat, farmHit.lng, buyerHit.lat, buyerHit.lng);
   const distanceKm = Math.round(straight * roadFactor * 10) / 10;
   const { fee, tier } = feeForDistance(distanceKm);
-  return { distanceKm, fee, tier };
+  // Approximate centers (city/village fallback for unmapped barangays):
+  // routable per owner decision, but CLEARLY flagged — farmer is final gate.
+  const approximate = farmHit.approximate === true || buyerHit.approximate === true;
+  return {
+    distanceKm,
+    fee,
+    tier: approximate ? `${tier} (approx.)` : tier,
+    approximate,
+  };
 
   function findCityDisplayIn(nCity, o) {
     if (o.data) {
@@ -311,5 +319,5 @@ function computeDeliveryForOrder({ farmerProfile, order }, opts = {}) {
   }
 
   const q = quoteDeliveryFee(farm, buyer, opts);
-  return { deliveryFee: q.fee, distanceKm: q.distanceKm, tier: q.tier, legacy: false };
+  return { deliveryFee: q.fee, distanceKm: q.distanceKm, tier: q.tier, legacy: false, approximate: q.approximate === true };
 }

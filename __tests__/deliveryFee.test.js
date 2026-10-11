@@ -94,19 +94,25 @@ test("typo in barangay name is UNKNOWN_BARANGAY (no fuzzy match)", () => {
 });
 
 test("same barangay name in another city resolves by (city, barangay) key", () => {
-  // "San Agustin" exists in both Hagonoy and Malolos — different places.
+  // "San Agustin" exists in both Hagonoy and Malolos — different places,
+  // so the same farm must quote DIFFERENT distances (never confused).
+  const hagonoyPob = { province: "Bulacan", city: "Hagonoy", barangay: "Santo Niño (Pob.)" };
   const hagonoyAgustin = { province: "Bulacan", city: "Hagonoy", barangay: "San Agustin" };
   const malolosAgustin = { province: "Bulacan", city: "Malolos", barangay: "San Agustin" };
-  const hagonoyPob = { province: "Bulacan", city: "Hagonoy", barangay: "Santo Niño (Pob.)" };
   const dSameCity = quoteDeliveryFee(hagonoyPob, hagonoyAgustin);
-  // Cross-city pair with identical barangay NAMES must not be treated as same place:
-  // Malolos San Agustin has no verified coords -> blocked, not silently 0 km.
+  const dCrossCity = quoteDeliveryFee(hagonoyPob, malolosAgustin);
   assert.ok(dSameCity.distanceKm > 0);
+  assert.ok(dCrossCity.distanceKm > 0);
+  assert.notEqual(dSameCity.distanceKm, dCrossCity.distanceKm);
+  // And a typo'd variant of a real name is still UNKNOWN_BARANGAY (no fuzzy).
   assert.throws(
-    () => quoteDeliveryFee(hagonoyPob, malolosAgustin),
-    (e) =>
-      e instanceof DeliveryFeeError &&
-      (e.code === "UNKNOWN_BARANGAY" || e.code === "BARANGAY_NOT_SERVICEABLE")
+    () =>
+      quoteDeliveryFee(hagonoyPob, {
+        province: "Bulacan",
+        city: "Hagonoy",
+        barangay: "San Agustinn",
+      }),
+    (e) => e instanceof DeliveryFeeError && e.code === "UNKNOWN_BARANGAY"
   );
 });
 

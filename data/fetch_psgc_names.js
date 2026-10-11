@@ -44,6 +44,8 @@ const VERIFIED = {
   "Guiguinto|Poblacion": [14.8299, 120.8836],
   "Hagonoy|Santo Niño (Pob.)": [14.8339, 120.7341],
   "Hagonoy|Iba": [14.8655, 120.7568], // OSM place node 1307373115 (Iba village, Hagonoy); field-verify before production reliance
+  "Hagonoy|Carillo": [14.8604, 120.7609], // DERIVED: centroid of Carillo-named OSM features (school 14.8602,120.7597 + farm 14.8605,120.7621); field-verify
+  "Hagonoy|Tibaguin": [14.7735, 120.7521], // DERIVED: Tibaguin Elementary School OSM node (island barangay, no boundary mapped); field-verify
   "Hagonoy|San Agustin": [14.8412, 120.742],
   "Calumpit|Poblacion": [14.9172, 120.7669],
   "Meycauayan|Poblacion": [14.7333, 120.95],
@@ -66,6 +68,21 @@ async function main() {
     "https://psgc.gitlab.io/api/provinces/031400000/barangays"
   );
   const brgys = await brgyRes.json();
+  // Preserve already-verified coords from the existing CSV so regenerating
+  // never wipes field/OSM work. VERIFIED overlays on top.
+  const out = path.join(__dirname, "bulacan_barangays.csv");
+  const keep = {};
+  try {
+    for (const line of fs.readFileSync(out, "utf8").split("\n").slice(1)) {
+      const parts = line.split(",");
+      if (parts.length >= 4 && parts[2].trim() !== "" && parts[3].trim() !== "") {
+        keep[parts[0].trim().toLowerCase() + "|" + parts[1].trim().toLowerCase()] = [
+          parts[2].trim(),
+          parts[3].trim(),
+        ];
+      }
+    }
+  } catch {}
   const rows = [["city", "barangay", "lat", "lng"]];
   for (const b of brgys.sort((a, c) => {
     const ka = String(codeToName[a.municipalityCode || a.cityCode] || "");
@@ -79,11 +96,13 @@ async function main() {
     const barangay = String(b.name || "").trim();
     const key = city + "|" + barangay;
     const v = VERIFIED[key];
-    rows.push([city, barangay, v ? String(v[0]) : "", v ? String(v[1]) : ""]);
+    const k = keep[key.toLowerCase()];
+    const lat = v ? String(v[0]) : k ? k[0] : "";
+    const lng = v ? String(v[1]) : k ? k[1] : "";
+    rows.push([city, barangay, lat, lng]);
   }
   const esc = (s) => (/[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s);
   const csv = rows.map((r) => r.map(esc).join(",")).join("\n") + "\n";
-  const out = path.join(__dirname, "bulacan_barangays.csv");
   fs.writeFileSync(out, csv);
   console.log(`Wrote ${rows.length - 1} barangays to ${out}`);
 }

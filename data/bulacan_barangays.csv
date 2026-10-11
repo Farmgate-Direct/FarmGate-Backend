@@ -1,570 +1,570 @@
 city,barangay,lat,lng
-Angat,Banaban,,
-Angat,Baybay,,
-Angat,Binagbag,,
-Angat,Donacion,,
-Angat,Encanto,,
-Angat,Laog,,
-Angat,Marungko,,
-Angat,Niugan,,
-Angat,Paltok,,
-Angat,Pulong Yantok,,
-Angat,San Roque (Pob.),,
-Angat,Santa Cruz (Pob.),,
-Angat,Santa Lucia,,
-Angat,Santo Cristo (Pob.),,
-Angat,Sulucan,,
-Angat,Taboc,,
-Balagtas,Borol 1st,,
-Balagtas,Borol 2nd,,
-Balagtas,Dalig,,
-Balagtas,Longos,,
-Balagtas,Panginay,,
-Balagtas,Pulong Gubat,,
-Balagtas,San Juan,,
-Balagtas,Santol,,
-Balagtas,Wawa (Pob.),,
-Baliwag,Bagong Nayon,,
-Baliwag,Barangca,,
-Baliwag,Calantipay,,
-Baliwag,Catulinan,,
-Baliwag,Concepcion,,
-Baliwag,Hinukay,,
-Baliwag,Makinabang,,
-Baliwag,Matangtubig,,
-Baliwag,Pagala,,
-Baliwag,Paitan,,
-Baliwag,Piel,,
-Baliwag,Pinagbarilan,,
+Angat,Banaban,14.9404,121.046
+Angat,Baybay,14.9424,121.038
+Angat,Binagbag,14.952,121.0231
+Angat,Donacion,14.9426,120.9825
+Angat,Encanto,14.9202,121.0065
+Angat,Laog,14.9192,121.0387
+Angat,Marungko,14.9524,121.0131
+Angat,Niugan,14.9455,120.9707
+Angat,Paltok,14.9203,120.9638
+Angat,Pulong Yantok,14.8918,121.0186
+Angat,San Roque (Pob.),14.9309,121.0269
+Angat,Santa Cruz (Pob.),14.9235,121.03
+Angat,Santa Lucia,14.9429,121.0266
+Angat,Santo Cristo (Pob.),14.9278,121.0292
+Angat,Sulucan,14.9419,121.0019
+Angat,Taboc,14.9363,120.987
+Balagtas,Borol 1st,14.8309,120.9087
+Balagtas,Borol 2nd,14.8349,120.9049
+Balagtas,Dalig,14.8409,120.9214
+Balagtas,Longos,14.8277,120.9148
+Balagtas,Panginay,14.8185,120.8959
+Balagtas,Pulong Gubat,14.8609,120.9052
+Balagtas,San Juan,14.8163,120.9139
+Balagtas,Santol,14.8517,120.9146
+Balagtas,Wawa (Pob.),14.8163,120.907
+Baliwag,Bagong Nayon,14.9613,120.8979
+Baliwag,Barangca,14.9877,120.8965
+Baliwag,Calantipay,14.9708,120.8581
+Baliwag,Catulinan,14.9641,120.8766
+Baliwag,Concepcion,14.9534,120.8893
+Baliwag,Hinukay,15.0093,120.8834
+Baliwag,Makinabang,14.9198,120.8863
+Baliwag,Matangtubig,14.9554,120.8621
+Baliwag,Pagala,14.9681,120.8921
+Baliwag,Paitan,15.0089,120.9003
+Baliwag,Piel,14.9861,120.8858
+Baliwag,Pinagbarilan,14.9575,120.877
 Baliwag,Poblacion,14.9547,120.8967
-Baliwag,Sabang,,
-Baliwag,San Jose,,
-Baliwag,San Roque,,
-Baliwag,Santa Barbara,,
-Baliwag,Santo Cristo,,
-Baliwag,Santo Niño,,
-Baliwag,Subic,,
-Baliwag,Sulivan,,
-Baliwag,Tangos,,
-Baliwag,Tarcan,,
-Baliwag,Tiaong,,
-Baliwag,Tibag,,
-Baliwag,Tilapayong,,
-Baliwag,Virgen delas Flores,,
-Bocaue,Antipona,,
-Bocaue,Bagumbayan,,
-Bocaue,Bambang,,
-Bocaue,Batia,,
-Bocaue,Biñang 1st,,
-Bocaue,Biñang 2nd,,
-Bocaue,Bolacan,,
-Bocaue,Bundukan,,
-Bocaue,Bunlo,,
-Bocaue,Caingin,,
-Bocaue,Duhat,,
-Bocaue,Igulot,,
-Bocaue,Lolomboy,,
-Bocaue,Poblacion,,
-Bocaue,Sulucan,,
-Bocaue,Taal,,
-Bocaue,Tambobong,,
-Bocaue,Turo,,
-Bocaue,Wakas,,
-Bulakan,Bagumbayan,,
-Bulakan,Balubad,,
-Bulakan,Bambang,,
-Bulakan,Matungao,,
-Bulakan,Maysantol,,
-Bulakan,Perez,,
-Bulakan,Pitpitan,,
-Bulakan,San Francisco,,
-Bulakan,San Jose (Pob.),,
-Bulakan,San Nicolas,,
-Bulakan,Santa Ana,,
-Bulakan,Santa Ines,,
-Bulakan,Taliptip,,
-Bulakan,Tibig,,
-Bustos,Bonga Mayor,,
-Bustos,Bonga Menor,,
-Bustos,Buisan,,
-Bustos,Camachilihan,,
-Bustos,Cambaog,,
-Bustos,Catacte,,
-Bustos,Liciada,,
-Bustos,Malamig,,
-Bustos,Malawak,,
-Bustos,Poblacion,,
-Bustos,San Pedro,,
-Bustos,Talampas,,
-Bustos,Tanawan,,
-Bustos,Tibagan,,
-Calumpit,Balite,,
-Calumpit,Balungao,,
-Calumpit,Buguion,,
-Calumpit,Bulusan,,
-Calumpit,Calizon,,
-Calumpit,Calumpang,,
-Calumpit,Caniogan,,
-Calumpit,Corazon,,
-Calumpit,Frances,,
-Calumpit,Gatbuca,,
-Calumpit,Gugo,,
-Calumpit,Iba Este,,
-Calumpit,Iba O'Este,,
-Calumpit,Longos,,
-Calumpit,Meysulao,,
-Calumpit,Meyto,,
-Calumpit,Palimbang,,
-Calumpit,Panducot,,
-Calumpit,Pio Cruzcosa,,
+Baliwag,Sabang,14.965,120.9096
+Baliwag,San Jose,14.9486,120.8941
+Baliwag,San Roque,14.9962,120.8918
+Baliwag,Santa Barbara,14.9396,120.8902
+Baliwag,Santo Cristo,14.9552,120.8944
+Baliwag,Santo Niño,14.9845,120.8931
+Baliwag,Subic,14.9611,120.9045
+Baliwag,Sulivan,14.9802,120.8843
+Baliwag,Tangos,14.9682,120.8962
+Baliwag,Tarcan,14.9299,120.8871
+Baliwag,Tiaong,14.9441,120.896
+Baliwag,Tibag,14.9565,120.903
+Baliwag,Tilapayong,14.9791,120.8779
+Baliwag,Virgen delas Flores,14.9448,120.8857
+Bocaue,Antipona,14.7969,120.9255
+Bocaue,Bagumbayan,14.8039,120.9164
+Bocaue,Bambang,14.7883,120.9282
+Bocaue,Batia,14.8301,120.9443
+Bocaue,Biñang 1st,14.8021,120.9329
+Bocaue,Biñang 2nd,14.7947,120.9346
+Bocaue,Bolacan,14.8007,120.9457
+Bocaue,Bundukan,14.7883,120.9423
+Bocaue,Bunlo,14.787,120.9381
+Bocaue,Caingin,14.8078,120.9266
+Bocaue,Duhat,14.7903,120.9536
+Bocaue,Igulot,14.7968,120.9411
+Bocaue,Lolomboy,14.7812,120.9353
+Bocaue,Poblacion,14.7949,120.9255
+Bocaue,Sulucan,14.7931,120.9252
+Bocaue,Taal,14.813,120.9331
+Bocaue,Tambobong,14.8149,120.9394
+Bocaue,Turo,14.8081,120.9425
+Bocaue,Wakas,14.8059,120.919
+Bulakan,Bagumbayan,14.7905,120.8786
+Bulakan,Balubad,14.8011,120.8742
+Bulakan,Bambang,14.7764,120.8822
+Bulakan,Matungao,14.8031,120.8804
+Bulakan,Maysantol,14.7975,120.872
+Bulakan,Perez,14.7692,120.8951
+Bulakan,Pitpitan,14.8071,120.86
+Bulakan,San Francisco,14.8158,120.8675
+Bulakan,San Jose (Pob.),14.7959,120.8782
+Bulakan,San Nicolas,14.7981,120.867
+Bulakan,Santa Ana,14.7871,120.8836
+Bulakan,Santa Ines,14.7859,120.8811
+Bulakan,Taliptip,14.7659,120.8972
+Bulakan,Tibig,14.7987,120.8715
+Bustos,Bonga Mayor,14.9543,120.9393
+Bustos,Bonga Menor,14.9508,120.9337
+Bustos,Buisan,14.9047,120.9209
+Bustos,Camachilihan,14.9023,120.9124
+Bustos,Cambaog,14.9276,120.8967
+Bustos,Catacte,14.9196,120.944
+Bustos,Liciada,14.9076,120.9292
+Bustos,Malamig,14.9418,120.9268
+Bustos,Malawak,14.9116,120.9536
+Bustos,Poblacion,14.9557,120.9094
+Bustos,San Pedro,14.9493,120.908
+Bustos,Talampas,14.9309,120.9071
+Bustos,Tanawan,14.9519,120.9256
+Bustos,Tibagan,14.958,120.9463
+Calumpit,Balite,14.8994,120.7849
+Calumpit,Balungao,14.9144,120.7624
+Calumpit,Buguion,14.8965,120.7983
+Calumpit,Bulusan,14.9087,120.7424
+Calumpit,Calizon,14.9125,120.753
+Calumpit,Calumpang,14.8845,120.7838
+Calumpit,Caniogan,14.9054,120.7733
+Calumpit,Corazon,14.9136,120.7685
+Calumpit,Frances,14.9154,120.7524
+Calumpit,Gatbuca,14.9225,120.7693
+Calumpit,Gugo,14.9014,120.7548
+Calumpit,Iba Este,14.8899,120.7673
+Calumpit,Iba O'Este,14.8894,120.7642
+Calumpit,Longos,14.8764,120.7846
+Calumpit,Meysulao,14.9039,120.737
+Calumpit,Meyto,14.883,120.7298
+Calumpit,Palimbang,14.8994,120.7756
+Calumpit,Panducot,14.8745,120.738
+Calumpit,Pio Cruzcosa,14.8941,120.7803
 Calumpit,Poblacion,14.9172,120.7669
-Calumpit,Pungo,,
-Calumpit,San Jose,,
-Calumpit,San Marcos,,
-Calumpit,San Miguel,,
-Calumpit,Santa Lucia,,
-Calumpit,Santo Niño,,
-Calumpit,Sapang Bayan,,
-Calumpit,Sergio Bayan,,
-Calumpit,Sucol,,
-Dona Remedios Trinidad,Bayabas,,
-Dona Remedios Trinidad,Camachile,,
-Dona Remedios Trinidad,Camachin,,
+Calumpit,Pungo,14.9027,120.7905
+Calumpit,San Jose,14.8849,120.7311
+Calumpit,San Marcos,14.8974,120.7785
+Calumpit,San Miguel,14.9169,120.7427
+Calumpit,Santa Lucia,14.8947,120.7325
+Calumpit,Santo Niño,14.9048,120.78
+Calumpit,Sapang Bayan,14.9183,120.7698
+Calumpit,Sergio Bayan,14.8976,120.7908
+Calumpit,Sucol,14.914,120.7699
+Dona Remedios Trinidad,Bayabas,14.9561,121.0912
+Dona Remedios Trinidad,Camachile,14.9806,121.0718
+Dona Remedios Trinidad,Camachin,15.0691,121.1225
 Dona Remedios Trinidad,Kabayunan,,
-Dona Remedios Trinidad,Kalawakan,,
-Dona Remedios Trinidad,Pulong Sampalok,,
-Dona Remedios Trinidad,Sapang Bulak,,
-Dona Remedios Trinidad,Talbak,,
-Guiguinto,Cutcut,,
-Guiguinto,Daungan,,
-Guiguinto,Ilang-Ilang,,
-Guiguinto,Malis,,
-Guiguinto,Panginay,,
+Dona Remedios Trinidad,Kalawakan,15.1296,121.1044
+Dona Remedios Trinidad,Pulong Sampalok,14.9615,121.0611
+Dona Remedios Trinidad,Sapang Bulak,15.0204,121.101
+Dona Remedios Trinidad,Talbak,15.0892,121.0941
+Guiguinto,Cutcut,14.8622,120.8958
+Guiguinto,Daungan,14.8556,120.8867
+Guiguinto,Ilang-Ilang,14.8305,120.8765
+Guiguinto,Malis,14.8392,120.881
+Guiguinto,Panginay,14.8173,120.8908
 Guiguinto,Poblacion,14.8299,120.8836
-Guiguinto,Pritil,,
-Guiguinto,Pulong Gubat,,
-Guiguinto,Santa Cruz,,
-Guiguinto,Santa Rita,,
-Guiguinto,Tabang,,
-Guiguinto,Tabe,,
-Guiguinto,Tiaong,,
-Guiguinto,Tuktukan,,
-Hagonoy,Abulalas,,
-Hagonoy,Carillo,,
+Guiguinto,Pritil,14.8545,120.8684
+Guiguinto,Pulong Gubat,14.8549,120.8972
+Guiguinto,Santa Cruz,14.8401,120.8678
+Guiguinto,Santa Rita,14.8602,120.8588
+Guiguinto,Tabang,14.8315,120.8631
+Guiguinto,Tabe,14.8373,120.886
+Guiguinto,Tiaong,14.8471,120.8907
+Guiguinto,Tuktukan,14.8275,120.8921
+Hagonoy,Abulalas,14.8535,120.7631
+Hagonoy,Carillo,14.8604,120.7609
 Hagonoy,Iba,14.8655,120.7568
-Hagonoy,Iba-Ibayo,,
-Hagonoy,Mercado,,
-Hagonoy,Palapat,,
-Hagonoy,Pugad,,
-Hagonoy,Sagrada Familia,,
+Hagonoy,Iba-Ibayo,14.8739,120.7709
+Hagonoy,Mercado,14.823,120.7256
+Hagonoy,Palapat,14.8626,120.7462
+Hagonoy,Pugad,14.7676,120.7421
+Hagonoy,Sagrada Familia,14.8181,120.7353
 Hagonoy,San Agustin,14.8412,120.742
-Hagonoy,San Isidro,,
-Hagonoy,San Jose,,
-Hagonoy,San Juan,,
-Hagonoy,San Miguel,,
-Hagonoy,San Nicolas,,
-Hagonoy,San Pablo,,
-Hagonoy,San Pascual,,
-Hagonoy,San Pedro,,
-Hagonoy,San Roque,,
-Hagonoy,San Sebastian,,
-Hagonoy,Santa Cruz,,
-Hagonoy,Santa Elena,,
-Hagonoy,Santa Monica,,
+Hagonoy,San Isidro,14.8661,120.7392
+Hagonoy,San Jose,14.8303,120.7304
+Hagonoy,San Juan,14.8667,120.7418
+Hagonoy,San Miguel,14.8564,120.7333
+Hagonoy,San Nicolas,14.8267,120.7289
+Hagonoy,San Pablo,14.8353,120.7522
+Hagonoy,San Pascual,14.8164,120.7197
+Hagonoy,San Pedro,14.8396,120.7634
+Hagonoy,San Roque,14.8139,120.7252
+Hagonoy,San Sebastian,14.8322,120.7349
+Hagonoy,Santa Cruz,14.8161,120.7258
+Hagonoy,Santa Elena,14.8182,120.7525
+Hagonoy,Santa Monica,14.8406,120.7345
 Hagonoy,Santo Niño (Pob.),14.8339,120.7341
-Hagonoy,Santo Rosario,,
-Hagonoy,Tampok,,
-Hagonoy,Tibaguin,,
+Hagonoy,Santo Rosario,14.8168,120.7281
+Hagonoy,Tampok,14.8478,120.7361
+Hagonoy,Tibaguin,14.7735,120.7521
 Malolos,Anilao,14.8422,120.7976
-Malolos,Atlag,,
-Malolos,Babatnin,,
-Malolos,Bagna,,
-Malolos,Bagong Bayan,,
-Malolos,Balayong,,
-Malolos,Balite,,
-Malolos,Bangkal,,
-Malolos,Barihan,,
+Malolos,Atlag,14.8297,120.8211
+Malolos,Babatnin,14.7819,120.8171
+Malolos,Bagna,14.8265,120.8233
+Malolos,Bagong Bayan,14.8391,120.8352
+Malolos,Balayong,14.8286,120.8291
+Malolos,Balite,14.8295,120.8367
+Malolos,Bangkal,14.8236,120.8488
+Malolos,Barihan,14.8799,120.8319
 Malolos,Bulihan,14.8348,120.8067
-Malolos,Bungahan,,
-Malolos,Caingin,,
-Malolos,Calero,,
-Malolos,Caliligawan,,
-Malolos,Canalate,,
-Malolos,Caniogan,,
-Malolos,Catmon,,
-Malolos,Cofradia,,
-Malolos,Dakila,,
-Malolos,Guinhawa,,
-Malolos,Liang,,
-Malolos,Ligas,,
-Malolos,Longos,,
-Malolos,Look 1st,,
-Malolos,Look 2nd,,
-Malolos,Lugam,,
-Malolos,Mabolo,,
-Malolos,Mambog,,
-Malolos,Masile,,
-Malolos,Matimbo,,
-Malolos,Mojon,,
-Malolos,Namayan,,
-Malolos,Niugan,,
-Malolos,Pamarawan,,
-Malolos,Panasahan,,
-Malolos,Pinagbakahan,,
-Malolos,San Agustin,,
-Malolos,San Gabriel,,
-Malolos,San Juan,,
-Malolos,San Pablo,,
+Malolos,Bungahan,14.8613,120.843
+Malolos,Caingin,14.8449,120.809
+Malolos,Calero,14.8308,120.8097
+Malolos,Caliligawan,14.7707,120.8083
+Malolos,Canalate,14.8409,120.8027
+Malolos,Caniogan,14.8461,120.8182
+Malolos,Catmon,14.8513,120.814
+Malolos,Cofradia,14.8431,120.8331
+Malolos,Dakila,14.8509,120.836
+Malolos,Guinhawa,14.855,120.817
+Malolos,Liang,14.8464,120.8142
+Malolos,Ligas,14.8628,120.8511
+Malolos,Longos,14.873,120.7921
+Malolos,Look 1st,14.8841,120.8108
+Malolos,Look 2nd,14.8221,120.8612
+Malolos,Lugam,14.8823,120.8187
+Malolos,Mabolo,14.8424,120.8266
+Malolos,Mambog,14.81,120.85
+Malolos,Masile,14.7848,120.8106
+Malolos,Matimbo,14.8164,120.8375
+Malolos,Mojon,14.8672,120.8211
+Malolos,Namayan,14.7763,120.8111
+Malolos,Niugan,14.8197,120.8547
+Malolos,Pamarawan,14.7607,120.8135
+Malolos,Panasahan,14.8225,120.8272
+Malolos,Pinagbakahan,14.8716,120.8216
+Malolos,San Agustin,14.8459,120.811
+Malolos,San Gabriel,14.8476,120.8126
+Malolos,San Juan,14.8351,120.8161
+Malolos,San Pablo,14.8431,120.8459
 Malolos,San Vicente (Pob.),14.8526,120.8119
-Malolos,Santiago,,
-Malolos,Santisima Trinidad,,
-Malolos,Santo Cristo,,
+Malolos,Santiago,14.8424,120.8069
+Malolos,Santisima Trinidad,14.8755,120.8257
+Malolos,Santo Cristo,14.8319,120.8188
 Malolos,Santo Niño (Pob.),14.8445,120.8103
-Malolos,Santo Rosario (Pob.),,
-Malolos,Santor,,
-Malolos,Sumapang Bata,,
-Malolos,Sumapang Matanda,,
-Malolos,Taal,,
-Malolos,Tikay,,
-Marilao,Abangan Norte,,
-Marilao,Abangan Sur,,
-Marilao,Ibayo,,
-Marilao,Lambakin,,
-Marilao,Lias,,
-Marilao,Loma de Gato,,
-Marilao,Nagbalon,,
-Marilao,Patubig,,
-Marilao,Poblacion I,,
-Marilao,Poblacion II,,
-Marilao,Prenza I,,
-Marilao,Prenza II,,
-Marilao,Santa Rosa I,,
-Marilao,Santa Rosa II,,
-Marilao,Saog,,
-Marilao,Tabing Ilog,,
-Meycauayan,Bagbaguin,,
-Meycauayan,Bahay Pare,,
-Meycauayan,Bancal,,
-Meycauayan,Banga,,
-Meycauayan,Bayugo,,
-Meycauayan,Caingin,,
-Meycauayan,Calvario,,
-Meycauayan,Camalig,,
-Meycauayan,Hulo,,
-Meycauayan,Iba,,
-Meycauayan,Langka,,
-Meycauayan,Lawa,,
-Meycauayan,Libtong,,
-Meycauayan,Liputan,,
-Meycauayan,Longos,,
-Meycauayan,Malhacan,,
-Meycauayan,Pajo,,
-Meycauayan,Pandayan,,
-Meycauayan,Pantoc,,
-Meycauayan,Perez,,
+Malolos,Santo Rosario (Pob.),14.8405,120.8122
+Malolos,Santor,14.8325,120.8549
+Malolos,Sumapang Bata,14.8586,120.8342
+Malolos,Sumapang Matanda,14.8574,120.8275
+Malolos,Taal,14.8139,120.8542
+Malolos,Tikay,14.8424,120.8532
+Marilao,Abangan Norte,14.7721,120.94
+Marilao,Abangan Sur,14.7642,120.9442
+Marilao,Ibayo,14.7544,120.9535
+Marilao,Lambakin,14.7738,120.9784
+Marilao,Lias,14.7603,120.9623
+Marilao,Loma de Gato,14.775,121.0177
+Marilao,Nagbalon,14.7504,120.9508
+Marilao,Patubig,14.7766,120.959
+Marilao,Poblacion I,14.756,120.9488
+Marilao,Poblacion II,14.7595,120.9467
+Marilao,Prenza I,14.7866,120.9858
+Marilao,Prenza II,14.7831,120.9861
+Marilao,Santa Rosa I,14.7787,120.9742
+Marilao,Santa Rosa II,14.7844,120.9702
+Marilao,Saog,14.7636,120.956
+Marilao,Tabing Ilog,14.7649,120.9488
+Meycauayan,Bagbaguin,14.758,121.0062
+Meycauayan,Bahay Pare,14.7681,121.0128
+Meycauayan,Bancal,14.7247,120.9581
+Meycauayan,Banga,14.7279,120.9613
+Meycauayan,Bayugo,14.7317,120.9523
+Meycauayan,Caingin,14.7274,120.9708
+Meycauayan,Calvario,14.7336,120.9614
+Meycauayan,Camalig,14.7732,120.993
+Meycauayan,Hulo,14.732,120.9585
+Meycauayan,Iba,14.7543,120.9821
+Meycauayan,Langka,14.7395,120.9811
+Meycauayan,Lawa,14.7341,120.978
+Meycauayan,Libtong,14.7448,120.9802
+Meycauayan,Liputan,14.7389,120.9274
+Meycauayan,Longos,14.7349,120.9495
+Meycauayan,Malhacan,14.744,120.9718
+Meycauayan,Pajo,14.7774,121.0026
+Meycauayan,Pandayan,14.7497,120.9657
+Meycauayan,Pantoc,14.7664,120.9839
+Meycauayan,Perez,14.7648,120.9972
 Meycauayan,Poblacion,14.7333,120.95
-Meycauayan,Saint Francis (Gasak),,
-Meycauayan,Saluysoy,,
-Meycauayan,Tugatog,,
+Meycauayan,Saint Francis (Gasak),14.7338,120.957
+Meycauayan,Saluysoy,14.7422,120.9568
+Meycauayan,Tugatog,14.725,120.9645
 Meycauayan,Ubihan,14.7533,120.9229
-Meycauayan,Zamora,,
-Norzagaray,Bangkal,,
-Norzagaray,Baraka,,
-Norzagaray,Bigte,,
-Norzagaray,Bitungol,,
-Norzagaray,Friendship Village Resources,,
-Norzagaray,Matictic,,
-Norzagaray,Minuyan,,
-Norzagaray,Partida,,
-Norzagaray,Pinagtulayan,,
-Norzagaray,Poblacion,,
-Norzagaray,San Lorenzo,,
-Norzagaray,San Mateo,,
-Norzagaray,Tigbe,,
-Obando,Binuangan,,
-Obando,Catanghalan,,
-Obando,Hulo,,
-Obando,Lawa,,
-Obando,Paco,,
-Obando,Pag-asa (Pob.),,
-Obando,Paliwas,,
-Obando,Panghulo,,
-Obando,Salambao,,
-Obando,San Pascual,,
-Obando,Tawiran,,
-Pandi,Bagbaguin,,
-Pandi,Bagong Barrio,,
-Pandi,Baka-bakahan,,
-Pandi,Bunsuran I,,
-Pandi,Bunsuran II,,
-Pandi,Bunsuran III,,
-Pandi,Cacarong Bata,,
-Pandi,Cacarong Matanda,,
-Pandi,Cupang,,
-Pandi,Malibong Bata,,
-Pandi,Malibong Matanda,,
-Pandi,Manatal,,
-Pandi,Mapulang Lupa,,
-Pandi,Masagana,,
-Pandi,Masuso,,
-Pandi,Pinagkuartelan,,
-Pandi,Poblacion,,
-Pandi,Real de Cacarong,,
-Pandi,San Roque,,
-Pandi,Santo Niño,,
-Pandi,Siling Bata,,
-Pandi,Siling Matanda,,
-Paombong,Binakod,,
-Paombong,Kapitangan,,
-Paombong,Malumot,,
-Paombong,Masukol,,
-Paombong,Pinalagdan,,
-Paombong,Poblacion,,
-Paombong,San Isidro I,,
-Paombong,San Isidro II,,
-Paombong,San Jose,,
-Paombong,San Roque,,
-Paombong,San Vicente,,
-Paombong,Santa Cruz,,
-Paombong,Santo Niño,,
-Paombong,Santo Rosario,,
-Plaridel,Agnaya,,
-Plaridel,Bagong Silang,,
-Plaridel,Banga I,,
-Plaridel,Banga II,,
-Plaridel,Bintog,,
-Plaridel,Bulihan,,
-Plaridel,Culianin,,
-Plaridel,Dampol,,
-Plaridel,Lagundi,,
-Plaridel,Lalangan,,
-Plaridel,Lumang Bayan,,
-Plaridel,Parulan,,
-Plaridel,Poblacion,,
-Plaridel,Rueda,,
-Plaridel,San Jose,,
-Plaridel,Santa Ines,,
-Plaridel,Santo Niño,,
-Plaridel,Sipat,,
-Plaridel,Tabang,,
-Pulilan,Balatong A,,
-Pulilan,Balatong B,,
-Pulilan,Cutcot,,
-Pulilan,Dampol I,,
-Pulilan,Dampol II-A,,
-Pulilan,Dampol II-B,,
-Pulilan,Dulong Malabon,,
-Pulilan,Inaon,,
-Pulilan,Longos,,
-Pulilan,Lumbac,,
-Pulilan,Paltao,,
-Pulilan,Penabatan,,
-Pulilan,Poblacion,,
-Pulilan,Santa Peregrina,,
-Pulilan,Santo Cristo,,
-Pulilan,Taal,,
-Pulilan,Tabon,,
-Pulilan,Tibag,,
-Pulilan,Tinejero,,
-San Ildefonso,Akle,,
-San Ildefonso,Alagao,,
-San Ildefonso,Anyatam,,
-San Ildefonso,Bagong Barrio,,
-San Ildefonso,Basuit,,
-San Ildefonso,Bubulong Malaki,,
-San Ildefonso,Bubulong Munti,,
-San Ildefonso,Buhol na Mangga,,
-San Ildefonso,Bulusukan,,
-San Ildefonso,Calasag,,
-San Ildefonso,Calawitan,,
-San Ildefonso,Casalat,,
-San Ildefonso,Gabihan,,
-San Ildefonso,Garlang,,
-San Ildefonso,Lapnit,,
-San Ildefonso,Maasim,,
-San Ildefonso,Makapilapil,,
-San Ildefonso,Malipampang,,
-San Ildefonso,Mataas na Parang,,
-San Ildefonso,Matimbubong,,
-San Ildefonso,Nabaong Garlang,,
-San Ildefonso,Palapala,,
-San Ildefonso,Pasong Bangkal,,
-San Ildefonso,Pinaod,,
-San Ildefonso,Poblacion,,
-San Ildefonso,Pulong Tamo,,
-San Ildefonso,San Juan,,
-San Ildefonso,Santa Catalina Bata,,
-San Ildefonso,Santa Catalina Matanda,,
-San Ildefonso,Sapang Dayap,,
-San Ildefonso,Sapang Putik,,
-San Ildefonso,Sapang Putol,,
-San Ildefonso,Sumandig,,
-San Ildefonso,Telepatio,,
-San Ildefonso,Umpucan,,
-San Ildefonso,Upig,,
-San Jose del Monte,Assumption,,
-San Jose del Monte,Bagong Buhay I,,
-San Jose del Monte,Bagong Buhay II,,
-San Jose del Monte,Bagong Buhay III,,
-San Jose del Monte,Citrus,,
-San Jose del Monte,Ciudad Real,,
-San Jose del Monte,Dulong Bayan,,
-San Jose del Monte,Fatima I,,
-San Jose del Monte,Fatima II,,
-San Jose del Monte,Fatima III,,
-San Jose del Monte,Fatima IV,,
-San Jose del Monte,Fatima V,,
-San Jose del Monte,Francisco Homes-Guijo,,
-San Jose del Monte,Francisco Homes-Mulawin,,
-San Jose del Monte,Francisco Homes-Narra,,
-San Jose del Monte,Francisco Homes-Yakal,,
-San Jose del Monte,Gaya-gaya,,
-San Jose del Monte,Graceville,,
-San Jose del Monte,Gumaoc Central,,
-San Jose del Monte,Gumaoc East,,
-San Jose del Monte,Gumaoc West,,
-San Jose del Monte,Kaybanban,,
-San Jose del Monte,Kaypian,,
-San Jose del Monte,Lawang Pari,,
-San Jose del Monte,Maharlika,,
-San Jose del Monte,Minuyan I,,
-San Jose del Monte,Minuyan II,,
-San Jose del Monte,Minuyan III,,
-San Jose del Monte,Minuyan IV,,
-San Jose del Monte,Minuyan Proper,,
-San Jose del Monte,Minuyan V,,
-San Jose del Monte,Muzon,,
-San Jose del Monte,Paradise III,,
+Meycauayan,Zamora,14.7353,120.9545
+Norzagaray,Bangkal,14.9265,121.0999
+Norzagaray,Baraka,14.9081,121.1021
+Norzagaray,Bigte,14.8572,121.0856
+Norzagaray,Bitungol,14.8823,121.0611
+Norzagaray,Friendship Village Resources,14.8611,121.0465
+Norzagaray,Matictic,14.9101,121.0565
+Norzagaray,Minuyan,14.8677,121.0803
+Norzagaray,Partida,14.8931,121.0291
+Norzagaray,Pinagtulayan,14.9346,121.0715
+Norzagaray,Poblacion,14.9103,121.0492
+Norzagaray,San Lorenzo,14.9002,121.1514
+Norzagaray,San Mateo,14.8735,121.1277
+Norzagaray,Tigbe,14.867,121.0378
+Obando,Binuangan,14.7159,120.9066
+Obando,Catanghalan,14.7051,120.941
+Obando,Hulo,14.7214,120.9273
+Obando,Lawa,14.7258,120.9257
+Obando,Paco,14.731,120.9218
+Obando,Pag-asa (Pob.),14.7098,120.9368
+Obando,Paliwas,14.7127,120.9352
+Obando,Panghulo,14.6983,120.9469
+Obando,Salambao,14.7141,120.9066
+Obando,San Pascual,14.7205,120.9294
+Obando,Tawiran,14.7448,120.9109
+Pandi,Bagbaguin,14.8904,120.9212
+Pandi,Bagong Barrio,14.896,120.953
+Pandi,Baka-bakahan,14.8499,120.9505
+Pandi,Bunsuran I,14.8627,120.9374
+Pandi,Bunsuran II,14.8602,120.9269
+Pandi,Bunsuran III,14.8667,120.9299
+Pandi,Cacarong Bata,14.896,120.9678
+Pandi,Cacarong Matanda,14.9042,120.9677
+Pandi,Cupang,14.8956,120.9372
+Pandi,Malibong Bata,14.8464,120.9305
+Pandi,Malibong Matanda,14.8478,120.939
+Pandi,Manatal,14.8739,120.9182
+Pandi,Mapulang Lupa,14.882,120.9642
+Pandi,Masagana,14.8855,120.9303
+Pandi,Masuso,14.882,120.9408
+Pandi,Pinagkuartelan,14.8969,120.9795
+Pandi,Poblacion,14.8672,120.9576
+Pandi,Real de Cacarong,14.9166,120.9761
+Pandi,San Roque,14.8581,120.9562
+Pandi,Santo Niño,14.8692,120.9378
+Pandi,Siling Bata,14.8904,120.9691
+Pandi,Siling Matanda,14.9041,120.9898
+Paombong,Binakod,14.7813,120.7837
+Paombong,Kapitangan,14.8647,120.7881
+Paombong,Malumot,14.8284,120.7888
+Paombong,Masukol,14.7645,120.7696
+Paombong,Pinalagdan,14.8528,120.7772
+Paombong,Poblacion,14.8363,120.7876
+Paombong,San Isidro I,14.8378,120.7841
+Paombong,San Isidro II,14.836,120.7715
+Paombong,San Jose,14.8312,120.7892
+Paombong,San Roque,14.831,120.7873
+Paombong,San Vicente,14.8352,120.7903
+Paombong,Santa Cruz,14.7619,120.7901
+Paombong,Santo Niño,14.8397,120.7937
+Paombong,Santo Rosario,14.8452,120.7882
+Plaridel,Agnaya,14.8848,120.8528
+Plaridel,Bagong Silang,14.8707,120.8787
+Plaridel,Banga I,14.8871,120.8663
+Plaridel,Banga II,14.8883,120.8698
+Plaridel,Bintog,14.9027,120.889
+Plaridel,Bulihan,14.8725,120.9021
+Plaridel,Culianin,14.9146,120.8949
+Plaridel,Dampol,14.9004,120.8222
+Plaridel,Lagundi,14.891,120.8183
+Plaridel,Lalangan,14.8774,120.8483
+Plaridel,Lumang Bayan,14.8954,120.8537
+Plaridel,Parulan,14.8909,120.8747
+Plaridel,Poblacion,14.8855,120.863
+Plaridel,Rueda,14.8974,120.8083
+Plaridel,San Jose,14.9057,120.8966
+Plaridel,Santa Ines,14.8824,120.856
+Plaridel,Santo Niño,14.8832,120.8381
+Plaridel,Sipat,14.8945,120.8301
+Plaridel,Tabang,14.873,120.8616
+Pulilan,Balatong A,14.9309,120.8442
+Pulilan,Balatong B,14.9415,120.8447
+Pulilan,Cutcot,14.9019,120.8639
+Pulilan,Dampol I,14.9016,120.8322
+Pulilan,Dampol II-A,14.9034,120.8147
+Pulilan,Dampol II-B,14.9027,120.8073
+Pulilan,Dulong Malabon,14.9215,120.8174
+Pulilan,Inaon,14.9436,120.8279
+Pulilan,Longos,14.8974,120.8661
+Pulilan,Lumbac,14.9016,120.8409
+Pulilan,Paltao,14.9022,120.8561
+Pulilan,Penabatan,14.932,120.8429
+Pulilan,Poblacion,14.9022,120.8488
+Pulilan,Santa Peregrina,14.9458,120.8384
+Pulilan,Santo Cristo,14.8963,120.873
+Pulilan,Taal,14.9081,120.8807
+Pulilan,Tabon,14.9106,120.8288
+Pulilan,Tibag,14.9059,120.823
+Pulilan,Tinejero,14.9232,120.8453
+San Ildefonso,Akle,15.0497,121.0706
+San Ildefonso,Alagao,15.0509,121.045
+San Ildefonso,Anyatam,15.1037,120.9442
+San Ildefonso,Bagong Barrio,15.0132,120.9887
+San Ildefonso,Basuit,15.0414,120.9913
+San Ildefonso,Bubulong Malaki,15.0875,120.9937
+San Ildefonso,Bubulong Munti,15.0976,121.0135
+San Ildefonso,Buhol na Mangga,15.1021,121.0472
+San Ildefonso,Bulusukan,15.082,121.0175
+San Ildefonso,Calasag,15.0723,120.9284
+San Ildefonso,Calawitan,15.0743,120.9177
+San Ildefonso,Casalat,15.0229,121.0548
+San Ildefonso,Gabihan,15.0501,121.0111
+San Ildefonso,Garlang,15.112,120.9471
+San Ildefonso,Lapnit,15.0781,120.9364
+San Ildefonso,Maasim,15.0482,120.9368
+San Ildefonso,Makapilapil,15.0891,120.9386
+San Ildefonso,Malipampang,15.0575,120.9384
+San Ildefonso,Mataas na Parang,15.088,120.9545
+San Ildefonso,Matimbubong,15.0676,120.9449
+San Ildefonso,Nabaong Garlang,15.1061,120.9618
+San Ildefonso,Palapala,15.0605,120.9817
+San Ildefonso,Pasong Bangkal,15.0138,121.0088
+San Ildefonso,Pinaod,15.0725,120.9611
+San Ildefonso,Poblacion,15.0776,120.9426
+San Ildefonso,Pulong Tamo,15.0642,120.9079
+San Ildefonso,San Juan,15.0835,120.9377
+San Ildefonso,Santa Catalina Bata,15.1001,120.9717
+San Ildefonso,Santa Catalina Matanda,15.0984,120.9802
+San Ildefonso,Sapang Dayap,15.0358,121.0226
+San Ildefonso,Sapang Putik,15.0342,120.9621
+San Ildefonso,Sapang Putol,15.0741,120.9425
+San Ildefonso,Sumandig,15.0762,120.983
+San Ildefonso,Telepatio,15.0544,120.9221
+San Ildefonso,Umpucan,15.071,121.0111
+San Ildefonso,Upig,15.0252,120.9918
+San Jose del Monte,Assumption,14.8628,121.0638
+San Jose del Monte,Bagong Buhay I,14.8558,121.0587
+San Jose del Monte,Bagong Buhay II,14.859,121.0588
+San Jose del Monte,Bagong Buhay III,14.8543,121.0628
+San Jose del Monte,Citrus,14.8492,121.0647
+San Jose del Monte,Ciudad Real,14.7705,121.0923
+San Jose del Monte,Dulong Bayan,14.8268,121.0447
+San Jose del Monte,Fatima I,14.8467,121.045
+San Jose del Monte,Fatima II,14.8433,121.044
+San Jose del Monte,Fatima III,14.8453,121.0454
+San Jose del Monte,Fatima IV,14.8435,121.0465
+San Jose del Monte,Fatima V,14.8477,121.0508
+San Jose del Monte,Francisco Homes-Guijo,14.8143,121.0598
+San Jose del Monte,Francisco Homes-Mulawin,14.8064,121.067
+San Jose del Monte,Francisco Homes-Narra,14.8086,121.0569
+San Jose del Monte,Francisco Homes-Yakal,14.8075,121.0544
+San Jose del Monte,Gaya-gaya,14.795,121.0523
+San Jose del Monte,Graceville,14.7874,121.0608
+San Jose del Monte,Gumaoc Central,14.8002,121.0659
+San Jose del Monte,Gumaoc East,14.7993,121.0678
+San Jose del Monte,Gumaoc West,14.7997,121.0604
+San Jose del Monte,Kaybanban,14.8142,121.0959
+San Jose del Monte,Kaypian,14.8216,121.0626
+San Jose del Monte,Lawang Pari,14.8582,121.0711
+San Jose del Monte,Maharlika,14.7952,121.0722
+San Jose del Monte,Minuyan I,14.8508,121.0798
+San Jose del Monte,Minuyan II,14.8432,121.0756
+San Jose del Monte,Minuyan III,14.8465,121.0718
+San Jose del Monte,Minuyan IV,14.8466,121.0743
+San Jose del Monte,Minuyan Proper,14.8428,121.0786
+San Jose del Monte,Minuyan V,14.8513,121.0746
+San Jose del Monte,Muzon,14.8019,121.0347
+San Jose del Monte,Paradise III,14.8236,121.1146
 San Jose del Monte,Poblacion,14.8139,121.0453
-San Jose del Monte,Poblacion I,,
-San Jose del Monte,San Isidro,,
-San Jose del Monte,San Manuel,,
-San Jose del Monte,San Martin de Porres,,
-San Jose del Monte,San Martin I,,
-San Jose del Monte,San Martin II,,
-San Jose del Monte,San Martin III,,
-San Jose del Monte,San Martin IV,,
-San Jose del Monte,San Pedro,,
-San Jose del Monte,San Rafael I,,
-San Jose del Monte,San Rafael II,,
-San Jose del Monte,San Rafael III,,
-San Jose del Monte,San Rafael IV,,
-San Jose del Monte,San Rafael V,,
-San Jose del Monte,San Roque,,
-San Jose del Monte,Santa Cruz I,,
-San Jose del Monte,Santa Cruz II,,
-San Jose del Monte,Santa Cruz III,,
-San Jose del Monte,Santa Cruz IV,,
-San Jose del Monte,Santa Cruz V,,
-San Jose del Monte,Santo Cristo,,
-San Jose del Monte,Santo Niño I,,
-San Jose del Monte,Santo Niño II,,
-San Jose del Monte,Sapang Palay,,
-San Jose del Monte,Tungkong Mangga,,
-San Miguel,Bagong Pag-asa,,
-San Miguel,Bagong Silang,,
-San Miguel,Balaong,,
-San Miguel,Balite,,
-San Miguel,Bantog,,
-San Miguel,Bardias,,
+San Jose del Monte,Poblacion I,14.8088,121.0456
+San Jose del Monte,San Isidro,14.8235,121.1324
+San Jose del Monte,San Manuel,14.7817,121.0685
+San Jose del Monte,San Martin de Porres,14.859,121.0662
+San Jose del Monte,San Martin I,14.8631,121.0585
+San Jose del Monte,San Martin II,14.8623,121.0556
+San Jose del Monte,San Martin III,14.8615,121.0552
+San Jose del Monte,San Martin IV,14.8607,121.0532
+San Jose del Monte,San Pedro,14.8461,121.0559
+San Jose del Monte,San Rafael I,14.8531,121.0446
+San Jose del Monte,San Rafael II,14.8545,121.0459
+San Jose del Monte,San Rafael III,14.8538,121.0444
+San Jose del Monte,San Rafael IV,14.8545,121.0443
+San Jose del Monte,San Rafael V,14.8499,121.045
+San Jose del Monte,San Roque,14.8174,121.1026
+San Jose del Monte,Santa Cruz I,14.8521,121.0527
+San Jose del Monte,Santa Cruz II,14.8544,121.0517
+San Jose del Monte,Santa Cruz III,14.8557,121.0521
+San Jose del Monte,Santa Cruz IV,14.8578,121.0508
+San Jose del Monte,Santa Cruz V,14.8567,121.0477
+San Jose del Monte,Santo Cristo,14.8253,121.0789
+San Jose del Monte,Santo Niño I,14.862,121.0642
+San Jose del Monte,Santo Niño II,14.8583,121.0632
+San Jose del Monte,Sapang Palay,14.8573,121.0558
+San Jose del Monte,Tungkong Mangga,14.7891,121.0747
+San Miguel,Bagong Pag-asa,15.193,120.9452
+San Miguel,Bagong Silang,15.1703,120.9306
+San Miguel,Balaong,15.1384,121.0255
+San Miguel,Balite,15.1742,120.9649
+San Miguel,Bantog,15.2102,120.9536
+San Miguel,Bardias,15.2394,121.0112
 San Miguel,Baritan,,
 San Miguel,Batasan Bata,,
 San Miguel,Batasan Matanda,,
-San Miguel,Biak-na-Bato,,
-San Miguel,Biclat,,
-San Miguel,Buga,,
-San Miguel,Buliran,,
-San Miguel,Bulualto,,
-San Miguel,Calumpang,,
-San Miguel,Cambio,,
-San Miguel,Camias,,
-San Miguel,Ilog-Bulo,,
-San Miguel,King Kabayo,,
-San Miguel,Labne,,
-San Miguel,Lambakin,,
-San Miguel,Magmarale,,
-San Miguel,Malibay,,
-San Miguel,Maligaya,,
+San Miguel,Biak-na-Bato,15.1093,121.069
+San Miguel,Biclat,15.1179,120.9842
+San Miguel,Buga,15.1896,120.9728
+San Miguel,Buliran,15.1668,120.9943
+San Miguel,Bulualto,15.2201,120.9543
+San Miguel,Calumpang,15.1805,121.0312
+San Miguel,Cambio,15.1976,120.9669
+San Miguel,Camias,15.1625,120.9713
+San Miguel,Ilog-Bulo,15.1784,120.9516
+San Miguel,King Kabayo,15.2169,120.9816
+San Miguel,Labne,15.1414,121.0092
+San Miguel,Lambakin,15.2288,121.0267
+San Miguel,Magmarale,15.1106,121.0009
+San Miguel,Malibay,15.2279,121.0612
+San Miguel,Maligaya,15.2464,121.0333
 San Miguel,Mandile,,
-San Miguel,Masalipit,,
-San Miguel,Pacalag,,
-San Miguel,Paliwasan,,
-San Miguel,Partida,,
-San Miguel,Pinambaran,,
-San Miguel,Poblacion,,
-San Miguel,Pulong Bayabas,,
-San Miguel,Pulong Duhat,,
-San Miguel,Sacdalan,,
-San Miguel,Salacot,,
-San Miguel,Salangan,,
-San Miguel,San Agustin,,
-San Miguel,San Jose,,
-San Miguel,San Juan,,
-San Miguel,San Vicente,,
-San Miguel,Santa Ines,,
-San Miguel,Santa Lucia,,
-San Miguel,Santa Rita Bata,,
-San Miguel,Santa Rita Matanda,,
-San Miguel,Sapang,,
-San Miguel,Sibul,,
-San Miguel,Tartaro,,
-San Miguel,Tibagan,,
-San Miguel,Tigpalas,,
-San Rafael,Banca-banca,,
-San Rafael,BMA-Balagtas,,
-San Rafael,Caingin,,
-San Rafael,Capihan,,
-San Rafael,Coral na Bato,,
-San Rafael,Cruz na Daan,,
-San Rafael,Dagat-dagatan,,
-San Rafael,Diliman I,,
-San Rafael,Diliman II,,
-San Rafael,Libis,,
-San Rafael,Lico,,
-San Rafael,Maasim,,
-San Rafael,Mabalas-balas,,
-San Rafael,Maguinao,,
-San Rafael,Maronquillo,,
-San Rafael,Paco,,
-San Rafael,Pansumaloc,,
-San Rafael,Pantubig,,
-San Rafael,Pasong Bangkal,,
-San Rafael,Pasong Callos,,
-San Rafael,Pasong Intsik,,
-San Rafael,Pinacpinacan,,
-San Rafael,Poblacion,,
-San Rafael,Pulo,,
-San Rafael,Pulong Bayabas,,
-San Rafael,Salapungan,,
-San Rafael,Sampaloc,,
-San Rafael,San Agustin,,
-San Rafael,San Roque,,
-San Rafael,Sapang Pahalang,,
-San Rafael,Talacsan,,
-San Rafael,Tambubong,,
-San Rafael,Tukod,,
-San Rafael,Ulingao,,
-Santa Maria,Bagbaguin,,
-Santa Maria,Balasing,,
-Santa Maria,Buenavista,,
-Santa Maria,Bulac,,
-Santa Maria,Camangyanan,,
-Santa Maria,Catmon,,
-Santa Maria,Cay Pombo,,
-Santa Maria,Caysio,,
-Santa Maria,Guyong,,
-Santa Maria,Lalakhan,,
-Santa Maria,Mag-asawang Sapa,,
-Santa Maria,Mahabang Parang,,
-Santa Maria,Manggahan,,
-Santa Maria,Parada,,
-Santa Maria,Poblacion,,
-Santa Maria,Pulong Buhangin,,
-Santa Maria,San Gabriel,,
-Santa Maria,San Jose Patag,,
-Santa Maria,San Vicente,,
-Santa Maria,Silangan,,
-Santa Maria,Sta. Clara,,
-Santa Maria,Sta. Cruz,,
-Santa Maria,Tabing Bakod,,
-Santa Maria,Tumana,,
+San Miguel,Masalipit,15.1495,121.0365
+San Miguel,Pacalag,15.1189,121.025
+San Miguel,Paliwasan,15.1187,120.9636
+San Miguel,Partida,15.2072,121.0202
+San Miguel,Pinambaran,15.2035,120.9776
+San Miguel,Poblacion,15.1426,120.9764
+San Miguel,Pulong Bayabas,15.1262,121.0122
+San Miguel,Pulong Duhat,15.2254,120.9731
+San Miguel,Sacdalan,15.204,120.9568
+San Miguel,Salacot,15.1812,120.9606
+San Miguel,Salangan,15.1303,120.9586
+San Miguel,San Agustin,15.1383,120.9617
+San Miguel,San Jose,15.1477,120.9815
+San Miguel,San Juan,15.1366,120.9763
+San Miguel,San Vicente,15.1418,120.9689
+San Miguel,Santa Ines,15.1692,121.0125
+San Miguel,Santa Lucia,15.2199,121.007
+San Miguel,Santa Rita Bata,15.1354,120.9726
+San Miguel,Santa Rita Matanda,15.133,120.9661
+San Miguel,Sapang,15.1795,120.9755
+San Miguel,Sibul,15.167,121.0608
+San Miguel,Tartaro,15.1661,121.04
+San Miguel,Tibagan,15.132,120.9934
+San Miguel,Tigpalas,15.1494,120.9781
+San Rafael,Banca-banca,15.0242,120.9215
+San Rafael,BMA-Balagtas,14.969,120.9672
+San Rafael,Caingin,14.9717,120.9434
+San Rafael,Capihan,14.9989,120.9303
+San Rafael,Coral na Bato,14.9942,120.9792
+San Rafael,Cruz na Daan,15.0296,120.9348
+San Rafael,Dagat-dagatan,15.0338,120.9145
+San Rafael,Diliman I,15.0243,120.9492
+San Rafael,Diliman II,15.0332,120.9532
+San Rafael,Libis,14.957,120.9695
+San Rafael,Lico,14.961,120.9563
+San Rafael,Maasim,15.0352,120.9364
+San Rafael,Mabalas-balas,15.0253,120.9427
+San Rafael,Maguinao,15.0228,120.9336
+San Rafael,Maronquillo,14.9674,121.0014
+San Rafael,Paco,14.9959,120.9057
+San Rafael,Pansumaloc,15.0174,120.8968
+San Rafael,Pantubig,14.9655,120.953
+San Rafael,Pasong Bangkal,15.0058,121.01
+San Rafael,Pasong Callos,15.0005,121.0003
+San Rafael,Pasong Intsik,15.0109,120.9688
+San Rafael,Pinacpinacan,14.9977,120.9133
+San Rafael,Poblacion,14.9553,120.9639
+San Rafael,Pulo,14.9619,121.0145
+San Rafael,Pulong Bayabas,15.0122,120.9046
+San Rafael,Salapungan,15.0196,120.9639
+San Rafael,Sampaloc,14.9818,120.9265
+San Rafael,San Agustin,15.0304,120.9272
+San Rafael,San Roque,15.0088,120.9326
+San Rafael,Sapang Pahalang,14.9975,121.0388
+San Rafael,Talacsan,14.96,120.9792
+San Rafael,Tambubong,14.9687,120.9264
+San Rafael,Tukod,14.9945,121.0494
+San Rafael,Ulingao,14.9716,120.9131
+Santa Maria,Bagbaguin,14.8174,120.9581
+Santa Maria,Balasing,14.8498,121.0027
+Santa Maria,Buenavista,14.7964,120.9819
+Santa Maria,Bulac,14.8381,121.0226
+Santa Maria,Camangyanan,14.7973,120.9711
+Santa Maria,Catmon,14.8296,121.0041
+Santa Maria,Cay Pombo,14.8525,120.9775
+Santa Maria,Caysio,14.8442,120.9683
+Santa Maria,Guyong,14.8364,120.9766
+Santa Maria,Lalakhan,14.8149,120.9465
+Santa Maria,Mag-asawang Sapa,14.8786,120.9831
+Santa Maria,Mahabang Parang,14.7904,120.9625
+Santa Maria,Manggahan,14.8521,120.957
+Santa Maria,Parada,14.8108,120.9856
+Santa Maria,Poblacion,14.8198,120.9626
+Santa Maria,Pulong Buhangin,14.865,120.9956
+Santa Maria,San Gabriel,14.8056,120.9589
+Santa Maria,San Jose Patag,14.8263,120.9808
+Santa Maria,San Vicente,14.807,121.0039
+Santa Maria,Silangan,14.8871,120.9876
+Santa Maria,Sta. Clara,14.8227,120.9506
+Santa Maria,Sta. Cruz,14.8417,120.9566
+Santa Maria,Tabing Bakod,14.8017,120.954
+Santa Maria,Tumana,14.8125,120.9731

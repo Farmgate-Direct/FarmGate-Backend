@@ -1,0 +1,4431 @@
+{
+  "angat|banaban": {
+    "lat": 14.9404,
+    "lng": 121.046,
+    "confidence": "high",
+    "display": "Banaban, Angat, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1541844976",
+    "at": "2026-10-11T15:07:55.520Z"
+  },
+  "angat|baybay": {
+    "lat": 14.9424,
+    "lng": 121.038,
+    "confidence": "high",
+    "display": "Baybay, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/1604278647",
+    "at": "2026-10-11T15:07:56.745Z"
+  },
+  "angat|binagbag": {
+    "lat": 14.952,
+    "lng": 121.0231,
+    "confidence": "high",
+    "display": "Binagbag, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/5714087423",
+    "at": "2026-10-11T15:07:57.968Z"
+  },
+  "angat|donacion": {
+    "lat": 14.9426,
+    "lng": 120.9825,
+    "confidence": "high",
+    "display": "Donacion, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/9420248894",
+    "at": "2026-10-11T15:07:59.189Z"
+  },
+  "angat|encanto": {
+    "lat": 14.9202,
+    "lng": 121.0065,
+    "confidence": "high",
+    "display": "Encanto, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "relation/16026263",
+    "at": "2026-10-11T15:08:00.416Z"
+  },
+  "angat|laog": {
+    "lat": 14.9192,
+    "lng": 121.0387,
+    "confidence": "high",
+    "display": "Laog, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/9420248893",
+    "at": "2026-10-11T15:08:01.925Z"
+  },
+  "angat|marungko": {
+    "lat": 14.9524,
+    "lng": 121.0131,
+    "confidence": "high",
+    "display": "Marungko, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/9420248892",
+    "at": "2026-10-11T15:08:03.670Z"
+  },
+  "angat|niugan": {
+    "lat": 14.9455,
+    "lng": 120.9707,
+    "confidence": "high",
+    "display": "Niugan, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/8508883612",
+    "at": "2026-10-11T15:08:05.614Z"
+  },
+  "angat|paltok": {
+    "lat": 14.9203,
+    "lng": 120.9638,
+    "confidence": "high",
+    "display": "Paltok, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/8508883603",
+    "at": "2026-10-11T15:08:07.656Z"
+  },
+  "angat|pulong yantok": {
+    "lat": 14.8918,
+    "lng": 121.0186,
+    "confidence": "high",
+    "display": "Pulong Yantok, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "relation/21123797",
+    "at": "2026-10-11T15:08:09.082Z"
+  },
+  "angat|santa lucia": {
+    "lat": 14.9429,
+    "lng": 121.0266,
+    "confidence": "high",
+    "display": "Santa Lucia, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/1541845006",
+    "at": "2026-10-11T15:08:14.313Z"
+  },
+  "angat|sulucan": {
+    "lat": 14.9419,
+    "lng": 121.0019,
+    "confidence": "high",
+    "display": "Sulucan, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/8508883605",
+    "at": "2026-10-11T15:08:17.380Z"
+  },
+  "angat|taboc": {
+    "lat": 14.9363,
+    "lng": 120.987,
+    "confidence": "high",
+    "display": "Taboc, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/8282971826",
+    "at": "2026-10-11T15:08:18.891Z"
+  },
+  "angat|san roque (pob.)": {
+    "lat": 14.9309,
+    "lng": 121.0269,
+    "confidence": "high",
+    "display": "San Roque, Santa Lucia, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/9420248890",
+    "at": "2026-10-11T15:09:58.635Z"
+  },
+  "angat|santa cruz (pob.)": {
+    "lat": 14.9235,
+    "lng": 121.03,
+    "confidence": "high",
+    "display": "Santa Cruz, Laog, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/9420248891",
+    "at": "2026-10-11T15:10:01.581Z"
+  },
+  "angat|santo cristo (pob.)": {
+    "lat": 14.9278,
+    "lng": 121.0292,
+    "confidence": "high",
+    "display": "Santo Cristo, Laog, Angat, Bulacan, Central Luzon, 3012, Philippines",
+    "osm": "node/9420248889",
+    "at": "2026-10-11T15:10:04.751Z"
+  },
+  "balagtas|borol 1st": {
+    "lat": 14.8309,
+    "lng": 120.9087,
+    "confidence": "high",
+    "display": "Borol 1st, Balagtas, Bulacan, Central Luzon, 3016, Philippines",
+    "osm": "relation/19608839",
+    "at": "2026-10-11T15:10:28.791Z"
+  },
+  "balagtas|borol 2nd": {
+    "lat": 14.8349,
+    "lng": 120.9049,
+    "confidence": "high",
+    "display": "Borol 2nd, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608840",
+    "at": "2026-10-11T15:10:30.274Z"
+  },
+  "balagtas|dalig": {
+    "lat": 14.8409,
+    "lng": 120.9214,
+    "confidence": "high",
+    "display": "Dalig, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608841",
+    "at": "2026-10-11T15:10:32.219Z"
+  },
+  "balagtas|longos": {
+    "lat": 14.8277,
+    "lng": 120.9148,
+    "confidence": "high",
+    "display": "Longos, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608842",
+    "at": "2026-10-11T15:10:34.072Z"
+  },
+  "balagtas|panginay": {
+    "lat": 14.8185,
+    "lng": 120.8959,
+    "confidence": "high",
+    "display": "Panginay, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608843",
+    "at": "2026-10-11T15:10:35.826Z"
+  },
+  "balagtas|pulong gubat": {
+    "lat": 14.8609,
+    "lng": 120.9052,
+    "confidence": "high",
+    "display": "Pulong Gubat, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608844",
+    "at": "2026-10-11T15:10:37.671Z"
+  },
+  "balagtas|san juan": {
+    "lat": 14.8163,
+    "lng": 120.9139,
+    "confidence": "high",
+    "display": "San Juan, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608845",
+    "at": "2026-10-11T15:10:39.709Z"
+  },
+  "balagtas|santol": {
+    "lat": 14.8517,
+    "lng": 120.9146,
+    "confidence": "high",
+    "display": "Santol, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608846",
+    "at": "2026-10-11T15:10:41.767Z"
+  },
+  "balagtas|wawa (pob.)": {
+    "lat": 14.8163,
+    "lng": 120.907,
+    "confidence": "high",
+    "display": "Wawa, Balagtas, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19608847",
+    "at": "2026-10-11T15:10:45.048Z"
+  },
+  "bulakan|bagumbayan": {
+    "lat": 14.7905,
+    "lng": 120.8786,
+    "confidence": "high",
+    "display": "Bagumbayan, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20994388",
+    "at": "2026-10-11T15:10:47.521Z"
+  },
+  "bulakan|balubad": {
+    "lat": 14.8011,
+    "lng": 120.8742,
+    "confidence": "high",
+    "display": "Balubad, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20994389",
+    "at": "2026-10-11T15:10:48.993Z"
+  },
+  "bulakan|bambang": {
+    "lat": 14.7764,
+    "lng": 120.8822,
+    "confidence": "high",
+    "display": "Bambang, Purok 2, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20994390",
+    "at": "2026-10-11T15:10:50.842Z"
+  },
+  "bulakan|matungao": {
+    "lat": 14.8031,
+    "lng": 120.8804,
+    "confidence": "high",
+    "display": "Matungao, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20995112",
+    "at": "2026-10-11T15:10:52.883Z"
+  },
+  "bulakan|maysantol": {
+    "lat": 14.7975,
+    "lng": 120.872,
+    "confidence": "high",
+    "display": "Maysantol, Taal, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20995113",
+    "at": "2026-10-11T15:10:54.625Z"
+  },
+  "bulakan|perez": {
+    "lat": 14.7692,
+    "lng": 120.8951,
+    "confidence": "high",
+    "display": "Perez, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20995114",
+    "at": "2026-10-11T15:10:56.768Z"
+  },
+  "bulakan|pitpitan": {
+    "lat": 14.8071,
+    "lng": 120.86,
+    "confidence": "high",
+    "display": "Pitpitan, Taal, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20995115",
+    "at": "2026-10-11T15:10:58.603Z"
+  },
+  "bulakan|san francisco": {
+    "lat": 14.8158,
+    "lng": 120.8675,
+    "confidence": "high",
+    "display": "San Francisco, Niugan, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20995116",
+    "at": "2026-10-11T15:11:00.128Z"
+  },
+  "bulakan|san jose (pob.)": {
+    "lat": 14.7959,
+    "lng": 120.8782,
+    "confidence": "high",
+    "display": "San Jose, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20997520",
+    "at": "2026-10-11T15:11:04.003Z"
+  },
+  "bulakan|san nicolas": {
+    "lat": 14.7981,
+    "lng": 120.867,
+    "confidence": "high",
+    "display": "San Nicolas, Taal, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20997521",
+    "at": "2026-10-11T15:11:06.075Z"
+  },
+  "bulakan|santa ana": {
+    "lat": 14.7871,
+    "lng": 120.8836,
+    "confidence": "high",
+    "display": "Santa Ana, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20998226",
+    "at": "2026-10-11T15:11:08.114Z"
+  },
+  "bulakan|santa ines": {
+    "lat": 14.7859,
+    "lng": 120.8811,
+    "confidence": "high",
+    "display": "Santa Ines, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20998227",
+    "at": "2026-10-11T15:11:10.275Z"
+  },
+  "bulakan|taliptip": {
+    "lat": 14.7659,
+    "lng": 120.8972,
+    "confidence": "high",
+    "display": "Taliptip, Bulakan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/2541378",
+    "at": "2026-10-11T15:11:12.311Z"
+  },
+  "bulakan|tibig": {
+    "lat": 14.7987,
+    "lng": 120.8715,
+    "confidence": "high",
+    "display": "Tibig, Taal, Bulakan, Bulacan, Central Luzon, 3017, Philippines",
+    "osm": "relation/20998228",
+    "at": "2026-10-11T15:11:14.349Z"
+  },
+  "bustos|bonga mayor": {
+    "lat": 14.9543,
+    "lng": 120.9393,
+    "confidence": "high",
+    "display": "Bonga Mayor, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16126019",
+    "at": "2026-10-11T15:11:16.686Z"
+  },
+  "bustos|bonga menor": {
+    "lat": 14.9508,
+    "lng": 120.9337,
+    "confidence": "high",
+    "display": "Bonga Menor, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16126018",
+    "at": "2026-10-11T15:11:18.434Z"
+  },
+  "bustos|buisan": {
+    "lat": 14.9047,
+    "lng": 120.9209,
+    "confidence": "high",
+    "display": "Buisan, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16569927",
+    "at": "2026-10-11T15:11:19.946Z"
+  },
+  "bustos|camachilihan": {
+    "lat": 14.9023,
+    "lng": 120.9124,
+    "confidence": "high",
+    "display": "Camachilihan, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16569928",
+    "at": "2026-10-11T15:11:21.690Z"
+  },
+  "bustos|cambaog": {
+    "lat": 14.9276,
+    "lng": 120.8967,
+    "confidence": "high",
+    "display": "Cambaog, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16641642",
+    "at": "2026-10-11T15:11:23.212Z"
+  },
+  "bustos|catacte": {
+    "lat": 14.9196,
+    "lng": 120.944,
+    "confidence": "high",
+    "display": "Catacte, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16619088",
+    "at": "2026-10-11T15:11:24.941Z"
+  },
+  "bustos|liciada": {
+    "lat": 14.9076,
+    "lng": 120.9292,
+    "confidence": "high",
+    "display": "Liciada, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16132704",
+    "at": "2026-10-11T15:11:26.666Z"
+  },
+  "bustos|malamig": {
+    "lat": 14.9418,
+    "lng": 120.9268,
+    "confidence": "high",
+    "display": "Malamig, Bustos, Bulacan, Central Luzon, 3007, Philippines",
+    "osm": "relation/16619089",
+    "at": "2026-10-11T15:11:28.720Z"
+  },
+  "bustos|malawak": {
+    "lat": 14.9116,
+    "lng": 120.9536,
+    "confidence": "high",
+    "display": "Malawak, Paltok, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16619090",
+    "at": "2026-10-11T15:11:30.150Z"
+  },
+  "bustos|poblacion": {
+    "lat": 14.9557,
+    "lng": 120.9094,
+    "confidence": "high",
+    "display": "Poblacion, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16128985",
+    "at": "2026-10-11T15:11:32.200Z"
+  },
+  "bustos|san pedro": {
+    "lat": 14.9493,
+    "lng": 120.908,
+    "confidence": "high",
+    "display": "San Pedro, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16619091",
+    "at": "2026-10-11T15:11:34.133Z"
+  },
+  "bustos|talampas": {
+    "lat": 14.9309,
+    "lng": 120.9071,
+    "confidence": "high",
+    "display": "Talampas, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16619092",
+    "at": "2026-10-11T15:11:36.079Z"
+  },
+  "bustos|tanawan": {
+    "lat": 14.9519,
+    "lng": 120.9256,
+    "confidence": "high",
+    "display": "Tanawan, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16619093",
+    "at": "2026-10-11T15:11:37.572Z"
+  },
+  "bustos|tibagan": {
+    "lat": 14.958,
+    "lng": 120.9463,
+    "confidence": "high",
+    "display": "Tibagan, Bustos, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16619094",
+    "at": "2026-10-11T15:11:39.291Z"
+  },
+  "guiguinto|cutcut": {
+    "lat": 14.8622,
+    "lng": 120.8958,
+    "confidence": "high",
+    "display": "Cutcut, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607306",
+    "at": "2026-10-11T15:11:41.256Z"
+  },
+  "guiguinto|daungan": {
+    "lat": 14.8556,
+    "lng": 120.8867,
+    "confidence": "high",
+    "display": "Daungan, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607307",
+    "at": "2026-10-11T15:11:42.750Z"
+  },
+  "guiguinto|ilang-ilang": {
+    "lat": 14.8305,
+    "lng": 120.8765,
+    "confidence": "high",
+    "display": "Ilang-ilang, St. Peter Village, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607308",
+    "at": "2026-10-11T15:11:44.689Z"
+  },
+  "guiguinto|malis": {
+    "lat": 14.8392,
+    "lng": 120.881,
+    "confidence": "high",
+    "display": "Malis, Guiguinto, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "relation/19607309",
+    "at": "2026-10-11T15:11:46.119Z"
+  },
+  "guiguinto|panginay": {
+    "lat": 14.8173,
+    "lng": 120.8908,
+    "confidence": "high",
+    "display": "Panginay, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607310",
+    "at": "2026-10-11T15:11:48.179Z"
+  },
+  "guiguinto|pritil": {
+    "lat": 14.8545,
+    "lng": 120.8684,
+    "confidence": "high",
+    "display": "Pritil, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607312",
+    "at": "2026-10-11T15:11:49.692Z"
+  },
+  "guiguinto|pulong gubat": {
+    "lat": 14.8549,
+    "lng": 120.8972,
+    "confidence": "high",
+    "display": "Pulong Gubat, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607313",
+    "at": "2026-10-11T15:11:51.187Z"
+  },
+  "guiguinto|santa cruz": {
+    "lat": 14.8401,
+    "lng": 120.8678,
+    "confidence": "high",
+    "display": "Santa Cruz, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607314",
+    "at": "2026-10-11T15:11:52.943Z"
+  },
+  "guiguinto|santa rita": {
+    "lat": 14.8602,
+    "lng": 120.8588,
+    "confidence": "high",
+    "display": "Santa Rita, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607315",
+    "at": "2026-10-11T15:11:54.708Z"
+  },
+  "guiguinto|tabang": {
+    "lat": 14.8315,
+    "lng": 120.8631,
+    "confidence": "high",
+    "display": "Tabang, St. Peter Village, Guiguinto, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074864910",
+    "at": "2026-10-11T15:11:56.872Z"
+  },
+  "guiguinto|tabe": {
+    "lat": 14.8373,
+    "lng": 120.886,
+    "confidence": "high",
+    "display": "Tabe, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607316",
+    "at": "2026-10-11T15:11:58.298Z"
+  },
+  "guiguinto|tiaong": {
+    "lat": 14.8471,
+    "lng": 120.8907,
+    "confidence": "high",
+    "display": "Tiaong, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607317",
+    "at": "2026-10-11T15:12:00.034Z"
+  },
+  "guiguinto|tuktukan": {
+    "lat": 14.8275,
+    "lng": 120.8921,
+    "confidence": "high",
+    "display": "Tuktukan, Guiguinto, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19607318",
+    "at": "2026-10-11T15:12:01.613Z"
+  },
+  "bocaue|antipona": {
+    "lat": 14.7969,
+    "lng": 120.9255,
+    "confidence": "high",
+    "display": "Antipona, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613297",
+    "at": "2026-10-11T15:12:20.060Z"
+  },
+  "bocaue|bagumbayan": {
+    "lat": 14.8039,
+    "lng": 120.9164,
+    "confidence": "high",
+    "display": "Bagumbayan, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613298",
+    "at": "2026-10-11T15:12:22.100Z"
+  },
+  "bocaue|bambang": {
+    "lat": 14.7883,
+    "lng": 120.9282,
+    "confidence": "high",
+    "display": "Bambang, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613299",
+    "at": "2026-10-11T15:12:23.528Z"
+  },
+  "bocaue|batia": {
+    "lat": 14.8301,
+    "lng": 120.9443,
+    "confidence": "high",
+    "display": "Batia, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613300",
+    "at": "2026-10-11T15:12:25.263Z"
+  },
+  "bocaue|binang 1st": {
+    "lat": 14.8021,
+    "lng": 120.9329,
+    "confidence": "high",
+    "display": "Biñang 1st, Bocaue, Bulacan, Central Luzon, 3018, Philippines",
+    "osm": "relation/19613301",
+    "at": "2026-10-11T15:12:27.205Z"
+  },
+  "bocaue|binang 2nd": {
+    "lat": 14.7947,
+    "lng": 120.9346,
+    "confidence": "high",
+    "display": "Biñang 2nd, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613302",
+    "at": "2026-10-11T15:12:29.243Z"
+  },
+  "bocaue|bolacan": {
+    "lat": 14.8007,
+    "lng": 120.9457,
+    "confidence": "high",
+    "display": "Bolacan, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613303",
+    "at": "2026-10-11T15:12:31.289Z"
+  },
+  "bocaue|bundukan": {
+    "lat": 14.7883,
+    "lng": 120.9423,
+    "confidence": "high",
+    "display": "Bundukan, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613304",
+    "at": "2026-10-11T15:12:33.145Z"
+  },
+  "bocaue|bunlo": {
+    "lat": 14.787,
+    "lng": 120.9381,
+    "confidence": "high",
+    "display": "Bunlo, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19613305",
+    "at": "2026-10-11T15:12:34.699Z"
+  },
+  "bocaue|caingin": {
+    "lat": 14.8078,
+    "lng": 120.9266,
+    "confidence": "high",
+    "display": "Caingin, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617986",
+    "at": "2026-10-11T15:12:36.648Z"
+  },
+  "bocaue|duhat": {
+    "lat": 14.7903,
+    "lng": 120.9536,
+    "confidence": "high",
+    "display": "Duhat, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617987",
+    "at": "2026-10-11T15:12:38.121Z"
+  },
+  "bocaue|igulot": {
+    "lat": 14.7968,
+    "lng": 120.9411,
+    "confidence": "high",
+    "display": "Igulot, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617988",
+    "at": "2026-10-11T15:12:39.837Z"
+  },
+  "bocaue|lolomboy": {
+    "lat": 14.7812,
+    "lng": 120.9353,
+    "confidence": "high",
+    "display": "Lolomboy, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617989",
+    "at": "2026-10-11T15:12:41.778Z"
+  },
+  "bocaue|poblacion": {
+    "lat": 14.7949,
+    "lng": 120.9255,
+    "confidence": "high",
+    "display": "Poblacion, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617990",
+    "at": "2026-10-11T15:12:43.284Z"
+  },
+  "bocaue|sulucan": {
+    "lat": 14.7931,
+    "lng": 120.9252,
+    "confidence": "high",
+    "display": "Sulucan, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617991",
+    "at": "2026-10-11T15:12:45.222Z"
+  },
+  "bocaue|taal": {
+    "lat": 14.813,
+    "lng": 120.9331,
+    "confidence": "high",
+    "display": "Taal, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617992",
+    "at": "2026-10-11T15:12:47.196Z"
+  },
+  "bocaue|turo": {
+    "lat": 14.8081,
+    "lng": 120.9425,
+    "confidence": "high",
+    "display": "Turo, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617994",
+    "at": "2026-10-11T15:12:50.464Z"
+  },
+  "bocaue|wakas": {
+    "lat": 14.8059,
+    "lng": 120.919,
+    "confidence": "high",
+    "display": "Wakas, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617995",
+    "at": "2026-10-11T15:12:51.923Z"
+  },
+  "baliwag|bagong nayon": {
+    "lat": 14.9613,
+    "lng": 120.8979,
+    "confidence": "high",
+    "display": "Bagong Nayon, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559456",
+    "at": "2026-10-11T15:12:54.262Z"
+  },
+  "baliwag|barangca": {
+    "lat": 14.9877,
+    "lng": 120.8965,
+    "confidence": "high",
+    "display": "Barangca, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559457",
+    "at": "2026-10-11T15:12:55.750Z"
+  },
+  "baliwag|calantipay": {
+    "lat": 14.9708,
+    "lng": 120.8581,
+    "confidence": "high",
+    "display": "Calantipay, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559458",
+    "at": "2026-10-11T15:12:57.793Z"
+  },
+  "baliwag|catulinan": {
+    "lat": 14.9641,
+    "lng": 120.8766,
+    "confidence": "high",
+    "display": "Catulinan, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559459",
+    "at": "2026-10-11T15:12:59.833Z"
+  },
+  "baliwag|concepcion": {
+    "lat": 14.9534,
+    "lng": 120.8893,
+    "confidence": "high",
+    "display": "Concepcion, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16117722",
+    "at": "2026-10-11T15:13:01.683Z"
+  },
+  "baliwag|hinukay": {
+    "lat": 15.0093,
+    "lng": 120.8834,
+    "confidence": "high",
+    "display": "Hinukay, Baliwag, Bulacan, Central Luzon, 3006, Philippines",
+    "osm": "relation/16118121",
+    "at": "2026-10-11T15:13:03.535Z"
+  },
+  "baliwag|makinabang": {
+    "lat": 14.9198,
+    "lng": 120.8863,
+    "confidence": "high",
+    "display": "Makinabang, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559598",
+    "at": "2026-10-11T15:13:05.486Z"
+  },
+  "baliwag|matangtubig": {
+    "lat": 14.9554,
+    "lng": 120.8621,
+    "confidence": "high",
+    "display": "Matangtubig, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559599",
+    "at": "2026-10-11T15:13:06.975Z"
+  },
+  "baliwag|pagala": {
+    "lat": 14.9681,
+    "lng": 120.8921,
+    "confidence": "high",
+    "display": "Pagala, Baliwag, Bulacan, Central Luzon, 3006, Philippines",
+    "osm": "relation/16117888",
+    "at": "2026-10-11T15:13:08.721Z"
+  },
+  "baliwag|paitan": {
+    "lat": 15.0089,
+    "lng": 120.9003,
+    "confidence": "high",
+    "display": "Paitan, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559600",
+    "at": "2026-10-11T15:13:10.184Z"
+  },
+  "baliwag|piel": {
+    "lat": 14.9861,
+    "lng": 120.8858,
+    "confidence": "high",
+    "display": "Piel, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559601",
+    "at": "2026-10-11T15:13:11.674Z"
+  },
+  "baliwag|pinagbarilan": {
+    "lat": 14.9575,
+    "lng": 120.877,
+    "confidence": "high",
+    "display": "Pinagbarilan, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19562499",
+    "at": "2026-10-11T15:13:13.717Z"
+  },
+  "baliwag|sabang": {
+    "lat": 14.965,
+    "lng": 120.9096,
+    "confidence": "high",
+    "display": "Sabang, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559603",
+    "at": "2026-10-11T15:13:15.554Z"
+  },
+  "baliwag|san jose": {
+    "lat": 14.9486,
+    "lng": 120.8941,
+    "confidence": "high",
+    "display": "San Jose, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559604",
+    "at": "2026-10-11T15:13:17.804Z"
+  },
+  "baliwag|san roque": {
+    "lat": 14.9962,
+    "lng": 120.8918,
+    "confidence": "high",
+    "display": "San Roque, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559605",
+    "at": "2026-10-11T15:13:19.847Z"
+  },
+  "baliwag|santa barbara": {
+    "lat": 14.9396,
+    "lng": 120.8902,
+    "confidence": "high",
+    "display": "Santa Barbara, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559606",
+    "at": "2026-10-11T15:13:21.693Z"
+  },
+  "baliwag|santo cristo": {
+    "lat": 14.9552,
+    "lng": 120.8944,
+    "confidence": "high",
+    "display": "Santo Cristo, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559607",
+    "at": "2026-10-11T15:13:23.829Z"
+  },
+  "baliwag|santo nino": {
+    "lat": 14.9845,
+    "lng": 120.8931,
+    "confidence": "high",
+    "display": "Santo Niño, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19559608",
+    "at": "2026-10-11T15:13:25.278Z"
+  },
+  "baliwag|subic": {
+    "lat": 14.9611,
+    "lng": 120.9045,
+    "confidence": "high",
+    "display": "Subic, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19562493",
+    "at": "2026-10-11T15:13:27.528Z"
+  },
+  "baliwag|sulivan": {
+    "lat": 14.9802,
+    "lng": 120.8843,
+    "confidence": "high",
+    "display": "Sulivan, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19562494",
+    "at": "2026-10-11T15:13:29.558Z"
+  },
+  "baliwag|tangos": {
+    "lat": 14.9682,
+    "lng": 120.8962,
+    "confidence": "high",
+    "display": "Tangos, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16117961",
+    "at": "2026-10-11T15:13:31.302Z"
+  },
+  "baliwag|tarcan": {
+    "lat": 14.9299,
+    "lng": 120.8871,
+    "confidence": "high",
+    "display": "Tarcan, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19562495",
+    "at": "2026-10-11T15:13:33.348Z"
+  },
+  "baliwag|tiaong": {
+    "lat": 14.9441,
+    "lng": 120.896,
+    "confidence": "high",
+    "display": "Tiaong, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19562496",
+    "at": "2026-10-11T15:13:34.851Z"
+  },
+  "baliwag|tibag": {
+    "lat": 14.9565,
+    "lng": 120.903,
+    "confidence": "high",
+    "display": "Tibag, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19562497",
+    "at": "2026-10-11T15:13:36.892Z"
+  },
+  "baliwag|tilapayong": {
+    "lat": 14.9791,
+    "lng": 120.8779,
+    "confidence": "high",
+    "display": "Tilapayong, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19562498",
+    "at": "2026-10-11T15:13:38.420Z"
+  },
+  "baliwag|virgen delas flores": {
+    "lat": 14.9448,
+    "lng": 120.8857,
+    "confidence": "high",
+    "display": "Virgen delas Flores, Baliwag, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/16117873",
+    "at": "2026-10-11T15:13:40.151Z"
+  },
+  "hagonoy|abulalas": {
+    "lat": 14.8535,
+    "lng": 120.7631,
+    "confidence": "high",
+    "display": "Abulalas, Hangga, Hagonoy, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/1701843823",
+    "at": "2026-10-11T15:13:58.748Z"
+  },
+  "hagonoy|iba-ibayo": {
+    "lat": 14.8739,
+    "lng": 120.7709,
+    "confidence": "high",
+    "display": "Iba-Ibayo, Hagonoy, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/3074890335",
+    "at": "2026-10-11T15:14:02.937Z"
+  },
+  "hagonoy|mercado": {
+    "lat": 14.823,
+    "lng": 120.7256,
+    "confidence": "high",
+    "display": "Mercado, San Jose, Hagonoy, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/11699277270",
+    "at": "2026-10-11T15:14:04.982Z"
+  },
+  "hagonoy|palapat": {
+    "lat": 14.8626,
+    "lng": 120.7462,
+    "confidence": "high",
+    "display": "Palapat, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1444091435",
+    "at": "2026-10-11T15:14:07.025Z"
+  },
+  "hagonoy|pugad": {
+    "lat": 14.7676,
+    "lng": 120.7421,
+    "confidence": "high",
+    "display": "Pugad, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/2555240",
+    "at": "2026-10-11T15:14:08.743Z"
+  },
+  "hagonoy|sagrada familia": {
+    "lat": 14.8181,
+    "lng": 120.7353,
+    "confidence": "high",
+    "display": "Sagrada Familia, Hagonoy, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/1307373094",
+    "at": "2026-10-11T15:14:10.682Z"
+  },
+  "hagonoy|san isidro": {
+    "lat": 14.8661,
+    "lng": 120.7392,
+    "confidence": "high",
+    "display": "San Isidro, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373227",
+    "at": "2026-10-11T15:14:12.210Z"
+  },
+  "hagonoy|san jose": {
+    "lat": 14.8303,
+    "lng": 120.7304,
+    "confidence": "high",
+    "display": "San Jose, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373141",
+    "at": "2026-10-11T15:14:13.647Z"
+  },
+  "hagonoy|san juan": {
+    "lat": 14.8667,
+    "lng": 120.7418,
+    "confidence": "high",
+    "display": "San Juan, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373226",
+    "at": "2026-10-11T15:14:15.696Z"
+  },
+  "hagonoy|san miguel": {
+    "lat": 14.8564,
+    "lng": 120.7333,
+    "confidence": "high",
+    "display": "San Miguel, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373101",
+    "at": "2026-10-11T15:14:17.207Z"
+  },
+  "hagonoy|san nicolas": {
+    "lat": 14.8267,
+    "lng": 120.7289,
+    "confidence": "high",
+    "display": "San Nicolas, San Jose, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373152",
+    "at": "2026-10-11T15:14:19.145Z"
+  },
+  "hagonoy|san pablo": {
+    "lat": 14.8353,
+    "lng": 120.7522,
+    "confidence": "high",
+    "display": "San Pablo, Hagonoy, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/1701843837",
+    "at": "2026-10-11T15:14:20.562Z"
+  },
+  "hagonoy|san pascual": {
+    "lat": 14.8164,
+    "lng": 120.7197,
+    "confidence": "high",
+    "display": "San Pascual, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373142",
+    "at": "2026-10-11T15:14:22.408Z"
+  },
+  "hagonoy|san pedro": {
+    "lat": 14.8396,
+    "lng": 120.7634,
+    "confidence": "high",
+    "display": "San Pedro, Hagonoy, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/1701843836",
+    "at": "2026-10-11T15:14:24.458Z"
+  },
+  "hagonoy|san roque": {
+    "lat": 14.8139,
+    "lng": 120.7252,
+    "confidence": "high",
+    "display": "San Roque, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/2557574",
+    "at": "2026-10-11T15:14:25.938Z"
+  },
+  "hagonoy|san sebastian": {
+    "lat": 14.8322,
+    "lng": 120.7349,
+    "confidence": "high",
+    "display": "San Sebastian, San Jose, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373143",
+    "at": "2026-10-11T15:14:28.391Z"
+  },
+  "hagonoy|santa cruz": {
+    "lat": 14.8161,
+    "lng": 120.7258,
+    "confidence": "high",
+    "display": "Santa Cruz, San Pascual, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373155",
+    "at": "2026-10-11T15:14:30.338Z"
+  },
+  "hagonoy|santa elena": {
+    "lat": 14.8182,
+    "lng": 120.7525,
+    "confidence": "high",
+    "display": "Santa Elena, Hagonoy, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/8946742421",
+    "at": "2026-10-11T15:14:32.287Z"
+  },
+  "hagonoy|santa monica": {
+    "lat": 14.8406,
+    "lng": 120.7345,
+    "confidence": "high",
+    "display": "Santa Monica, San Jose, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373157",
+    "at": "2026-10-11T15:14:34.009Z"
+  },
+  "hagonoy|santo rosario": {
+    "lat": 14.8168,
+    "lng": 120.7281,
+    "confidence": "high",
+    "display": "Santo Rosario, Sagrada Familia, Hagonoy, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/12861302965",
+    "at": "2026-10-11T15:14:35.941Z"
+  },
+  "hagonoy|tampok": {
+    "lat": 14.8478,
+    "lng": 120.7361,
+    "confidence": "high",
+    "display": "Tampok, San Miguel, Hagonoy, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1307373109",
+    "at": "2026-10-11T15:14:37.429Z"
+  },
+  "calumpit|balite": {
+    "lat": 14.8994,
+    "lng": 120.7849,
+    "confidence": "high",
+    "display": "Balite, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20977759",
+    "at": "2026-10-11T15:14:41.111Z"
+  },
+  "calumpit|balungao": {
+    "lat": 14.9144,
+    "lng": 120.7624,
+    "confidence": "high",
+    "display": "Balungao, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20977760",
+    "at": "2026-10-11T15:14:43.974Z"
+  },
+  "calumpit|buguion": {
+    "lat": 14.8965,
+    "lng": 120.7983,
+    "confidence": "high",
+    "display": "Buguion, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20977761",
+    "at": "2026-10-11T15:14:46.229Z"
+  },
+  "calumpit|bulusan": {
+    "lat": 14.9087,
+    "lng": 120.7424,
+    "confidence": "high",
+    "display": "Bulusan, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20977762",
+    "at": "2026-10-11T15:14:47.659Z"
+  },
+  "calumpit|calizon": {
+    "lat": 14.9125,
+    "lng": 120.753,
+    "confidence": "high",
+    "display": "Calizon, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20977763",
+    "at": "2026-10-11T15:14:49.696Z"
+  },
+  "calumpit|calumpang": {
+    "lat": 14.8845,
+    "lng": 120.7838,
+    "confidence": "high",
+    "display": "Calumpang, Iba-Ibayo, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20977764",
+    "at": "2026-10-11T15:14:51.248Z"
+  },
+  "calumpit|caniogan": {
+    "lat": 14.9054,
+    "lng": 120.7733,
+    "confidence": "high",
+    "display": "Caniogan, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20977765",
+    "at": "2026-10-11T15:14:53.088Z"
+  },
+  "calumpit|corazon": {
+    "lat": 14.9136,
+    "lng": 120.7685,
+    "confidence": "high",
+    "display": "Corazon, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20978220",
+    "at": "2026-10-11T15:14:55.126Z"
+  },
+  "calumpit|frances": {
+    "lat": 14.9154,
+    "lng": 120.7524,
+    "confidence": "high",
+    "display": "Frances, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20978221",
+    "at": "2026-10-11T15:14:57.057Z"
+  },
+  "calumpit|gatbuca": {
+    "lat": 14.9225,
+    "lng": 120.7693,
+    "confidence": "high",
+    "display": "Gatbuca, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20978245",
+    "at": "2026-10-11T15:14:59.114Z"
+  },
+  "calumpit|gugo": {
+    "lat": 14.9014,
+    "lng": 120.7548,
+    "confidence": "high",
+    "display": "Gugo, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20978246",
+    "at": "2026-10-11T15:15:01.169Z"
+  },
+  "calumpit|iba este": {
+    "lat": 14.8899,
+    "lng": 120.7673,
+    "confidence": "high",
+    "display": "Iba Este, Iba-Ibayo, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981627",
+    "at": "2026-10-11T15:15:03.203Z"
+  },
+  "calumpit|longos": {
+    "lat": 14.8764,
+    "lng": 120.7846,
+    "confidence": "high",
+    "display": "Longos, Iba-Ibayo, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981629",
+    "at": "2026-10-11T15:15:07.184Z"
+  },
+  "calumpit|meysulao": {
+    "lat": 14.9039,
+    "lng": 120.737,
+    "confidence": "high",
+    "display": "Meysulao, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981630",
+    "at": "2026-10-11T15:15:08.699Z"
+  },
+  "calumpit|meyto": {
+    "lat": 14.883,
+    "lng": 120.7298,
+    "confidence": "high",
+    "display": "Meyto, San Jose, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981631",
+    "at": "2026-10-11T15:15:10.536Z"
+  },
+  "calumpit|palimbang": {
+    "lat": 14.8994,
+    "lng": 120.7756,
+    "confidence": "high",
+    "display": "Palimbang, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981632",
+    "at": "2026-10-11T15:15:12.378Z"
+  },
+  "calumpit|panducot": {
+    "lat": 14.8745,
+    "lng": 120.738,
+    "confidence": "high",
+    "display": "Panducot, San Isidro, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981633",
+    "at": "2026-10-11T15:15:14.117Z"
+  },
+  "calumpit|pio cruzcosa": {
+    "lat": 14.8941,
+    "lng": 120.7803,
+    "confidence": "high",
+    "display": "Pio Cruzcosa, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "node/12706048550",
+    "at": "2026-10-11T15:15:16.150Z"
+  },
+  "calumpit|pungo": {
+    "lat": 14.9027,
+    "lng": 120.7905,
+    "confidence": "high",
+    "display": "Pungo, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981636",
+    "at": "2026-10-11T15:15:18.190Z"
+  },
+  "calumpit|san jose": {
+    "lat": 14.8849,
+    "lng": 120.7311,
+    "confidence": "high",
+    "display": "San Jose, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "node/12212588266",
+    "at": "2026-10-11T15:15:19.748Z"
+  },
+  "calumpit|san marcos": {
+    "lat": 14.8974,
+    "lng": 120.7785,
+    "confidence": "high",
+    "display": "San Marcos, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981638",
+    "at": "2026-10-11T15:15:21.979Z"
+  },
+  "calumpit|san miguel": {
+    "lat": 14.9169,
+    "lng": 120.7427,
+    "confidence": "high",
+    "display": "San Miguel, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981639",
+    "at": "2026-10-11T15:15:23.552Z"
+  },
+  "calumpit|santa lucia": {
+    "lat": 14.8947,
+    "lng": 120.7325,
+    "confidence": "high",
+    "display": "Santa Lucia, San Jose, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20987926",
+    "at": "2026-10-11T15:15:25.081Z"
+  },
+  "calumpit|santo nino": {
+    "lat": 14.9048,
+    "lng": 120.78,
+    "confidence": "high",
+    "display": "Santo Niño, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20987927",
+    "at": "2026-10-11T15:15:26.593Z"
+  },
+  "calumpit|sapang bayan": {
+    "lat": 14.9183,
+    "lng": 120.7698,
+    "confidence": "high",
+    "display": "Sapang Bayan, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20987928",
+    "at": "2026-10-11T15:15:28.630Z"
+  },
+  "calumpit|sergio bayan": {
+    "lat": 14.8976,
+    "lng": 120.7908,
+    "confidence": "high",
+    "display": "Sergio Bayan, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20987929",
+    "at": "2026-10-11T15:15:30.043Z"
+  },
+  "calumpit|sucol": {
+    "lat": 14.914,
+    "lng": 120.7699,
+    "confidence": "high",
+    "display": "Sucol, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20987930",
+    "at": "2026-10-11T15:15:32.082Z"
+  },
+  "marilao|abangan norte": {
+    "lat": 14.7721,
+    "lng": 120.94,
+    "confidence": "high",
+    "display": "Abangan Norte, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19638916",
+    "at": "2026-10-11T15:15:49.789Z"
+  },
+  "marilao|abangan sur": {
+    "lat": 14.7642,
+    "lng": 120.9442,
+    "confidence": "high",
+    "display": "Abangan Sur, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19638917",
+    "at": "2026-10-11T15:15:51.535Z"
+  },
+  "marilao|ibayo": {
+    "lat": 14.7544,
+    "lng": 120.9535,
+    "confidence": "high",
+    "display": "Ibayo, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19638918",
+    "at": "2026-10-11T15:15:53.583Z"
+  },
+  "marilao|lambakin": {
+    "lat": 14.7738,
+    "lng": 120.9784,
+    "confidence": "high",
+    "display": "Lambakin, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19638919",
+    "at": "2026-10-11T15:15:55.134Z"
+  },
+  "marilao|lias": {
+    "lat": 14.7603,
+    "lng": 120.9623,
+    "confidence": "high",
+    "display": "Lias, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19638920",
+    "at": "2026-10-11T15:15:56.563Z"
+  },
+  "marilao|loma de gato": {
+    "lat": 14.775,
+    "lng": 121.0177,
+    "confidence": "high",
+    "display": "Loma de Gato, Marilao, Bulacan, Central Luzon, 3019, Philippines",
+    "osm": "node/12972172543",
+    "at": "2026-10-11T15:15:58.114Z"
+  },
+  "marilao|nagbalon": {
+    "lat": 14.7504,
+    "lng": 120.9508,
+    "confidence": "high",
+    "display": "Nagbalon, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639107",
+    "at": "2026-10-11T15:16:00.153Z"
+  },
+  "marilao|patubig": {
+    "lat": 14.7766,
+    "lng": 120.959,
+    "confidence": "high",
+    "display": "Patubig, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639108",
+    "at": "2026-10-11T15:16:02.096Z"
+  },
+  "marilao|poblacion i": {
+    "lat": 14.756,
+    "lng": 120.9488,
+    "confidence": "high",
+    "display": "Poblacion I, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639544",
+    "at": "2026-10-11T15:16:04.152Z"
+  },
+  "marilao|poblacion ii": {
+    "lat": 14.7595,
+    "lng": 120.9467,
+    "confidence": "high",
+    "display": "Poblacion II, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639545",
+    "at": "2026-10-11T15:16:06.201Z"
+  },
+  "marilao|prenza i": {
+    "lat": 14.7866,
+    "lng": 120.9858,
+    "confidence": "high",
+    "display": "Prenza I, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639546",
+    "at": "2026-10-11T15:16:08.236Z"
+  },
+  "marilao|prenza ii": {
+    "lat": 14.7831,
+    "lng": 120.9861,
+    "confidence": "high",
+    "display": "Prenza II, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639547",
+    "at": "2026-10-11T15:16:09.716Z"
+  },
+  "marilao|santa rosa i": {
+    "lat": 14.7787,
+    "lng": 120.9742,
+    "confidence": "high",
+    "display": "Santa Rosa I, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639548",
+    "at": "2026-10-11T15:16:11.965Z"
+  },
+  "marilao|santa rosa ii": {
+    "lat": 14.7844,
+    "lng": 120.9702,
+    "confidence": "high",
+    "display": "Santa Rosa II, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639549",
+    "at": "2026-10-11T15:16:13.821Z"
+  },
+  "marilao|saog": {
+    "lat": 14.7636,
+    "lng": 120.956,
+    "confidence": "high",
+    "display": "Saog, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639609",
+    "at": "2026-10-11T15:16:15.565Z"
+  },
+  "marilao|tabing ilog": {
+    "lat": 14.7649,
+    "lng": 120.9488,
+    "confidence": "high",
+    "display": "Tabing Ilog, Marilao, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19639610",
+    "at": "2026-10-11T15:16:17.508Z"
+  },
+  "meycauayan|bagbaguin": {
+    "lat": 14.758,
+    "lng": 121.0062,
+    "confidence": "high",
+    "display": "Bagbaguin, Loma de Gato, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19650548",
+    "at": "2026-10-11T15:16:19.324Z"
+  },
+  "meycauayan|bahay pare": {
+    "lat": 14.7681,
+    "lng": 121.0128,
+    "confidence": "high",
+    "display": "Bahay Pare, Loma de Gato, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19650549",
+    "at": "2026-10-11T15:16:21.190Z"
+  },
+  "meycauayan|bancal": {
+    "lat": 14.7247,
+    "lng": 120.9581,
+    "confidence": "high",
+    "display": "Bancal, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19650550",
+    "at": "2026-10-11T15:16:23.228Z"
+  },
+  "meycauayan|banga": {
+    "lat": 14.7279,
+    "lng": 120.9613,
+    "confidence": "high",
+    "display": "Banga, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19650551",
+    "at": "2026-10-11T15:16:25.177Z"
+  },
+  "meycauayan|bayugo": {
+    "lat": 14.7317,
+    "lng": 120.9523,
+    "confidence": "high",
+    "display": "Bayugo, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19650552",
+    "at": "2026-10-11T15:16:27.235Z"
+  },
+  "meycauayan|caingin": {
+    "lat": 14.7274,
+    "lng": 120.9708,
+    "confidence": "high",
+    "display": "Caingin, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19659121",
+    "at": "2026-10-11T15:16:28.977Z"
+  },
+  "meycauayan|calvario": {
+    "lat": 14.7336,
+    "lng": 120.9614,
+    "confidence": "high",
+    "display": "Calvario, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19659122",
+    "at": "2026-10-11T15:16:30.817Z"
+  },
+  "meycauayan|camalig": {
+    "lat": 14.7732,
+    "lng": 120.993,
+    "confidence": "high",
+    "display": "Camalig, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19659123",
+    "at": "2026-10-11T15:16:32.757Z"
+  },
+  "meycauayan|hulo": {
+    "lat": 14.732,
+    "lng": 120.9585,
+    "confidence": "high",
+    "display": "Hulo, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19659124",
+    "at": "2026-10-11T15:16:34.235Z"
+  },
+  "meycauayan|iba": {
+    "lat": 14.7543,
+    "lng": 120.9821,
+    "confidence": "high",
+    "display": "Iba, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19659125",
+    "at": "2026-10-11T15:16:35.761Z"
+  },
+  "meycauayan|langka": {
+    "lat": 14.7395,
+    "lng": 120.9811,
+    "confidence": "high",
+    "display": "Langka, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19659141",
+    "at": "2026-10-11T15:16:37.178Z"
+  },
+  "meycauayan|lawa": {
+    "lat": 14.7341,
+    "lng": 120.978,
+    "confidence": "high",
+    "display": "Lawa, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19659142",
+    "at": "2026-10-11T15:16:39.018Z"
+  },
+  "meycauayan|libtong": {
+    "lat": 14.7448,
+    "lng": 120.9802,
+    "confidence": "high",
+    "display": "Libtong, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19660838",
+    "at": "2026-10-11T15:16:40.482Z"
+  },
+  "meycauayan|liputan": {
+    "lat": 14.7389,
+    "lng": 120.9274,
+    "confidence": "high",
+    "display": "Liputan, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/2544666",
+    "at": "2026-10-11T15:16:42.529Z"
+  },
+  "meycauayan|longos": {
+    "lat": 14.7349,
+    "lng": 120.9495,
+    "confidence": "high",
+    "display": "Longos, Meycauayan, Bulacan, Central Luzon, 3060, Philippines",
+    "osm": "relation/1710787",
+    "at": "2026-10-11T15:16:44.087Z"
+  },
+  "meycauayan|malhacan": {
+    "lat": 14.744,
+    "lng": 120.9718,
+    "confidence": "high",
+    "display": "Malhacan, Meycauayan, Bulacan, Central Luzon, 3020, Philippines",
+    "osm": "relation/19660839",
+    "at": "2026-10-11T15:16:46.039Z"
+  },
+  "meycauayan|pajo": {
+    "lat": 14.7774,
+    "lng": 121.0026,
+    "confidence": "high",
+    "display": "Pajo, Loma de Gato, Meycauayan, Bulacan, Central Luzon, 3019, Philippines",
+    "osm": "relation/19660911",
+    "at": "2026-10-11T15:16:47.992Z"
+  },
+  "meycauayan|pandayan": {
+    "lat": 14.7497,
+    "lng": 120.9657,
+    "confidence": "high",
+    "display": "Pandayan, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19660912",
+    "at": "2026-10-11T15:16:49.489Z"
+  },
+  "meycauayan|pantoc": {
+    "lat": 14.7664,
+    "lng": 120.9839,
+    "confidence": "high",
+    "display": "Pantoc, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19662756",
+    "at": "2026-10-11T15:16:50.903Z"
+  },
+  "meycauayan|perez": {
+    "lat": 14.7648,
+    "lng": 120.9972,
+    "confidence": "high",
+    "display": "Perez, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19662757",
+    "at": "2026-10-11T15:16:52.945Z"
+  },
+  "meycauayan|saint francis (gasak)": {
+    "lat": 14.7338,
+    "lng": 120.957,
+    "confidence": "high",
+    "display": "Saint Francis, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19662760",
+    "at": "2026-10-11T15:16:55.988Z"
+  },
+  "meycauayan|saluysoy": {
+    "lat": 14.7422,
+    "lng": 120.9568,
+    "confidence": "high",
+    "display": "Saluysoy, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19662759",
+    "at": "2026-10-11T15:16:58.028Z"
+  },
+  "meycauayan|tugatog": {
+    "lat": 14.725,
+    "lng": 120.9645,
+    "confidence": "high",
+    "display": "Tugatog, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19662761",
+    "at": "2026-10-11T15:16:59.519Z"
+  },
+  "meycauayan|zamora": {
+    "lat": 14.7353,
+    "lng": 120.9545,
+    "confidence": "high",
+    "display": "Zamora, Meycauayan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19662762",
+    "at": "2026-10-11T15:17:01.352Z"
+  },
+  "norzagaray|bangkal": {
+    "lat": 14.9265,
+    "lng": 121.0999,
+    "confidence": "high",
+    "display": "Bangkal, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248874",
+    "at": "2026-10-11T15:17:18.789Z"
+  },
+  "norzagaray|baraka": {
+    "lat": 14.9081,
+    "lng": 121.1021,
+    "confidence": "high",
+    "display": "Baraka, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248878",
+    "at": "2026-10-11T15:17:20.313Z"
+  },
+  "norzagaray|bigte": {
+    "lat": 14.8572,
+    "lng": 121.0856,
+    "confidence": "high",
+    "display": "Bigte, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/976990333",
+    "at": "2026-10-11T15:17:21.811Z"
+  },
+  "norzagaray|bitungol": {
+    "lat": 14.8823,
+    "lng": 121.0611,
+    "confidence": "high",
+    "display": "Bitungol, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248873",
+    "at": "2026-10-11T15:17:23.852Z"
+  },
+  "norzagaray|friendship village resources": {
+    "lat": 14.8611,
+    "lng": 121.0465,
+    "confidence": "high",
+    "display": "Friendship Village Resources, Norzagaray, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19618174",
+    "at": "2026-10-11T15:17:25.688Z"
+  },
+  "norzagaray|matictic": {
+    "lat": 14.9101,
+    "lng": 121.0565,
+    "confidence": "high",
+    "display": "Matictic, Padling, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248876",
+    "at": "2026-10-11T15:17:27.635Z"
+  },
+  "norzagaray|minuyan": {
+    "lat": 14.8677,
+    "lng": 121.0803,
+    "confidence": "high",
+    "display": "Minuyan, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248872",
+    "at": "2026-10-11T15:17:29.478Z"
+  },
+  "norzagaray|partida": {
+    "lat": 14.8931,
+    "lng": 121.0291,
+    "confidence": "high",
+    "display": "Partida, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248871",
+    "at": "2026-10-11T15:17:31.434Z"
+  },
+  "norzagaray|pinagtulayan": {
+    "lat": 14.9346,
+    "lng": 121.0715,
+    "confidence": "high",
+    "display": "Pinagtulayan, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248877",
+    "at": "2026-10-11T15:17:33.185Z"
+  },
+  "norzagaray|poblacion": {
+    "lat": 14.9103,
+    "lng": 121.0492,
+    "confidence": "high",
+    "display": "Poblacion, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248870",
+    "at": "2026-10-11T15:17:35.123Z"
+  },
+  "norzagaray|san lorenzo": {
+    "lat": 14.9002,
+    "lng": 121.1514,
+    "confidence": "high",
+    "display": "San Lorenzo, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/12407211603",
+    "at": "2026-10-11T15:17:37.171Z"
+  },
+  "norzagaray|san mateo": {
+    "lat": 14.8735,
+    "lng": 121.1277,
+    "confidence": "high",
+    "display": "San Mateo, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/976990332",
+    "at": "2026-10-11T15:17:38.675Z"
+  },
+  "norzagaray|tigbe": {
+    "lat": 14.867,
+    "lng": 121.0378,
+    "confidence": "high",
+    "display": "Tigbe, Norzagaray, Bulacan, Central Luzon, 3013, Philippines",
+    "osm": "node/9420248869",
+    "at": "2026-10-11T15:17:40.163Z"
+  },
+  "obando|binuangan": {
+    "lat": 14.7159,
+    "lng": 120.9066,
+    "confidence": "high",
+    "display": "Binuangan, Obando, Bulacan, Central Luzon, 3021, Philippines",
+    "osm": "relation/9464156",
+    "at": "2026-10-11T15:17:42.369Z"
+  },
+  "obando|catanghalan": {
+    "lat": 14.7051,
+    "lng": 120.941,
+    "confidence": "high",
+    "display": "Catanghalan, Obando, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19625470",
+    "at": "2026-10-11T15:17:44.423Z"
+  },
+  "obando|hulo": {
+    "lat": 14.7214,
+    "lng": 120.9273,
+    "confidence": "high",
+    "display": "Hulo, Obando, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19625471",
+    "at": "2026-10-11T15:17:46.391Z"
+  },
+  "obando|lawa": {
+    "lat": 14.7258,
+    "lng": 120.9257,
+    "confidence": "high",
+    "display": "Lawa, Obando, Bulacan, Central Luzon, 1445, Philippines",
+    "osm": "node/1448571438",
+    "at": "2026-10-11T15:17:47.827Z"
+  },
+  "obando|paco": {
+    "lat": 14.731,
+    "lng": 120.9218,
+    "confidence": "high",
+    "display": "Paco, Obando, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19625473",
+    "at": "2026-10-11T15:17:49.878Z"
+  },
+  "obando|pag-asa (pob.)": {
+    "lat": 14.7098,
+    "lng": 120.9368,
+    "confidence": "high",
+    "display": "Pag-asa, Obando, Bulacan, Central Luzon, 3021, Philippines",
+    "osm": "relation/19625474",
+    "at": "2026-10-11T15:17:53.294Z"
+  },
+  "obando|paliwas": {
+    "lat": 14.7127,
+    "lng": 120.9352,
+    "confidence": "high",
+    "display": "Paliwas, Obando, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19625475",
+    "at": "2026-10-11T15:17:54.847Z"
+  },
+  "obando|panghulo": {
+    "lat": 14.6983,
+    "lng": 120.9469,
+    "confidence": "high",
+    "display": "Panghulo, Obando, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19625476",
+    "at": "2026-10-11T15:17:56.381Z"
+  },
+  "obando|salambao": {
+    "lat": 14.7141,
+    "lng": 120.9066,
+    "confidence": "high",
+    "display": "Salambao, Obando, Bulacan, Central Luzon, 3021, Philippines",
+    "osm": "relation/9464157",
+    "at": "2026-10-11T15:17:58.223Z"
+  },
+  "obando|san pascual": {
+    "lat": 14.7205,
+    "lng": 120.9294,
+    "confidence": "high",
+    "display": "San Pascual, Obando, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19625477",
+    "at": "2026-10-11T15:17:59.781Z"
+  },
+  "obando|tawiran": {
+    "lat": 14.7448,
+    "lng": 120.9109,
+    "confidence": "high",
+    "display": "Tawiran, Obando, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/1710786",
+    "at": "2026-10-11T15:18:01.723Z"
+  },
+  "pandi|bagbaguin": {
+    "lat": 14.8904,
+    "lng": 120.9212,
+    "confidence": "high",
+    "display": "Bagbaguin, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529652",
+    "at": "2026-10-11T15:18:04.235Z"
+  },
+  "pandi|bagong barrio": {
+    "lat": 14.896,
+    "lng": 120.953,
+    "confidence": "high",
+    "display": "Bagong Barrio, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529653",
+    "at": "2026-10-11T15:18:05.667Z"
+  },
+  "pandi|baka-bakahan": {
+    "lat": 14.8499,
+    "lng": 120.9505,
+    "confidence": "high",
+    "display": "Baka-bakahan, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530340",
+    "at": "2026-10-11T15:18:07.616Z"
+  },
+  "pandi|bunsuran i": {
+    "lat": 14.8627,
+    "lng": 120.9374,
+    "confidence": "high",
+    "display": "Bunsuran I, Santo Niño, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529654",
+    "at": "2026-10-11T15:18:09.563Z"
+  },
+  "pandi|bunsuran ii": {
+    "lat": 14.8602,
+    "lng": 120.9269,
+    "confidence": "high",
+    "display": "Bunsuran II, Santo Niño, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529655",
+    "at": "2026-10-11T15:18:11.071Z"
+  },
+  "pandi|bunsuran iii": {
+    "lat": 14.8667,
+    "lng": 120.9299,
+    "confidence": "high",
+    "display": "Bunsuran III, Santo Niño, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529656",
+    "at": "2026-10-11T15:18:12.535Z"
+  },
+  "pandi|cacarong bata": {
+    "lat": 14.896,
+    "lng": 120.9678,
+    "confidence": "high",
+    "display": "Cacarong Bata, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529657",
+    "at": "2026-10-11T15:18:14.595Z"
+  },
+  "pandi|cacarong matanda": {
+    "lat": 14.9042,
+    "lng": 120.9677,
+    "confidence": "high",
+    "display": "Cacarong Matanda, Paltok, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529658",
+    "at": "2026-10-11T15:18:16.540Z"
+  },
+  "pandi|cupang": {
+    "lat": 14.8956,
+    "lng": 120.9372,
+    "confidence": "high",
+    "display": "Cupang, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529659",
+    "at": "2026-10-11T15:18:18.690Z"
+  },
+  "pandi|malibong bata": {
+    "lat": 14.8464,
+    "lng": 120.9305,
+    "confidence": "high",
+    "display": "Malibong Bata, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529745",
+    "at": "2026-10-11T15:18:20.115Z"
+  },
+  "pandi|malibong matanda": {
+    "lat": 14.8478,
+    "lng": 120.939,
+    "confidence": "high",
+    "display": "Malibong Matanda, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529746",
+    "at": "2026-10-11T15:18:22.064Z"
+  },
+  "pandi|manatal": {
+    "lat": 14.8739,
+    "lng": 120.9182,
+    "confidence": "high",
+    "display": "Manatal, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19529747",
+    "at": "2026-10-11T15:18:23.619Z"
+  },
+  "pandi|mapulang lupa": {
+    "lat": 14.882,
+    "lng": 120.9642,
+    "confidence": "high",
+    "display": "Mapulang Lupa, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530331",
+    "at": "2026-10-11T15:18:25.582Z"
+  },
+  "pandi|masagana": {
+    "lat": 14.8855,
+    "lng": 120.9303,
+    "confidence": "high",
+    "display": "Masagana, Santo Niño, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530332",
+    "at": "2026-10-11T15:18:27.008Z"
+  },
+  "pandi|masuso": {
+    "lat": 14.882,
+    "lng": 120.9408,
+    "confidence": "high",
+    "display": "Masuso, Santo Niño, Pandi, Bulacan, Central Luzon, 3014, Philippines",
+    "osm": "relation/19530333",
+    "at": "2026-10-11T15:18:28.469Z"
+  },
+  "pandi|pinagkuartelan": {
+    "lat": 14.8969,
+    "lng": 120.9795,
+    "confidence": "high",
+    "display": "Pinagkuartelan, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530334",
+    "at": "2026-10-11T15:18:30.308Z"
+  },
+  "pandi|poblacion": {
+    "lat": 14.8672,
+    "lng": 120.9576,
+    "confidence": "high",
+    "display": "Poblacion, Pandi, Bulacan, Central Luzon, 3014, Philippines",
+    "osm": "node/2029176362",
+    "at": "2026-10-11T15:18:32.349Z"
+  },
+  "pandi|real de cacarong": {
+    "lat": 14.9166,
+    "lng": 120.9761,
+    "confidence": "high",
+    "display": "Real de Cacarong, Paltok, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530336",
+    "at": "2026-10-11T15:18:33.792Z"
+  },
+  "pandi|san roque": {
+    "lat": 14.8581,
+    "lng": 120.9562,
+    "confidence": "high",
+    "display": "San Roque, Santo Niño, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530337",
+    "at": "2026-10-11T15:18:35.631Z"
+  },
+  "pandi|santo nino": {
+    "lat": 14.8692,
+    "lng": 120.9378,
+    "confidence": "high",
+    "display": "Santo Niño, Pandi, Bulacan, Central Luzon, 3014, Philippines",
+    "osm": "node/13645134604",
+    "at": "2026-10-11T15:18:37.155Z"
+  },
+  "pandi|siling bata": {
+    "lat": 14.8904,
+    "lng": 120.9691,
+    "confidence": "high",
+    "display": "Siling Bata, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530338",
+    "at": "2026-10-11T15:18:38.631Z"
+  },
+  "pandi|siling matanda": {
+    "lat": 14.9041,
+    "lng": 120.9898,
+    "confidence": "high",
+    "display": "Siling Matanda, Pandi, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19530339",
+    "at": "2026-10-11T15:18:40.585Z"
+  },
+  "paombong|kapitangan": {
+    "lat": 14.8647,
+    "lng": 120.7881,
+    "confidence": "high",
+    "display": "Kapitangan, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12989735",
+    "at": "2026-10-11T15:19:02.014Z"
+  },
+  "paombong|malumot": {
+    "lat": 14.8284,
+    "lng": 120.7888,
+    "confidence": "high",
+    "display": "Malumot, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12996960",
+    "at": "2026-10-11T15:19:04.046Z"
+  },
+  "paombong|masukol": {
+    "lat": 14.7645,
+    "lng": 120.7696,
+    "confidence": "high",
+    "display": "Masukol, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12970126",
+    "at": "2026-10-11T15:19:05.793Z"
+  },
+  "paombong|pinalagdan": {
+    "lat": 14.8528,
+    "lng": 120.7772,
+    "confidence": "high",
+    "display": "Pinalagdan, Hangga, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12989782",
+    "at": "2026-10-11T15:19:07.321Z"
+  },
+  "paombong|poblacion": {
+    "lat": 14.8363,
+    "lng": 120.7876,
+    "confidence": "high",
+    "display": "Poblacion, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12969781",
+    "at": "2026-10-11T15:19:09.476Z"
+  },
+  "paombong|san isidro i": {
+    "lat": 14.8378,
+    "lng": 120.7841,
+    "confidence": "high",
+    "display": "San Isidro I, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12997016",
+    "at": "2026-10-11T15:19:11.328Z"
+  },
+  "paombong|san isidro ii": {
+    "lat": 14.836,
+    "lng": 120.7715,
+    "confidence": "high",
+    "display": "San Isidro II, Hangga, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12997382",
+    "at": "2026-10-11T15:19:13.075Z"
+  },
+  "paombong|san jose": {
+    "lat": 14.8312,
+    "lng": 120.7892,
+    "confidence": "high",
+    "display": "San Jose, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12992628",
+    "at": "2026-10-11T15:19:15.121Z"
+  },
+  "paombong|san roque": {
+    "lat": 14.831,
+    "lng": 120.7873,
+    "confidence": "high",
+    "display": "San Roque, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12997459",
+    "at": "2026-10-11T15:19:16.612Z"
+  },
+  "paombong|san vicente": {
+    "lat": 14.8352,
+    "lng": 120.7903,
+    "confidence": "high",
+    "display": "San Vicente, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12989859",
+    "at": "2026-10-11T15:19:18.168Z"
+  },
+  "paombong|santa cruz": {
+    "lat": 14.7619,
+    "lng": 120.7901,
+    "confidence": "high",
+    "display": "Santa Cruz, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12979272",
+    "at": "2026-10-11T15:19:20.208Z"
+  },
+  "paombong|santo nino": {
+    "lat": 14.8397,
+    "lng": 120.7937,
+    "confidence": "high",
+    "display": "Santo Niño, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12989812",
+    "at": "2026-10-11T15:19:21.645Z"
+  },
+  "paombong|santo rosario": {
+    "lat": 14.8452,
+    "lng": 120.7882,
+    "confidence": "high",
+    "display": "Santo Rosario, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12997052",
+    "at": "2026-10-11T15:19:23.689Z"
+  },
+  "plaridel|agnaya": {
+    "lat": 14.8848,
+    "lng": 120.8528,
+    "confidence": "high",
+    "display": "Agnaya, Tabang, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557443",
+    "at": "2026-10-11T15:19:26.117Z"
+  },
+  "plaridel|bagong silang": {
+    "lat": 14.8707,
+    "lng": 120.8787,
+    "confidence": "high",
+    "display": "Bagong Silang, Tabang, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557444",
+    "at": "2026-10-11T15:19:28.272Z"
+  },
+  "plaridel|banga i": {
+    "lat": 14.8871,
+    "lng": 120.8663,
+    "confidence": "high",
+    "display": "Banga I, Tabang, Plaridel, Bulacan, Central Luzon, 3004, Philippines",
+    "osm": "relation/19557445",
+    "at": "2026-10-11T15:19:30.129Z"
+  },
+  "plaridel|banga ii": {
+    "lat": 14.8883,
+    "lng": 120.8698,
+    "confidence": "high",
+    "display": "Banga II, Tabang, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557446",
+    "at": "2026-10-11T15:19:32.063Z"
+  },
+  "plaridel|bintog": {
+    "lat": 14.9027,
+    "lng": 120.889,
+    "confidence": "high",
+    "display": "Bintog, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557447",
+    "at": "2026-10-11T15:19:34.010Z"
+  },
+  "plaridel|bulihan": {
+    "lat": 14.8725,
+    "lng": 120.9021,
+    "confidence": "high",
+    "display": "Bulihan, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557448",
+    "at": "2026-10-11T15:19:35.504Z"
+  },
+  "plaridel|culianin": {
+    "lat": 14.9146,
+    "lng": 120.8949,
+    "confidence": "high",
+    "display": "Culianin, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557449",
+    "at": "2026-10-11T15:19:37.346Z"
+  },
+  "plaridel|dampol": {
+    "lat": 14.9004,
+    "lng": 120.8222,
+    "confidence": "high",
+    "display": "Dampol, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557450",
+    "at": "2026-10-11T15:19:38.869Z"
+  },
+  "plaridel|lagundi": {
+    "lat": 14.891,
+    "lng": 120.8183,
+    "confidence": "high",
+    "display": "Lagundi, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557451",
+    "at": "2026-10-11T15:19:40.722Z"
+  },
+  "plaridel|lalangan": {
+    "lat": 14.8774,
+    "lng": 120.8483,
+    "confidence": "high",
+    "display": "Lalangan, Tabang, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557452",
+    "at": "2026-10-11T15:19:42.149Z"
+  },
+  "plaridel|lumang bayan": {
+    "lat": 14.8954,
+    "lng": 120.8537,
+    "confidence": "high",
+    "display": "Lumang Bayan, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19557453",
+    "at": "2026-10-11T15:19:43.660Z"
+  },
+  "plaridel|parulan": {
+    "lat": 14.8909,
+    "lng": 120.8747,
+    "confidence": "high",
+    "display": "Parulan, Tabang, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19558061",
+    "at": "2026-10-11T15:19:45.089Z"
+  },
+  "plaridel|poblacion": {
+    "lat": 14.8855,
+    "lng": 120.863,
+    "confidence": "high",
+    "display": "Poblacion, Tabang, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19558062",
+    "at": "2026-10-11T15:19:46.623Z"
+  },
+  "plaridel|rueda": {
+    "lat": 14.8974,
+    "lng": 120.8083,
+    "confidence": "high",
+    "display": "Rueda, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19558063",
+    "at": "2026-10-11T15:19:48.459Z"
+  },
+  "plaridel|san jose": {
+    "lat": 14.9057,
+    "lng": 120.8966,
+    "confidence": "high",
+    "display": "San Jose, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19558064",
+    "at": "2026-10-11T15:19:50.400Z"
+  },
+  "plaridel|santa ines": {
+    "lat": 14.8824,
+    "lng": 120.856,
+    "confidence": "high",
+    "display": "Santa Ines, Tabang, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19558065",
+    "at": "2026-10-11T15:19:52.339Z"
+  },
+  "plaridel|santo nino": {
+    "lat": 14.8832,
+    "lng": 120.8381,
+    "confidence": "high",
+    "display": "Santo Niño, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19558066",
+    "at": "2026-10-11T15:19:54.283Z"
+  },
+  "plaridel|sipat": {
+    "lat": 14.8945,
+    "lng": 120.8301,
+    "confidence": "high",
+    "display": "Sipat, Plaridel, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19558067",
+    "at": "2026-10-11T15:19:56.327Z"
+  },
+  "plaridel|tabang": {
+    "lat": 14.873,
+    "lng": 120.8616,
+    "confidence": "high",
+    "display": "Tabang, Plaridel, Bulacan, Central Luzon, 3004, Philippines",
+    "osm": "node/3106712406",
+    "at": "2026-10-11T15:19:57.817Z"
+  },
+  "pulilan|balatong a": {
+    "lat": 14.9309,
+    "lng": 120.8442,
+    "confidence": "high",
+    "display": "Balatong A, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12739119",
+    "at": "2026-10-11T15:19:59.642Z"
+  },
+  "pulilan|balatong b": {
+    "lat": 14.9415,
+    "lng": 120.8447,
+    "confidence": "high",
+    "display": "Balatong B, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12739001",
+    "at": "2026-10-11T15:20:01.052Z"
+  },
+  "pulilan|dulong malabon": {
+    "lat": 14.9215,
+    "lng": 120.8174,
+    "confidence": "high",
+    "display": "Dulong Malabon, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12752592",
+    "at": "2026-10-11T15:20:09.691Z"
+  },
+  "pulilan|inaon": {
+    "lat": 14.9436,
+    "lng": 120.8279,
+    "confidence": "high",
+    "display": "Inaon, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12750451",
+    "at": "2026-10-11T15:20:11.635Z"
+  },
+  "pulilan|longos": {
+    "lat": 14.8974,
+    "lng": 120.8661,
+    "confidence": "high",
+    "display": "Longos, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12766191",
+    "at": "2026-10-11T15:20:13.091Z"
+  },
+  "pulilan|lumbac": {
+    "lat": 14.9016,
+    "lng": 120.8409,
+    "confidence": "high",
+    "display": "Lumbac, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12756642",
+    "at": "2026-10-11T15:20:15.148Z"
+  },
+  "pulilan|paltao": {
+    "lat": 14.9022,
+    "lng": 120.8561,
+    "confidence": "high",
+    "display": "Paltao, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12763342",
+    "at": "2026-10-11T15:20:16.641Z"
+  },
+  "pulilan|penabatan": {
+    "lat": 14.932,
+    "lng": 120.8429,
+    "confidence": "high",
+    "display": "Peñabatan, Pulilan, Bulacan, Central Luzon, 3005, Philippines",
+    "osm": "relation/12750397",
+    "at": "2026-10-11T15:20:18.113Z"
+  },
+  "pulilan|poblacion": {
+    "lat": 14.9022,
+    "lng": 120.8488,
+    "confidence": "high",
+    "display": "Poblacion, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12763105",
+    "at": "2026-10-11T15:20:20.051Z"
+  },
+  "pulilan|santa peregrina": {
+    "lat": 14.9458,
+    "lng": 120.8384,
+    "confidence": "high",
+    "display": "Santa Peregrina, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12750439",
+    "at": "2026-10-11T15:20:21.540Z"
+  },
+  "pulilan|santo cristo": {
+    "lat": 14.8963,
+    "lng": 120.873,
+    "confidence": "high",
+    "display": "Santo Cristo, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12766229",
+    "at": "2026-10-11T15:20:23.020Z"
+  },
+  "pulilan|taal": {
+    "lat": 14.9081,
+    "lng": 120.8807,
+    "confidence": "high",
+    "display": "Taal, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12766239",
+    "at": "2026-10-11T15:20:24.756Z"
+  },
+  "pulilan|tabon": {
+    "lat": 14.9106,
+    "lng": 120.8288,
+    "confidence": "high",
+    "display": "Tabon, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12756546",
+    "at": "2026-10-11T15:20:26.595Z"
+  },
+  "pulilan|tibag": {
+    "lat": 14.9059,
+    "lng": 120.823,
+    "confidence": "high",
+    "display": "Tibag, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12752670",
+    "at": "2026-10-11T15:20:28.021Z"
+  },
+  "pulilan|tinejero": {
+    "lat": 14.9232,
+    "lng": 120.8453,
+    "confidence": "high",
+    "display": "Tinejero, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12745413",
+    "at": "2026-10-11T15:20:30.072Z"
+  },
+  "pulilan|cutcot": {
+    "lat": 14.9019,
+    "lng": 120.8639,
+    "confidence": "medium",
+    "display": "Cut-cot, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12763359",
+    "alias": "Cut-cot = Cutcot",
+    "at": "2026-10-11T15:24:17.484Z"
+  },
+  "pulilan|dampol i": {
+    "lat": 14.9016,
+    "lng": 120.8322,
+    "confidence": "medium",
+    "display": "Dampol 1st, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12756610",
+    "alias": "Dampol 1st = Dampol I",
+    "at": "2026-10-11T15:24:19.930Z"
+  },
+  "pulilan|dampol ii-a": {
+    "lat": 14.9034,
+    "lng": 120.8147,
+    "confidence": "medium",
+    "display": "Dampol 2nd A, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12752617",
+    "alias": "Dampol 2nd A = Dampol II-A",
+    "at": "2026-10-11T15:24:22.365Z"
+  },
+  "pulilan|dampol ii-b": {
+    "lat": 14.9027,
+    "lng": 120.8073,
+    "confidence": "medium",
+    "display": "Dampol 2nd B, Pulilan, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/12752573",
+    "alias": "Dampol 2nd B = Dampol II-B",
+    "at": "2026-10-11T15:24:24.830Z"
+  },
+  "bocaue|tambobong": {
+    "lat": 14.8149,
+    "lng": 120.9394,
+    "confidence": "medium",
+    "display": "Tambubong, Bocaue, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19617993",
+    "alias": "Tambubong = Tambobong",
+    "at": "2026-10-11T15:25:16.834Z"
+  },
+  "calumpit|iba o'este": {
+    "lat": 14.8894,
+    "lng": 120.7642,
+    "confidence": "medium",
+    "display": "Iba Oeste, Iba-Ibayo, Calumpit, Bulacan, Central Luzon, 3003, Philippines",
+    "osm": "relation/20981628",
+    "alias": "Iba Oeste = Iba O'Este",
+    "at": "2026-10-11T15:25:19.727Z"
+  },
+  "paombong|binakod": {
+    "lat": 14.7813,
+    "lng": 120.7837,
+    "confidence": "medium",
+    "display": "Binacod, Paombong, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "relation/12979382",
+    "alias": "Binacod = Binakod",
+    "at": "2026-10-11T15:25:21.315Z"
+  },
+  "santa maria|bagbaguin": {
+    "lat": 14.8174,
+    "lng": 120.9581,
+    "confidence": "high",
+    "display": "Bagbaguin, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553184",
+    "at": "2026-10-11T15:27:27.193Z"
+  },
+  "santa maria|balasing": {
+    "lat": 14.8498,
+    "lng": 121.0027,
+    "confidence": "high",
+    "display": "Balasing, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553185",
+    "at": "2026-10-11T15:27:29.047Z"
+  },
+  "santa maria|buenavista": {
+    "lat": 14.7964,
+    "lng": 120.9819,
+    "confidence": "high",
+    "display": "Buenavista, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553186",
+    "at": "2026-10-11T15:27:30.991Z"
+  },
+  "santa maria|bulac": {
+    "lat": 14.8381,
+    "lng": 121.0226,
+    "confidence": "high",
+    "display": "Bulac, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553187",
+    "at": "2026-10-11T15:27:32.483Z"
+  },
+  "santa maria|camangyanan": {
+    "lat": 14.7973,
+    "lng": 120.9711,
+    "confidence": "high",
+    "display": "Camangyanan, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553188",
+    "at": "2026-10-11T15:27:34.434Z"
+  },
+  "santa maria|catmon": {
+    "lat": 14.8296,
+    "lng": 121.0041,
+    "confidence": "high",
+    "display": "Catmon, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553189",
+    "at": "2026-10-11T15:27:35.944Z"
+  },
+  "santa maria|cay pombo": {
+    "lat": 14.8525,
+    "lng": 120.9775,
+    "confidence": "high",
+    "display": "Cay Pombo, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553190",
+    "at": "2026-10-11T15:27:37.785Z"
+  },
+  "santa maria|caysio": {
+    "lat": 14.8442,
+    "lng": 120.9683,
+    "confidence": "high",
+    "display": "Caysio, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553191",
+    "at": "2026-10-11T15:27:39.220Z"
+  },
+  "santa maria|guyong": {
+    "lat": 14.8364,
+    "lng": 120.9766,
+    "confidence": "high",
+    "display": "Guyong, Santa Maria, Bulacan, Central Luzon, 3022, Philippines",
+    "osm": "relation/19553192",
+    "at": "2026-10-11T15:27:41.184Z"
+  },
+  "santa maria|lalakhan": {
+    "lat": 14.8149,
+    "lng": 120.9465,
+    "confidence": "high",
+    "display": "Lalakhan, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19553193",
+    "at": "2026-10-11T15:27:42.646Z"
+  },
+  "santa maria|mag-asawang sapa": {
+    "lat": 14.8786,
+    "lng": 120.9831,
+    "confidence": "high",
+    "display": "Mag-asawang Sapa, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556048",
+    "at": "2026-10-11T15:27:44.092Z"
+  },
+  "santa maria|mahabang parang": {
+    "lat": 14.7904,
+    "lng": 120.9625,
+    "confidence": "high",
+    "display": "Mahabang Parang, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556049",
+    "at": "2026-10-11T15:27:46.129Z"
+  },
+  "santa maria|manggahan": {
+    "lat": 14.8521,
+    "lng": 120.957,
+    "confidence": "high",
+    "display": "Manggahan, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19532883",
+    "at": "2026-10-11T15:27:48.080Z"
+  },
+  "santa maria|parada": {
+    "lat": 14.8108,
+    "lng": 120.9856,
+    "confidence": "high",
+    "display": "Parada, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556050",
+    "at": "2026-10-11T15:27:50.228Z"
+  },
+  "santa maria|poblacion": {
+    "lat": 14.8198,
+    "lng": 120.9626,
+    "confidence": "high",
+    "display": "Poblacion, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556051",
+    "at": "2026-10-11T15:27:52.269Z"
+  },
+  "santa maria|pulong buhangin": {
+    "lat": 14.865,
+    "lng": 120.9956,
+    "confidence": "high",
+    "display": "Pulong Buhangin, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556052",
+    "at": "2026-10-11T15:27:54.323Z"
+  },
+  "santa maria|san gabriel": {
+    "lat": 14.8056,
+    "lng": 120.9589,
+    "confidence": "high",
+    "display": "San Gabriel, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556053",
+    "at": "2026-10-11T15:27:56.170Z"
+  },
+  "santa maria|san jose patag": {
+    "lat": 14.8263,
+    "lng": 120.9808,
+    "confidence": "high",
+    "display": "San Jose Patag, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556054",
+    "at": "2026-10-11T15:27:58.004Z"
+  },
+  "santa maria|san vicente": {
+    "lat": 14.807,
+    "lng": 121.0039,
+    "confidence": "high",
+    "display": "San Vicente, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556055",
+    "at": "2026-10-11T15:27:59.839Z"
+  },
+  "santa maria|silangan": {
+    "lat": 14.8871,
+    "lng": 120.9876,
+    "confidence": "high",
+    "display": "Silangan, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556058",
+    "at": "2026-10-11T15:28:01.268Z"
+  },
+  "santa maria|tabing bakod": {
+    "lat": 14.8017,
+    "lng": 120.954,
+    "confidence": "high",
+    "display": "Tabing Bakod, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556059",
+    "at": "2026-10-11T15:28:07.392Z"
+  },
+  "santa maria|tumana": {
+    "lat": 14.8125,
+    "lng": 120.9731,
+    "confidence": "high",
+    "display": "Tumana, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556060",
+    "at": "2026-10-11T15:28:08.878Z"
+  },
+  "dona remedios trinidad|bayabas": {
+    "lat": 14.9561,
+    "lng": 121.0912,
+    "confidence": "high",
+    "display": "Bayabas, Doña Remedios Trinidad, Bulacan, Central Luzon, Philippines",
+    "osm": "node/8723752003",
+    "at": "2026-10-11T15:29:12.897Z"
+  },
+  "dona remedios trinidad|camachile": {
+    "lat": 14.9806,
+    "lng": 121.0718,
+    "confidence": "high",
+    "display": "Camachile, Doña Remedios Trinidad, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1541844979",
+    "at": "2026-10-11T15:29:14.349Z"
+  },
+  "dona remedios trinidad|camachin": {
+    "lat": 15.0691,
+    "lng": 121.1225,
+    "confidence": "high",
+    "display": "Camachin, Doña Remedios Trinidad, Bulacan, Central Luzon, 3009, Philippines",
+    "osm": "node/11380096107",
+    "at": "2026-10-11T15:29:16.099Z"
+  },
+  "dona remedios trinidad|kalawakan": {
+    "lat": 15.1296,
+    "lng": 121.1044,
+    "confidence": "high",
+    "display": "Kalawakan, Doña Remedios Trinidad, Bulacan, Central Luzon, Philippines",
+    "osm": "node/12016317447",
+    "at": "2026-10-11T15:29:19.101Z"
+  },
+  "dona remedios trinidad|talbak": {
+    "lat": 15.0892,
+    "lng": 121.0941,
+    "confidence": "high",
+    "display": "Talbak, Doña Remedios Trinidad, Bulacan, Central Luzon, Philippines",
+    "osm": "node/9323199855",
+    "at": "2026-10-11T15:29:24.638Z"
+  },
+  "santa maria|sta. clara": {
+    "lat": 14.8227,
+    "lng": 120.9506,
+    "confidence": "medium",
+    "display": "Santa Clara, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556056",
+    "alias": "Santa Clara = Sta. Clara",
+    "at": "2026-10-11T15:31:16.717Z"
+  },
+  "santa maria|sta. cruz": {
+    "lat": 14.8417,
+    "lng": 120.9566,
+    "confidence": "medium",
+    "display": "Santa Cruz, Santa Maria, Bulacan, Central Luzon, Philippines",
+    "osm": "relation/19556057",
+    "alias": "Santa Cruz = Sta. Cruz",
+    "at": "2026-10-11T15:31:19.796Z"
+  },
+  "malolos|atlag": {
+    "lat": 14.8297,
+    "lng": 120.8211,
+    "confidence": "high",
+    "display": "Atlag, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/2500250494",
+    "at": "2026-10-11T15:31:21.840Z"
+  },
+  "malolos|babatnin": {
+    "lat": 14.7819,
+    "lng": 120.8171,
+    "confidence": "high",
+    "display": "Babatnin, Malolos, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/7590793826",
+    "at": "2026-10-11T15:31:23.897Z"
+  },
+  "malolos|bagna": {
+    "lat": 14.8265,
+    "lng": 120.8233,
+    "confidence": "high",
+    "display": "Bagna, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/3074774008",
+    "at": "2026-10-11T15:31:25.423Z"
+  },
+  "malolos|bagong bayan": {
+    "lat": 14.8391,
+    "lng": 120.8352,
+    "confidence": "high",
+    "display": "Bagong Bayan, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074812245",
+    "at": "2026-10-11T15:31:27.463Z"
+  },
+  "malolos|balayong": {
+    "lat": 14.8286,
+    "lng": 120.8291,
+    "confidence": "high",
+    "display": "Balayong, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/3074831928",
+    "at": "2026-10-11T15:31:29.448Z"
+  },
+  "malolos|balite": {
+    "lat": 14.8295,
+    "lng": 120.8367,
+    "confidence": "high",
+    "display": "Balite, Niugan, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074831927",
+    "at": "2026-10-11T15:31:31.253Z"
+  },
+  "malolos|bangkal": {
+    "lat": 14.8236,
+    "lng": 120.8488,
+    "confidence": "high",
+    "display": "Bangkal, Niugan, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074864906",
+    "at": "2026-10-11T15:31:33.093Z"
+  },
+  "malolos|barihan": {
+    "lat": 14.8799,
+    "lng": 120.8319,
+    "confidence": "high",
+    "display": "Barihan, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074806889",
+    "at": "2026-10-11T15:31:34.836Z"
+  },
+  "malolos|bungahan": {
+    "lat": 14.8613,
+    "lng": 120.843,
+    "confidence": "high",
+    "display": "Bungahan, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074806890",
+    "at": "2026-10-11T15:31:36.309Z"
+  },
+  "malolos|caingin": {
+    "lat": 14.8449,
+    "lng": 120.809,
+    "confidence": "high",
+    "display": "Caingin, Calero, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074760828",
+    "at": "2026-10-11T15:31:37.818Z"
+  },
+  "malolos|calero": {
+    "lat": 14.8308,
+    "lng": 120.8097,
+    "confidence": "high",
+    "display": "Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/13185291614",
+    "at": "2026-10-11T15:31:39.772Z"
+  },
+  "malolos|caliligawan": {
+    "lat": 14.7707,
+    "lng": 120.8083,
+    "confidence": "high",
+    "display": "Caliligawan, Malolos, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/7590730683",
+    "at": "2026-10-11T15:31:41.341Z"
+  },
+  "malolos|canalate": {
+    "lat": 14.8409,
+    "lng": 120.8027,
+    "confidence": "high",
+    "display": "Canalate, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/9430467633",
+    "at": "2026-10-11T15:31:42.865Z"
+  },
+  "malolos|caniogan": {
+    "lat": 14.8461,
+    "lng": 120.8182,
+    "confidence": "high",
+    "display": "Caniogan, Calero, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074774013",
+    "at": "2026-10-11T15:31:44.326Z"
+  },
+  "malolos|catmon": {
+    "lat": 14.8513,
+    "lng": 120.814,
+    "confidence": "high",
+    "display": "Catmon, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074780976",
+    "at": "2026-10-11T15:31:45.746Z"
+  },
+  "malolos|cofradia": {
+    "lat": 14.8431,
+    "lng": 120.8331,
+    "confidence": "high",
+    "display": "Cofradia, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074774015",
+    "at": "2026-10-11T15:31:47.582Z"
+  },
+  "malolos|dakila": {
+    "lat": 14.8509,
+    "lng": 120.836,
+    "confidence": "high",
+    "display": "Dakila, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074812247",
+    "at": "2026-10-11T15:31:49.322Z"
+  },
+  "malolos|guinhawa": {
+    "lat": 14.855,
+    "lng": 120.817,
+    "confidence": "high",
+    "display": "Guinhawa, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074760829",
+    "at": "2026-10-11T15:31:51.373Z"
+  },
+  "malolos|liang": {
+    "lat": 14.8464,
+    "lng": 120.8142,
+    "confidence": "high",
+    "display": "Liang, Calero, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074774012",
+    "at": "2026-10-11T15:31:53.419Z"
+  },
+  "malolos|ligas": {
+    "lat": 14.8628,
+    "lng": 120.8511,
+    "confidence": "high",
+    "display": "Ligas, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074806891",
+    "at": "2026-10-11T15:31:55.360Z"
+  },
+  "malolos|longos": {
+    "lat": 14.873,
+    "lng": 120.7921,
+    "confidence": "high",
+    "display": "Longos, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074760824",
+    "at": "2026-10-11T15:31:57.187Z"
+  },
+  "malolos|look 1st": {
+    "lat": 14.8841,
+    "lng": 120.8108,
+    "confidence": "high",
+    "display": "Look 1st, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074806886",
+    "at": "2026-10-11T15:31:58.650Z"
+  },
+  "malolos|look 2nd": {
+    "lat": 14.8221,
+    "lng": 120.8612,
+    "confidence": "high",
+    "display": "Look 2nd, Niugan, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074864908",
+    "at": "2026-10-11T15:32:00.586Z"
+  },
+  "malolos|lugam": {
+    "lat": 14.8823,
+    "lng": 120.8187,
+    "confidence": "high",
+    "display": "Lugam, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074786291",
+    "at": "2026-10-11T15:32:02.012Z"
+  },
+  "malolos|mabolo": {
+    "lat": 14.8424,
+    "lng": 120.8266,
+    "confidence": "high",
+    "display": "Mabolo, Calero, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/13571935648",
+    "at": "2026-10-11T15:32:03.529Z"
+  },
+  "malolos|mambog": {
+    "lat": 14.81,
+    "lng": 120.85,
+    "confidence": "high",
+    "display": "Mambog, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074774010",
+    "at": "2026-10-11T15:32:05.274Z"
+  },
+  "malolos|masile": {
+    "lat": 14.7848,
+    "lng": 120.8106,
+    "confidence": "high",
+    "display": "Masile, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/9130915469",
+    "at": "2026-10-11T15:32:06.688Z"
+  },
+  "malolos|matimbo": {
+    "lat": 14.8164,
+    "lng": 120.8375,
+    "confidence": "high",
+    "display": "Matimbo, Mambog, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/3074774009",
+    "at": "2026-10-11T15:32:08.429Z"
+  },
+  "malolos|mojon": {
+    "lat": 14.8672,
+    "lng": 120.8211,
+    "confidence": "high",
+    "display": "Mojon, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074786289",
+    "at": "2026-10-11T15:32:10.488Z"
+  },
+  "malolos|namayan": {
+    "lat": 14.7763,
+    "lng": 120.8111,
+    "confidence": "high",
+    "display": "Namayan, Malolos, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/13571935647",
+    "at": "2026-10-11T15:32:11.917Z"
+  },
+  "malolos|niugan": {
+    "lat": 14.8197,
+    "lng": 120.8547,
+    "confidence": "high",
+    "display": "Niugan, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074864905",
+    "at": "2026-10-11T15:32:13.491Z"
+  },
+  "malolos|pamarawan": {
+    "lat": 14.7607,
+    "lng": 120.8135,
+    "confidence": "high",
+    "display": "Pamarawan, Malolos, Bulacan, Central Luzon, 3002, Philippines",
+    "osm": "node/3104801556",
+    "at": "2026-10-11T15:32:15.220Z"
+  },
+  "malolos|panasahan": {
+    "lat": 14.8225,
+    "lng": 120.8272,
+    "confidence": "high",
+    "display": "Panasahan, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/13571935646",
+    "at": "2026-10-11T15:32:17.213Z"
+  },
+  "malolos|pinagbakahan": {
+    "lat": 14.8716,
+    "lng": 120.8216,
+    "confidence": "high",
+    "display": "Pinagbakahan, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074786290",
+    "at": "2026-10-11T15:32:18.755Z"
+  },
+  "malolos|san agustin": {
+    "lat": 14.8459,
+    "lng": 120.811,
+    "confidence": "high",
+    "display": "San Agustin, Calero, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/9432340070",
+    "at": "2026-10-11T15:32:20.608Z"
+  },
+  "malolos|san gabriel": {
+    "lat": 14.8476,
+    "lng": 120.8126,
+    "confidence": "high",
+    "display": "San Gabriel, Calero, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074774011",
+    "at": "2026-10-11T15:32:22.577Z"
+  },
+  "malolos|san juan": {
+    "lat": 14.8351,
+    "lng": 120.8161,
+    "confidence": "high",
+    "display": "San Juan, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/2500250495",
+    "at": "2026-10-11T15:32:24.538Z"
+  },
+  "malolos|san pablo": {
+    "lat": 14.8431,
+    "lng": 120.8459,
+    "confidence": "high",
+    "display": "San Pablo, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074812246",
+    "at": "2026-10-11T15:32:26.709Z"
+  },
+  "malolos|santiago": {
+    "lat": 14.8424,
+    "lng": 120.8069,
+    "confidence": "high",
+    "display": "Santiago, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/3074774019",
+    "at": "2026-10-11T15:32:28.768Z"
+  },
+  "malolos|santisima trinidad": {
+    "lat": 14.8755,
+    "lng": 120.8257,
+    "confidence": "high",
+    "display": "Santisima Trinidad, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074786292",
+    "at": "2026-10-11T15:32:30.212Z"
+  },
+  "malolos|santo cristo": {
+    "lat": 14.8319,
+    "lng": 120.8188,
+    "confidence": "high",
+    "display": "Santo Cristo, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/2500250496",
+    "at": "2026-10-11T15:32:31.803Z"
+  },
+  "malolos|santo rosario (pob.)": {
+    "lat": 14.8405,
+    "lng": 120.8122,
+    "confidence": "high",
+    "display": "Santo Rosario, Calero, Malolos, Bulacan, Central Luzon, 3001, Philippines",
+    "osm": "node/3074774017",
+    "at": "2026-10-11T15:32:35.887Z"
+  },
+  "malolos|santor": {
+    "lat": 14.8325,
+    "lng": 120.8549,
+    "confidence": "high",
+    "display": "Santor, Niugan, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074864909",
+    "at": "2026-10-11T15:32:37.428Z"
+  },
+  "malolos|sumapang bata": {
+    "lat": 14.8586,
+    "lng": 120.8342,
+    "confidence": "high",
+    "display": "Sumapang Bata, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074786288",
+    "at": "2026-10-11T15:32:39.462Z"
+  },
+  "malolos|sumapang matanda": {
+    "lat": 14.8574,
+    "lng": 120.8275,
+    "confidence": "high",
+    "display": "Sumapang Matanda, Malolos, Bulacan, Central Luzon, 3000, Philippines",
+    "osm": "node/3074786287",
+    "at": "2026-10-11T15:32:41.300Z"
+  },
+  "malolos|taal": {
+    "lat": 14.8139,
+    "lng": 120.8542,
+    "confidence": "high",
+    "display": "Taal, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074864904",
+    "at": "2026-10-11T15:32:43.494Z"
+  },
+  "malolos|tikay": {
+    "lat": 14.8424,
+    "lng": 120.8532,
+    "confidence": "high",
+    "display": "Tikay, Malolos, Bulacan, Central Luzon, 3015, Philippines",
+    "osm": "node/3074812244",
+    "at": "2026-10-11T15:32:45.232Z"
+  },
+  "dona remedios trinidad|sapang bulak": {
+    "lat": 15.0204,
+    "lng": 121.101,
+    "confidence": "medium",
+    "display": "Sapang Bulac, Doña Remedios Trinidad, Bulacan, Central Luzon, 3009, Philippines",
+    "osm": "node/12201859765",
+    "alias": "Sapang Bulac = Sapang Bulak",
+    "at": "2026-10-11T15:33:44.522Z"
+  },
+  "dona remedios trinidad|pulong sampalok": {
+    "lat": 14.9615,
+    "lng": 121.0611,
+    "confidence": "medium",
+    "display": "Pulong Sampaloc, Doña Remedios Trinidad, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1541844999",
+    "alias": "Pulong Sampaloc = Pulong Sampalok",
+    "at": "2026-10-11T15:35:09.068Z"
+  },
+  "san jose del monte|assumption": {
+    "lat": 14.8628,
+    "lng": 121.0638,
+    "confidence": "high",
+    "display": "Assumption, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698231",
+    "at": "2026-10-11T15:35:11.066Z"
+  },
+  "san jose del monte|bagong buhay i": {
+    "lat": 14.8558,
+    "lng": 121.0587,
+    "confidence": "high",
+    "display": "Bagong Buhay I, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698230",
+    "at": "2026-10-11T15:35:12.584Z"
+  },
+  "san jose del monte|bagong buhay ii": {
+    "lat": 14.859,
+    "lng": 121.0588,
+    "confidence": "high",
+    "display": "Bagong Buhay II, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698220",
+    "at": "2026-10-11T15:35:14.535Z"
+  },
+  "san jose del monte|bagong buhay iii": {
+    "lat": 14.8543,
+    "lng": 121.0628,
+    "confidence": "high",
+    "display": "Bagong Buhay III, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698219",
+    "at": "2026-10-11T15:35:16.578Z"
+  },
+  "san jose del monte|citrus": {
+    "lat": 14.8492,
+    "lng": 121.0647,
+    "confidence": "high",
+    "display": "Citrus, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698226",
+    "at": "2026-10-11T15:35:18.085Z"
+  },
+  "san jose del monte|ciudad real": {
+    "lat": 14.7705,
+    "lng": 121.0923,
+    "confidence": "high",
+    "display": "Ciudad Real, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12008993211",
+    "at": "2026-10-11T15:35:19.768Z"
+  },
+  "san jose del monte|dulong bayan": {
+    "lat": 14.8268,
+    "lng": 121.0447,
+    "confidence": "high",
+    "display": "Dulong Bayan, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/340371616",
+    "at": "2026-10-11T15:35:21.636Z"
+  },
+  "san jose del monte|fatima i": {
+    "lat": 14.8467,
+    "lng": 121.045,
+    "confidence": "high",
+    "display": "Fatima I, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698224",
+    "at": "2026-10-11T15:35:23.776Z"
+  },
+  "san jose del monte|fatima ii": {
+    "lat": 14.8433,
+    "lng": 121.044,
+    "confidence": "high",
+    "display": "Fatima II, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698218",
+    "at": "2026-10-11T15:35:25.918Z"
+  },
+  "san jose del monte|fatima iii": {
+    "lat": 14.8453,
+    "lng": 121.0454,
+    "confidence": "high",
+    "display": "Fatima III, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698217",
+    "at": "2026-10-11T15:35:27.864Z"
+  },
+  "san jose del monte|fatima iv": {
+    "lat": 14.8435,
+    "lng": 121.0465,
+    "confidence": "high",
+    "display": "Fatima IV, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698216",
+    "at": "2026-10-11T15:35:29.624Z"
+  },
+  "san jose del monte|fatima v": {
+    "lat": 14.8477,
+    "lng": 121.0508,
+    "confidence": "high",
+    "display": "Fatima V, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698215",
+    "at": "2026-10-11T15:35:31.221Z"
+  },
+  "san jose del monte|gaya-gaya": {
+    "lat": 14.795,
+    "lng": 121.0523,
+    "confidence": "high",
+    "display": "Gaya-gaya, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/8261030271",
+    "at": "2026-10-11T15:35:40.255Z"
+  },
+  "san jose del monte|graceville": {
+    "lat": 14.7874,
+    "lng": 121.0608,
+    "confidence": "high",
+    "display": "Graceville, Gaya-gaya, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12246698214",
+    "at": "2026-10-11T15:35:42.204Z"
+  },
+  "san jose del monte|gumaoc central": {
+    "lat": 14.8002,
+    "lng": 121.0659,
+    "confidence": "high",
+    "display": "Gumaoc Central, Gumaoc, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/339264123",
+    "at": "2026-10-11T15:35:43.942Z"
+  },
+  "san jose del monte|gumaoc east": {
+    "lat": 14.7993,
+    "lng": 121.0678,
+    "confidence": "high",
+    "display": "Gumaoc East, Gumaoc, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12246698213",
+    "at": "2026-10-11T15:35:45.681Z"
+  },
+  "san jose del monte|gumaoc west": {
+    "lat": 14.7997,
+    "lng": 121.0604,
+    "confidence": "high",
+    "display": "Gumaoc West, Gumaoc, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12246698212",
+    "at": "2026-10-11T15:35:47.721Z"
+  },
+  "san jose del monte|kaybanban": {
+    "lat": 14.8142,
+    "lng": 121.0959,
+    "confidence": "high",
+    "display": "Kaybanban, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12246698229",
+    "at": "2026-10-11T15:35:49.560Z"
+  },
+  "san jose del monte|kaypian": {
+    "lat": 14.8216,
+    "lng": 121.0626,
+    "confidence": "high",
+    "display": "Kaypian, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12009135764",
+    "at": "2026-10-11T15:35:51.605Z"
+  },
+  "san jose del monte|lawang pari": {
+    "lat": 14.8582,
+    "lng": 121.0711,
+    "confidence": "high",
+    "display": "Lawang Pari, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698211",
+    "at": "2026-10-11T15:35:53.450Z"
+  },
+  "san jose del monte|maharlika": {
+    "lat": 14.7952,
+    "lng": 121.0722,
+    "confidence": "high",
+    "display": "Maharlika, Tungkong Mangga, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12246698210",
+    "at": "2026-10-11T15:35:55.590Z"
+  },
+  "san jose del monte|minuyan i": {
+    "lat": 14.8508,
+    "lng": 121.0798,
+    "confidence": "high",
+    "display": "Minuyan I, Minuyan Proper, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698228",
+    "at": "2026-10-11T15:35:57.099Z"
+  },
+  "san jose del monte|minuyan ii": {
+    "lat": 14.8432,
+    "lng": 121.0756,
+    "confidence": "high",
+    "display": "Minuyan II, Minuyan Proper, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698209",
+    "at": "2026-10-11T15:35:58.934Z"
+  },
+  "san jose del monte|minuyan iii": {
+    "lat": 14.8465,
+    "lng": 121.0718,
+    "confidence": "high",
+    "display": "Minuyan III, Minuyan Proper, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698208",
+    "at": "2026-10-11T15:36:00.363Z"
+  },
+  "san jose del monte|minuyan iv": {
+    "lat": 14.8466,
+    "lng": 121.0743,
+    "confidence": "high",
+    "display": "Minuyan IV, Minuyan Proper, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698207",
+    "at": "2026-10-11T15:36:02.399Z"
+  },
+  "san jose del monte|minuyan proper": {
+    "lat": 14.8428,
+    "lng": 121.0786,
+    "confidence": "high",
+    "display": "Minuyan Proper, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698205",
+    "at": "2026-10-11T15:36:04.349Z"
+  },
+  "san jose del monte|minuyan v": {
+    "lat": 14.8513,
+    "lng": 121.0746,
+    "confidence": "high",
+    "display": "Minuyan V, Minuyan Proper, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698206",
+    "at": "2026-10-11T15:36:06.081Z"
+  },
+  "san jose del monte|muzon": {
+    "lat": 14.8019,
+    "lng": 121.0347,
+    "confidence": "high",
+    "display": "Muzon, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12247358711",
+    "at": "2026-10-11T15:36:08.034Z"
+  },
+  "san jose del monte|paradise iii": {
+    "lat": 14.8236,
+    "lng": 121.1146,
+    "confidence": "high",
+    "display": "Paradise III, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12006744502",
+    "at": "2026-10-11T15:36:10.191Z"
+  },
+  "san jose del monte|poblacion i": {
+    "lat": 14.8088,
+    "lng": 121.0456,
+    "confidence": "high",
+    "display": "Poblacion I, Muzon, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12246698204",
+    "at": "2026-10-11T15:36:11.695Z"
+  },
+  "san jose del monte|san isidro": {
+    "lat": 14.8235,
+    "lng": 121.1324,
+    "confidence": "high",
+    "display": "San Isidro, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12006744503",
+    "at": "2026-10-11T15:36:13.839Z"
+  },
+  "san jose del monte|san manuel": {
+    "lat": 14.7817,
+    "lng": 121.0685,
+    "confidence": "high",
+    "display": "San Manuel, Tungkong Mangga, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12246698203",
+    "at": "2026-10-11T15:36:15.778Z"
+  },
+  "san jose del monte|san martin de porres": {
+    "lat": 14.859,
+    "lng": 121.0662,
+    "confidence": "high",
+    "display": "San Martin de Porres, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12010265228",
+    "at": "2026-10-11T15:36:17.737Z"
+  },
+  "san jose del monte|san martin i": {
+    "lat": 14.8631,
+    "lng": 121.0585,
+    "confidence": "high",
+    "display": "San Martin I, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/9604672058",
+    "at": "2026-10-11T15:36:19.769Z"
+  },
+  "san jose del monte|san martin ii": {
+    "lat": 14.8623,
+    "lng": 121.0556,
+    "confidence": "high",
+    "display": "San Martin II, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/9604640841",
+    "at": "2026-10-11T15:36:21.312Z"
+  },
+  "san jose del monte|san martin iii": {
+    "lat": 14.8615,
+    "lng": 121.0552,
+    "confidence": "high",
+    "display": "San Martin III, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698202",
+    "at": "2026-10-11T15:36:22.844Z"
+  },
+  "san jose del monte|san martin iv": {
+    "lat": 14.8607,
+    "lng": 121.0532,
+    "confidence": "high",
+    "display": "San Martin IV, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698201",
+    "at": "2026-10-11T15:36:24.900Z"
+  },
+  "san jose del monte|san pedro": {
+    "lat": 14.8461,
+    "lng": 121.0559,
+    "confidence": "high",
+    "display": "San Pedro, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698223",
+    "at": "2026-10-11T15:36:26.921Z"
+  },
+  "san jose del monte|san rafael i": {
+    "lat": 14.8531,
+    "lng": 121.0446,
+    "confidence": "high",
+    "display": "San Rafael I, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625800",
+    "at": "2026-10-11T15:36:28.889Z"
+  },
+  "san jose del monte|san rafael ii": {
+    "lat": 14.8545,
+    "lng": 121.0459,
+    "confidence": "high",
+    "display": "San Rafael II, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698222",
+    "at": "2026-10-11T15:36:31.038Z"
+  },
+  "san jose del monte|san rafael iii": {
+    "lat": 14.8538,
+    "lng": 121.0444,
+    "confidence": "high",
+    "display": "San Rafael III, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625799",
+    "at": "2026-10-11T15:36:32.910Z"
+  },
+  "san jose del monte|san rafael iv": {
+    "lat": 14.8545,
+    "lng": 121.0443,
+    "confidence": "high",
+    "display": "San Rafael IV, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625798",
+    "at": "2026-10-11T15:36:34.962Z"
+  },
+  "san jose del monte|san rafael v": {
+    "lat": 14.8499,
+    "lng": 121.045,
+    "confidence": "high",
+    "display": "San Rafael V, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12247358712",
+    "at": "2026-10-11T15:36:36.506Z"
+  },
+  "san jose del monte|san roque": {
+    "lat": 14.8174,
+    "lng": 121.1026,
+    "confidence": "high",
+    "display": "San Roque, Kaybanban, San Jose del Monte, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "relation/19780890",
+    "at": "2026-10-11T15:36:38.552Z"
+  },
+  "san jose del monte|santa cruz i": {
+    "lat": 14.8521,
+    "lng": 121.0527,
+    "confidence": "high",
+    "display": "Santa Cruz I, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698225",
+    "at": "2026-10-11T15:36:40.113Z"
+  },
+  "san jose del monte|santa cruz ii": {
+    "lat": 14.8544,
+    "lng": 121.0517,
+    "confidence": "high",
+    "display": "Santa Cruz II, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625796",
+    "at": "2026-10-11T15:36:42.608Z"
+  },
+  "san jose del monte|santa cruz iii": {
+    "lat": 14.8557,
+    "lng": 121.0521,
+    "confidence": "high",
+    "display": "Santa Cruz III, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625795",
+    "at": "2026-10-11T15:36:44.216Z"
+  },
+  "san jose del monte|santa cruz iv": {
+    "lat": 14.8578,
+    "lng": 121.0508,
+    "confidence": "high",
+    "display": "Santa Cruz IV, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625794",
+    "at": "2026-10-11T15:36:45.775Z"
+  },
+  "san jose del monte|santa cruz v": {
+    "lat": 14.8567,
+    "lng": 121.0477,
+    "confidence": "high",
+    "display": "Santa Cruz V, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/8570270014",
+    "at": "2026-10-11T15:36:47.840Z"
+  },
+  "san jose del monte|santo cristo": {
+    "lat": 14.8253,
+    "lng": 121.0789,
+    "confidence": "high",
+    "display": "Santo Cristo, Kaybanban, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/4294667672",
+    "at": "2026-10-11T15:36:49.999Z"
+  },
+  "san jose del monte|santo nino i": {
+    "lat": 14.862,
+    "lng": 121.0642,
+    "confidence": "high",
+    "display": "Santo Niño I, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246698221",
+    "at": "2026-10-11T15:36:51.623Z"
+  },
+  "san jose del monte|santo nino ii": {
+    "lat": 14.8583,
+    "lng": 121.0632,
+    "confidence": "high",
+    "display": "Santo Niño II, Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625793",
+    "at": "2026-10-11T15:36:54.171Z"
+  },
+  "san jose del monte|sapang palay": {
+    "lat": 14.8573,
+    "lng": 121.0558,
+    "confidence": "high",
+    "display": "Sapang Palay, San Jose del Monte, Bulacan, Central Luzon, 3024, Philippines",
+    "osm": "node/12246625792",
+    "at": "2026-10-11T15:36:56.256Z"
+  },
+  "san jose del monte|tungkong mangga": {
+    "lat": 14.7891,
+    "lng": 121.0747,
+    "confidence": "high",
+    "display": "Tungkong Mangga, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/3190448280",
+    "at": "2026-10-11T15:36:58.363Z"
+  },
+  "san jose del monte|francisco homes-guijo": {
+    "lat": 14.8143,
+    "lng": 121.0598,
+    "confidence": "high",
+    "display": "Francisco Homes–Guijo, Kaypian, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/12009133385",
+    "at": "2026-10-11T15:37:36.850Z"
+  },
+  "san jose del monte|francisco homes-mulawin": {
+    "lat": 14.8064,
+    "lng": 121.067,
+    "confidence": "medium",
+    "display": "Mulawin, Gumaoc, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/1479909711",
+    "alias": "Mulawin = Francisco Homes-Mulawin",
+    "at": "2026-10-11T15:38:14.153Z"
+  },
+  "san jose del monte|francisco homes-narra": {
+    "lat": 14.8086,
+    "lng": 121.0569,
+    "confidence": "medium",
+    "display": "Narra, Gumaoc, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/10613136703",
+    "alias": "Narra = Francisco Homes-Narra",
+    "at": "2026-10-11T15:38:15.449Z"
+  },
+  "san jose del monte|francisco homes-yakal": {
+    "lat": 14.8075,
+    "lng": 121.0544,
+    "confidence": "medium",
+    "display": "Yakal, Gumaoc, San Jose del Monte, Capital District, Bulacan, Central Luzon, 3023, Philippines",
+    "osm": "node/10613136704",
+    "alias": "Yakal = Francisco Homes-Yakal",
+    "at": "2026-10-11T15:38:16.694Z"
+  },
+  "san ildefonso|akle": {
+    "lat": 15.0497,
+    "lng": 121.0706,
+    "confidence": "high",
+    "display": "Akle, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20408127",
+    "at": "2026-10-11T15:38:19.214Z"
+  },
+  "san ildefonso|alagao": {
+    "lat": 15.0509,
+    "lng": 121.045,
+    "confidence": "high",
+    "display": "Alagao, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20408128",
+    "at": "2026-10-11T15:38:21.234Z"
+  },
+  "san ildefonso|anyatam": {
+    "lat": 15.1037,
+    "lng": 120.9442,
+    "confidence": "high",
+    "display": "Anyatam, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20408129",
+    "at": "2026-10-11T15:38:23.221Z"
+  },
+  "san ildefonso|bagong barrio": {
+    "lat": 15.0132,
+    "lng": 120.9887,
+    "confidence": "high",
+    "display": "Bagong Barrio, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20408236",
+    "at": "2026-10-11T15:38:25.284Z"
+  },
+  "san ildefonso|basuit": {
+    "lat": 15.0414,
+    "lng": 120.9913,
+    "confidence": "high",
+    "display": "Basuit, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20408237",
+    "at": "2026-10-11T15:38:27.252Z"
+  },
+  "san ildefonso|bubulong malaki": {
+    "lat": 15.0875,
+    "lng": 120.9937,
+    "confidence": "high",
+    "display": "Bubulong Malaki, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20412577",
+    "at": "2026-10-11T15:38:29.092Z"
+  },
+  "san ildefonso|bubulong munti": {
+    "lat": 15.0976,
+    "lng": 121.0135,
+    "confidence": "high",
+    "display": "Bubulong Munti, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20412576",
+    "at": "2026-10-11T15:38:30.626Z"
+  },
+  "san ildefonso|buhol na mangga": {
+    "lat": 15.1021,
+    "lng": 121.0472,
+    "confidence": "high",
+    "display": "Buhol na Mangga, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20412981",
+    "at": "2026-10-11T15:38:32.119Z"
+  },
+  "san ildefonso|bulusukan": {
+    "lat": 15.082,
+    "lng": 121.0175,
+    "confidence": "high",
+    "display": "Bulusukan, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20412982",
+    "at": "2026-10-11T15:38:34.177Z"
+  },
+  "san ildefonso|calasag": {
+    "lat": 15.0723,
+    "lng": 120.9284,
+    "confidence": "high",
+    "display": "Calasag, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20412983",
+    "at": "2026-10-11T15:38:35.655Z"
+  },
+  "san ildefonso|calawitan": {
+    "lat": 15.0743,
+    "lng": 120.9177,
+    "confidence": "high",
+    "display": "Calawitan, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20412984",
+    "at": "2026-10-11T15:38:37.160Z"
+  },
+  "san ildefonso|casalat": {
+    "lat": 15.0229,
+    "lng": 121.0548,
+    "confidence": "high",
+    "display": "Casalat, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20412985",
+    "at": "2026-10-11T15:38:38.652Z"
+  },
+  "san ildefonso|gabihan": {
+    "lat": 15.0501,
+    "lng": 121.0111,
+    "confidence": "high",
+    "display": "Gabihan, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20413086",
+    "at": "2026-10-11T15:38:40.184Z"
+  },
+  "san ildefonso|garlang": {
+    "lat": 15.112,
+    "lng": 120.9471,
+    "confidence": "high",
+    "display": "Garlang, Paliwasan, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20413087",
+    "at": "2026-10-11T15:38:41.675Z"
+  },
+  "san ildefonso|lapnit": {
+    "lat": 15.0781,
+    "lng": 120.9364,
+    "confidence": "high",
+    "display": "Lapnit, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20413171",
+    "at": "2026-10-11T15:38:43.512Z"
+  },
+  "san ildefonso|maasim": {
+    "lat": 15.0482,
+    "lng": 120.9368,
+    "confidence": "high",
+    "display": "Maasim, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415187",
+    "at": "2026-10-11T15:38:45.532Z"
+  },
+  "san ildefonso|makapilapil": {
+    "lat": 15.0891,
+    "lng": 120.9386,
+    "confidence": "high",
+    "display": "Makapilapil, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415188",
+    "at": "2026-10-11T15:38:47.064Z"
+  },
+  "san ildefonso|malipampang": {
+    "lat": 15.0575,
+    "lng": 120.9384,
+    "confidence": "high",
+    "display": "Malipampang, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415189",
+    "at": "2026-10-11T15:38:48.807Z"
+  },
+  "san ildefonso|mataas na parang": {
+    "lat": 15.088,
+    "lng": 120.9545,
+    "confidence": "high",
+    "display": "Mataas na Parang, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416130",
+    "at": "2026-10-11T15:38:50.299Z"
+  },
+  "san ildefonso|matimbubong": {
+    "lat": 15.0676,
+    "lng": 120.9449,
+    "confidence": "high",
+    "display": "Matimbubong, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415190",
+    "at": "2026-10-11T15:38:51.792Z"
+  },
+  "san ildefonso|nabaong garlang": {
+    "lat": 15.1061,
+    "lng": 120.9618,
+    "confidence": "high",
+    "display": "Nabaong Garlang, Paliwasan, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415191",
+    "at": "2026-10-11T15:38:53.288Z"
+  },
+  "san ildefonso|palapala": {
+    "lat": 15.0605,
+    "lng": 120.9817,
+    "confidence": "high",
+    "display": "Palapala, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415192",
+    "at": "2026-10-11T15:38:55.225Z"
+  },
+  "san ildefonso|pasong bangkal": {
+    "lat": 15.0138,
+    "lng": 121.0088,
+    "confidence": "high",
+    "display": "Pasong Bangkal, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415193",
+    "at": "2026-10-11T15:38:56.812Z"
+  },
+  "san ildefonso|pinaod": {
+    "lat": 15.0725,
+    "lng": 120.9611,
+    "confidence": "high",
+    "display": "Pinaod, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415194",
+    "at": "2026-10-11T15:38:58.691Z"
+  },
+  "san ildefonso|poblacion": {
+    "lat": 15.0776,
+    "lng": 120.9426,
+    "confidence": "high",
+    "display": "Poblacion, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415207",
+    "at": "2026-10-11T15:39:00.323Z"
+  },
+  "san ildefonso|pulong tamo": {
+    "lat": 15.0642,
+    "lng": 120.9079,
+    "confidence": "high",
+    "display": "Pulong Tamo, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20415208",
+    "at": "2026-10-11T15:39:02.268Z"
+  },
+  "san ildefonso|san juan": {
+    "lat": 15.0835,
+    "lng": 120.9377,
+    "confidence": "high",
+    "display": "San Juan, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416017",
+    "at": "2026-10-11T15:39:04.213Z"
+  },
+  "san ildefonso|santa catalina bata": {
+    "lat": 15.1001,
+    "lng": 120.9717,
+    "confidence": "high",
+    "display": "Santa Catalina Bata, Biclat, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416018",
+    "at": "2026-10-11T15:39:06.287Z"
+  },
+  "san ildefonso|santa catalina matanda": {
+    "lat": 15.0984,
+    "lng": 120.9802,
+    "confidence": "high",
+    "display": "Santa Catalina Matanda, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416019",
+    "at": "2026-10-11T15:39:07.882Z"
+  },
+  "san ildefonso|sapang dayap": {
+    "lat": 15.0358,
+    "lng": 121.0226,
+    "confidence": "high",
+    "display": "Sapang Dayap, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416020",
+    "at": "2026-10-11T15:39:09.436Z"
+  },
+  "san ildefonso|sapang putik": {
+    "lat": 15.0342,
+    "lng": 120.9621,
+    "confidence": "high",
+    "display": "Sapang Putik, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416021",
+    "at": "2026-10-11T15:39:11.385Z"
+  },
+  "san ildefonso|sapang putol": {
+    "lat": 15.0741,
+    "lng": 120.9425,
+    "confidence": "high",
+    "display": "Sapang Putol, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416022",
+    "at": "2026-10-11T15:39:13.366Z"
+  },
+  "san ildefonso|sumandig": {
+    "lat": 15.0762,
+    "lng": 120.983,
+    "confidence": "high",
+    "display": "Sumandig, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416023",
+    "at": "2026-10-11T15:39:14.845Z"
+  },
+  "san ildefonso|telepatio": {
+    "lat": 15.0544,
+    "lng": 120.9221,
+    "confidence": "high",
+    "display": "Telepatio, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416127",
+    "at": "2026-10-11T15:39:16.337Z"
+  },
+  "san ildefonso|umpucan": {
+    "lat": 15.071,
+    "lng": 121.0111,
+    "confidence": "high",
+    "display": "Umpucan, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416129",
+    "at": "2026-10-11T15:39:17.852Z"
+  },
+  "san ildefonso|upig": {
+    "lat": 15.0252,
+    "lng": 120.9918,
+    "confidence": "high",
+    "display": "Upig, San Ildefonso, Bulacan, Central Luzon, 3010, Philippines",
+    "osm": "relation/20416128",
+    "at": "2026-10-11T15:39:19.421Z"
+  },
+  "san miguel|bagong silang": {
+    "lat": 15.1703,
+    "lng": 120.9306,
+    "confidence": "high",
+    "display": "Bagong Silang, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "relation/20454220",
+    "at": "2026-10-11T15:39:40.558Z"
+  },
+  "san miguel|balaong": {
+    "lat": 15.1384,
+    "lng": 121.0255,
+    "confidence": "high",
+    "display": "Balaong, Masalipit, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "relation/20454221",
+    "at": "2026-10-11T15:39:42.098Z"
+  },
+  "san miguel|balite": {
+    "lat": 15.1742,
+    "lng": 120.9649,
+    "confidence": "high",
+    "display": "Balite, Sapang, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "relation/20454222",
+    "at": "2026-10-11T15:39:44.056Z"
+  },
+  "san miguel|bantog": {
+    "lat": 15.2102,
+    "lng": 120.9536,
+    "confidence": "high",
+    "display": "Bantog, Bulualto, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "relation/20454223",
+    "at": "2026-10-11T15:39:45.545Z"
+  },
+  "san miguel|biak-na-bato": {
+    "lat": 15.1093,
+    "lng": 121.069,
+    "confidence": "medium",
+    "display": "Biak na Bato, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/12016317450",
+    "alias": "Biak na Bato = Biak-na-Bato",
+    "at": "2026-10-11T15:39:54.160Z"
+  },
+  "san miguel|biclat": {
+    "lat": 15.1179,
+    "lng": 120.9842,
+    "confidence": "high",
+    "display": "Biclat, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/8530496147",
+    "at": "2026-10-11T15:39:56.108Z"
+  },
+  "san miguel|buga": {
+    "lat": 15.1896,
+    "lng": 120.9728,
+    "confidence": "high",
+    "display": "Buga, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139693200",
+    "at": "2026-10-11T15:39:57.958Z"
+  },
+  "san miguel|buliran": {
+    "lat": 15.1668,
+    "lng": 120.9943,
+    "confidence": "high",
+    "display": "Buliran, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139693194",
+    "at": "2026-10-11T15:39:59.417Z"
+  },
+  "san miguel|bulualto": {
+    "lat": 15.2201,
+    "lng": 120.9543,
+    "confidence": "high",
+    "display": "Bulualto, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/10998265470",
+    "at": "2026-10-11T15:40:01.475Z"
+  },
+  "san miguel|calumpang": {
+    "lat": 15.1805,
+    "lng": 121.0312,
+    "confidence": "high",
+    "display": "Calumpang, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/8914991354",
+    "at": "2026-10-11T15:40:03.027Z"
+  },
+  "san miguel|cambio": {
+    "lat": 15.1976,
+    "lng": 120.9669,
+    "confidence": "high",
+    "display": "Cambio, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6466582189",
+    "at": "2026-10-11T15:40:04.963Z"
+  },
+  "san miguel|camias": {
+    "lat": 15.1625,
+    "lng": 120.9713,
+    "confidence": "high",
+    "display": "Camias, Tigpalas, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139693197",
+    "at": "2026-10-11T15:40:07.007Z"
+  },
+  "san miguel|ilog-bulo": {
+    "lat": 15.1784,
+    "lng": 120.9516,
+    "confidence": "high",
+    "display": "Ilog-Bulo, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/9429888030",
+    "at": "2026-10-11T15:40:09.056Z"
+  },
+  "san miguel|king kabayo": {
+    "lat": 15.2169,
+    "lng": 120.9816,
+    "confidence": "high",
+    "display": "King Kabayo, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/8914991321",
+    "at": "2026-10-11T15:40:11.003Z"
+  },
+  "san miguel|lambakin": {
+    "lat": 15.2288,
+    "lng": 121.0267,
+    "confidence": "high",
+    "display": "Lambakin, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/8914991344",
+    "at": "2026-10-11T15:40:14.587Z"
+  },
+  "san miguel|malibay": {
+    "lat": 15.2279,
+    "lng": 121.0612,
+    "confidence": "high",
+    "display": "Malibay, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/1541996009",
+    "at": "2026-10-11T15:40:18.132Z"
+  },
+  "san miguel|masalipit": {
+    "lat": 15.1495,
+    "lng": 121.0365,
+    "confidence": "high",
+    "display": "Masalipit, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139692995",
+    "at": "2026-10-11T15:40:22.856Z"
+  },
+  "san miguel|paliwasan": {
+    "lat": 15.1187,
+    "lng": 120.9636,
+    "confidence": "high",
+    "display": "Paliwasan, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/2154519818",
+    "at": "2026-10-11T15:40:26.152Z"
+  },
+  "san miguel|partida": {
+    "lat": 15.2072,
+    "lng": 121.0202,
+    "confidence": "high",
+    "display": "Partida, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/2091748315",
+    "at": "2026-10-11T15:40:28.090Z"
+  },
+  "san miguel|pinambaran": {
+    "lat": 15.2035,
+    "lng": 120.9776,
+    "confidence": "high",
+    "display": "Pinambaran, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/7590750216",
+    "at": "2026-10-11T15:40:29.830Z"
+  },
+  "san miguel|poblacion": {
+    "lat": 15.1426,
+    "lng": 120.9764,
+    "confidence": "high",
+    "display": "Poblacion, Tigpalas, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/2057042257",
+    "at": "2026-10-11T15:40:31.908Z"
+  },
+  "san miguel|pulong bayabas": {
+    "lat": 15.1262,
+    "lng": 121.0122,
+    "confidence": "high",
+    "display": "Pulong Bayabas, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/8914952689",
+    "at": "2026-10-11T15:40:33.742Z"
+  },
+  "san miguel|pulong duhat": {
+    "lat": 15.2254,
+    "lng": 120.9731,
+    "confidence": "high",
+    "display": "Pulong Duhat, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/9429901898",
+    "at": "2026-10-11T15:40:35.895Z"
+  },
+  "san miguel|sacdalan": {
+    "lat": 15.204,
+    "lng": 120.9568,
+    "confidence": "high",
+    "display": "Sacdalan, Cambio, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/8914988009",
+    "at": "2026-10-11T15:40:37.977Z"
+  },
+  "san miguel|salacot": {
+    "lat": 15.1812,
+    "lng": 120.9606,
+    "confidence": "high",
+    "display": "Salacot, Ilog-Bulo, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/7590691570",
+    "at": "2026-10-11T15:40:39.483Z"
+  },
+  "san miguel|salangan": {
+    "lat": 15.1303,
+    "lng": 120.9586,
+    "confidence": "high",
+    "display": "Salangan, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/988688363",
+    "at": "2026-10-11T15:40:41.048Z"
+  },
+  "san miguel|san agustin": {
+    "lat": 15.1383,
+    "lng": 120.9617,
+    "confidence": "high",
+    "display": "San Agustin, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139693196",
+    "at": "2026-10-11T15:40:43.135Z"
+  },
+  "san miguel|san jose": {
+    "lat": 15.1477,
+    "lng": 120.9815,
+    "confidence": "high",
+    "display": "San Jose, Tigpalas, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/2057041962",
+    "at": "2026-10-11T15:40:44.714Z"
+  },
+  "san miguel|san juan": {
+    "lat": 15.1366,
+    "lng": 120.9763,
+    "confidence": "high",
+    "display": "San Juan, Santa Rita Bata, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/988688382",
+    "at": "2026-10-11T15:40:46.685Z"
+  },
+  "san miguel|san vicente": {
+    "lat": 15.1418,
+    "lng": 120.9689,
+    "confidence": "high",
+    "display": "San Vicente, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/2057041890",
+    "at": "2026-10-11T15:40:48.292Z"
+  },
+  "san miguel|santa ines": {
+    "lat": 15.1692,
+    "lng": 121.0125,
+    "confidence": "high",
+    "display": "Santa Ines, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/8914987993",
+    "at": "2026-10-11T15:40:49.883Z"
+  },
+  "san miguel|santa lucia": {
+    "lat": 15.2199,
+    "lng": 121.007,
+    "confidence": "high",
+    "display": "Santa Lucia, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/7979125902",
+    "at": "2026-10-11T15:40:52.086Z"
+  },
+  "san miguel|santa rita bata": {
+    "lat": 15.1354,
+    "lng": 120.9726,
+    "confidence": "high",
+    "display": "Santa Rita Bata, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/8914991371",
+    "at": "2026-10-11T15:40:53.564Z"
+  },
+  "san miguel|santa rita matanda": {
+    "lat": 15.133,
+    "lng": 120.9661,
+    "confidence": "high",
+    "display": "Santa Rita Matanda, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/8914987984",
+    "at": "2026-10-11T15:40:55.643Z"
+  },
+  "san miguel|sapang": {
+    "lat": 15.1795,
+    "lng": 120.9755,
+    "confidence": "high",
+    "display": "Sapang, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139693198",
+    "at": "2026-10-11T15:40:57.086Z"
+  },
+  "san miguel|sibul": {
+    "lat": 15.167,
+    "lng": 121.0608,
+    "confidence": "high",
+    "display": "Sibul, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "node/12016317448",
+    "at": "2026-10-11T15:40:59.052Z"
+  },
+  "san miguel|tartaro": {
+    "lat": 15.1661,
+    "lng": 121.04,
+    "confidence": "high",
+    "display": "Tartaro, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139693192",
+    "at": "2026-10-11T15:41:00.856Z"
+  },
+  "san miguel|tibagan": {
+    "lat": 15.132,
+    "lng": 120.9934,
+    "confidence": "high",
+    "display": "Tibagan, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/988688377",
+    "at": "2026-10-11T15:41:02.275Z"
+  },
+  "san miguel|tigpalas": {
+    "lat": 15.1494,
+    "lng": 120.9781,
+    "confidence": "high",
+    "display": "Tigpalas, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "node/6139693193",
+    "at": "2026-10-11T15:41:03.802Z"
+  },
+  "san miguel|baritan": {
+    "rejected": true,
+    "at": "2026-10-11T15:44:45.677Z"
+  },
+  "san miguel|batasan bata": {
+    "rejected": true,
+    "at": "2026-10-11T15:44:46.894Z"
+  },
+  "san miguel|batasan matanda": {
+    "rejected": true,
+    "at": "2026-10-11T15:44:48.114Z"
+  },
+  "san miguel|mandile": {
+    "rejected": true,
+    "at": "2026-10-11T15:44:59.019Z"
+  },
+  "san miguel|bagong pag-asa": {
+    "lat": 15.193,
+    "lng": 120.9452,
+    "confidence": "medium",
+    "display": "Bagong Pag-asa Elementary School, Cagayan Valley Road, Rodal Village, Salacot, Cambio, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "way/788390180",
+    "derived": "school Bagong Pag-asa Elementary School",
+    "at": "2026-10-11T15:46:45.072Z"
+  },
+  "san miguel|bardias": {
+    "lat": 15.2394,
+    "lng": 121.0112,
+    "confidence": "medium",
+    "display": "Bardias Elementary School, Batuhan - Partida Road, Lambakin, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "way/788331850",
+    "derived": "school Bardias Elementary School",
+    "at": "2026-10-11T15:46:46.296Z"
+  },
+  "san miguel|labne": {
+    "lat": 15.1414,
+    "lng": 121.0092,
+    "confidence": "medium",
+    "display": "Labne Elementary School, Pulong Bayabas_Labne Road, Pulong Bayabas, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "way/788333921",
+    "derived": "school Labne Elementary School",
+    "at": "2026-10-11T15:46:47.524Z"
+  },
+  "san miguel|magmarale": {
+    "lat": 15.1106,
+    "lng": 121.0009,
+    "confidence": "medium",
+    "display": "Magmarale Elementary School, San Rafael-San Ildefonso Bypass Road, Biclat, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "way/601164900",
+    "derived": "school Magmarale Elementary School",
+    "at": "2026-10-11T15:46:48.758Z"
+  },
+  "san miguel|maligaya": {
+    "lat": 15.2464,
+    "lng": 121.0333,
+    "confidence": "medium",
+    "display": "Maligaya Elementary School, Batuhan - Partida Road, Lambakin, San Miguel, Bulacan, Central Luzon, Philippines",
+    "osm": "way/788330289",
+    "derived": "school Maligaya Elementary School",
+    "at": "2026-10-11T15:46:49.988Z"
+  },
+  "san miguel|pacalag": {
+    "lat": 15.1189,
+    "lng": 121.025,
+    "confidence": "medium",
+    "display": "Pacalag Elementary School, Magsaysay Road, Pulong Bayabas, San Miguel, Bulacan, Central Luzon, 3011, Philippines",
+    "osm": "way/788333934",
+    "derived": "school Pacalag Elementary School",
+    "at": "2026-10-11T15:46:51.206Z"
+  },
+  "san rafael|banca-banca": {
+    "lat": 15.0242,
+    "lng": 120.9215,
+    "confidence": "high",
+    "display": "Banca-banca, Dagat-dagatan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19566754",
+    "at": "2026-10-11T15:47:13.462Z"
+  },
+  "san rafael|bma-balagtas": {
+    "lat": 14.969,
+    "lng": 120.9672,
+    "confidence": "high",
+    "display": "BMA-Balagtas, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19566753",
+    "at": "2026-10-11T15:47:15.428Z"
+  },
+  "san rafael|caingin": {
+    "lat": 14.9717,
+    "lng": 120.9434,
+    "confidence": "high",
+    "display": "Caingin, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19566755",
+    "at": "2026-10-11T15:47:16.938Z"
+  },
+  "san rafael|capihan": {
+    "lat": 14.9989,
+    "lng": 120.9303,
+    "confidence": "high",
+    "display": "Capihan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567728",
+    "at": "2026-10-11T15:47:18.780Z"
+  },
+  "san rafael|coral na bato": {
+    "lat": 14.9942,
+    "lng": 120.9792,
+    "confidence": "high",
+    "display": "Coral na Bato, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19566756",
+    "at": "2026-10-11T15:47:20.728Z"
+  },
+  "san rafael|cruz na daan": {
+    "lat": 15.0296,
+    "lng": 120.9348,
+    "confidence": "high",
+    "display": "Cruz na Daan, San Rafael, Bulacan, Central Luzon, 3025, Philippines",
+    "osm": "relation/17913029",
+    "at": "2026-10-11T15:47:22.777Z"
+  },
+  "san rafael|dagat-dagatan": {
+    "lat": 15.0338,
+    "lng": 120.9145,
+    "confidence": "high",
+    "display": "Dagat-dagatan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "node/9420248887",
+    "at": "2026-10-11T15:47:24.730Z"
+  },
+  "san rafael|diliman i": {
+    "lat": 15.0243,
+    "lng": 120.9492,
+    "confidence": "high",
+    "display": "Diliman I, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567726",
+    "at": "2026-10-11T15:47:26.684Z"
+  },
+  "san rafael|diliman ii": {
+    "lat": 15.0332,
+    "lng": 120.9532,
+    "confidence": "high",
+    "display": "Diliman II, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567727",
+    "at": "2026-10-11T15:47:28.630Z"
+  },
+  "san rafael|libis": {
+    "lat": 14.957,
+    "lng": 120.9695,
+    "confidence": "high",
+    "display": "Libis, Niugan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567729",
+    "at": "2026-10-11T15:47:30.580Z"
+  },
+  "san rafael|lico": {
+    "lat": 14.961,
+    "lng": 120.9563,
+    "confidence": "high",
+    "display": "Lico, Niugan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567730",
+    "at": "2026-10-11T15:47:32.522Z"
+  },
+  "san rafael|maasim": {
+    "lat": 15.0352,
+    "lng": 120.9364,
+    "confidence": "high",
+    "display": "Maasim, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567731",
+    "at": "2026-10-11T15:47:34.570Z"
+  },
+  "san rafael|mabalas-balas": {
+    "lat": 15.0253,
+    "lng": 120.9427,
+    "confidence": "high",
+    "display": "Mabalas-balas, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/20400978",
+    "at": "2026-10-11T15:47:36.063Z"
+  },
+  "san rafael|maguinao": {
+    "lat": 15.0228,
+    "lng": 120.9336,
+    "confidence": "high",
+    "display": "Maguinao, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567732",
+    "at": "2026-10-11T15:47:38.097Z"
+  },
+  "san rafael|maronquillo": {
+    "lat": 14.9674,
+    "lng": 121.0014,
+    "confidence": "high",
+    "display": "Maronquillo, Marungko, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567733",
+    "at": "2026-10-11T15:47:40.133Z"
+  },
+  "san rafael|paco": {
+    "lat": 14.9959,
+    "lng": 120.9057,
+    "confidence": "high",
+    "display": "Paco, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567734",
+    "at": "2026-10-11T15:47:42.081Z"
+  },
+  "san rafael|pansumaloc": {
+    "lat": 15.0174,
+    "lng": 120.8968,
+    "confidence": "high",
+    "display": "Pansumaloc, Dagat-dagatan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567735",
+    "at": "2026-10-11T15:47:43.797Z"
+  },
+  "san rafael|pantubig": {
+    "lat": 14.9655,
+    "lng": 120.953,
+    "confidence": "high",
+    "display": "Pantubig, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19567736",
+    "at": "2026-10-11T15:47:45.844Z"
+  },
+  "san rafael|pasong bangkal": {
+    "lat": 15.0058,
+    "lng": 121.01,
+    "confidence": "high",
+    "display": "Pasong Bangkal, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570913",
+    "at": "2026-10-11T15:47:47.887Z"
+  },
+  "san rafael|pasong callos": {
+    "lat": 15.0005,
+    "lng": 121.0003,
+    "confidence": "high",
+    "display": "Pasong Callos, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570914",
+    "at": "2026-10-11T15:47:49.597Z"
+  },
+  "san rafael|pasong intsik": {
+    "lat": 15.0109,
+    "lng": 120.9688,
+    "confidence": "high",
+    "display": "Pasong Intsik, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570915",
+    "at": "2026-10-11T15:47:51.324Z"
+  },
+  "san rafael|pinacpinacan": {
+    "lat": 14.9977,
+    "lng": 120.9133,
+    "confidence": "high",
+    "display": "Pinacpinacan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570916",
+    "at": "2026-10-11T15:47:52.804Z"
+  },
+  "san rafael|poblacion": {
+    "lat": 14.9553,
+    "lng": 120.9639,
+    "confidence": "high",
+    "display": "Poblacion, Niugan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570917",
+    "at": "2026-10-11T15:47:54.953Z"
+  },
+  "san rafael|pulo": {
+    "lat": 14.9619,
+    "lng": 121.0145,
+    "confidence": "high",
+    "display": "Pulo, Marungko, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570918",
+    "at": "2026-10-11T15:47:56.996Z"
+  },
+  "san rafael|pulong bayabas": {
+    "lat": 15.0122,
+    "lng": 120.9046,
+    "confidence": "high",
+    "display": "Pulong Bayabas, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570919",
+    "at": "2026-10-11T15:47:58.939Z"
+  },
+  "san rafael|salapungan": {
+    "lat": 15.0196,
+    "lng": 120.9639,
+    "confidence": "high",
+    "display": "Salapungan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570920",
+    "at": "2026-10-11T15:48:00.977Z"
+  },
+  "san rafael|sampaloc": {
+    "lat": 14.9818,
+    "lng": 120.9265,
+    "confidence": "high",
+    "display": "Sampaloc, Purok 3, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570921",
+    "at": "2026-10-11T15:48:02.466Z"
+  },
+  "san rafael|san agustin": {
+    "lat": 15.0304,
+    "lng": 120.9272,
+    "confidence": "high",
+    "display": "San Agustin, Dagat-dagatan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570922",
+    "at": "2026-10-11T15:48:04.604Z"
+  },
+  "san rafael|san roque": {
+    "lat": 15.0088,
+    "lng": 120.9326,
+    "confidence": "high",
+    "display": "San Roque, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570923",
+    "at": "2026-10-11T15:48:06.540Z"
+  },
+  "san rafael|sapang pahalang": {
+    "lat": 14.9975,
+    "lng": 121.0388,
+    "confidence": "high",
+    "display": "Sapang Pahalang, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570928",
+    "at": "2026-10-11T15:48:08.002Z"
+  },
+  "san rafael|talacsan": {
+    "lat": 14.96,
+    "lng": 120.9792,
+    "confidence": "high",
+    "display": "Talacsan, Niugan, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570924",
+    "at": "2026-10-11T15:48:09.530Z"
+  },
+  "san rafael|tambubong": {
+    "lat": 14.9687,
+    "lng": 120.9264,
+    "confidence": "high",
+    "display": "Tambubong, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570925",
+    "at": "2026-10-11T15:48:11.472Z"
+  },
+  "san rafael|tukod": {
+    "lat": 14.9945,
+    "lng": 121.0494,
+    "confidence": "high",
+    "display": "Tukod, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570926",
+    "at": "2026-10-11T15:48:13.196Z"
+  },
+  "san rafael|ulingao": {
+    "lat": 14.9716,
+    "lng": 120.9131,
+    "confidence": "high",
+    "display": "Ulingao, San Rafael, Bulacan, Central Luzon, 3008, Philippines",
+    "osm": "relation/19570927",
+    "at": "2026-10-11T15:48:15.126Z"
+  }
+}
