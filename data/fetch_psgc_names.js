@@ -43,6 +43,7 @@ const VERIFIED = {
   "Malolos|Bulihan": [14.8348, 120.8067],
   "Guiguinto|Poblacion": [14.8299, 120.8836],
   "Hagonoy|Santo Niño (Pob.)": [14.8339, 120.7341],
+  "Hagonoy|Iba": [14.8655, 120.7568], // OSM place node 1307373115 (Iba village, Hagonoy); field-verify before production reliance
   "Hagonoy|San Agustin": [14.8412, 120.742],
   "Calumpit|Poblacion": [14.9172, 120.7669],
   "Meycauayan|Poblacion": [14.7333, 120.95],
