@@ -1,0 +1,39 @@
+# Render Blueprint — copy of .env as infrastructure-as-code.
+# Secrets use `sync: false` so values are entered once in the Render dashboard
+# (or prompted at Blueprint creation) and never committed to git.
+# PORT is intentionally absent — Render provides it automatically.
+services:
+  - type: web
+    name: farmgate-backend
+    runtime: node
+    branch: main
+    buildCommand: npm install
+    startCommand: node index.js
+    plan: free
+    region: singapore
+    envVars:
+      - key: CLOUD_NAME
+        value: dc9jkdgaf
+      - key: CLOUD_API_KEY
+        sync: false
+      - key: CLOUD_API_SECRET
+        sync: false
+      - key: FARMGATE_COMMISSION_RATE
+        value: 0.03
+      - key: FARMGATE_ROAD_DISTANCE_FACTOR
+        value: 1.3
+      - key: XENDIT_SECRET_KEY
+        sync: false
+      - key: XENDIT_WEBHOOK_TOKEN
+        sync: false
+      - key: XENDIT_PAYOUT_SECRET_KEY
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        value: farmgate-new
+      - key: FIREBASE_CLIENT_EMAIL
+        value: firebase-adminsdk-fbsvc@farmgate-new.iam.gserviceaccount.com
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      # Update after the first deploy to the new onrender URL, then redeploy.
+      - key: PUBLIC_BASE_URL
+        value: https://farmgate-backend-mrx6.onrender.com
