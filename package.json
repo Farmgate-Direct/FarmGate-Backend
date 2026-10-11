@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "test": "node --test __tests__/",
+    "build:barangays": "node data/build_barangay_data.js",
+    "check:barangays": "node data/build_barangay_data.js --check-only",
+    "list:farms-missing-barangay": "node scripts/list-farms-missing-barangay.js"
   },
   "keywords": [],
   "author": "",
