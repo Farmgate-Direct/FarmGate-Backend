@@ -38,6 +38,7 @@ const CITY_CODE_TO_SHORT = {
 const VERIFIED = {
   // key: city|barangay -> [lat, lng]
   "Malolos|Santo Niño (Pob.)": [14.8445, 120.8103],
+  "Malolos|Anilao": [14.8422, 120.7976], // OSM place node 3074760831 (Anilao, Malolos); field-verify before production reliance
   "Malolos|San Vicente (Pob.)": [14.8526, 120.8119],
   "Malolos|Bulihan": [14.8348, 120.8067],
   "Guiguinto|Poblacion": [14.8299, 120.8836],
