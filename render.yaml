@@ -36,4 +36,4 @@ services:
         sync: false
       # Update after the first deploy to the new onrender URL, then redeploy.
       - key: PUBLIC_BASE_URL
-        value: https://farmgate-backend-mrx6.onrender.com
+        value: https://farmgate-backend-vofv.onrender.com
