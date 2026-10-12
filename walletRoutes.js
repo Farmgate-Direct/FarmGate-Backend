@@ -908,6 +908,109 @@ const TERMINAL_WITHDRAWAL_STATUSES = [
 
 const SYNCABLE_WITHDRAWAL_STATUSES = ["pending", "processing", "pending_review"];
 
+// Shared core for the manual sync routes AND the quiet auto-heal on
+// wallet loads. Never throws: per-record failures are reported, and the
+// caller decides whether to block the response on the result.
+const reconcileStuckWithdrawals = async ({
+  db,
+  collectionName,
+  farmerId = null,
+  applyFn,
+  maxDocs = 3,
+  minAgeMs = 2 * 60 * 1000,
+}) => {
+  const results = [];
+  let synced = 0;
+
+  try {
+    let query = db.collection(collectionName);
+
+    if (farmerId) {
+      query = query.where("farmerId", "==", farmerId);
+    }
+
+    const snapshot = await query.limit(20).get();
+    const now = Date.now();
+
+    for (const doc of snapshot.docs) {
+      if (results.length >= maxDocs) break;
+
+      const w = doc.data() || {};
+      const status = String(w.status || "");
+
+      if (!SYNCABLE_WITHDRAWAL_STATUSES.includes(status)) continue;
+
+      // Let fresh withdrawals settle (webhook usually arrives in seconds).
+      const updatedMs = toMillis(w.updatedAt || w.requestedAt || w.createdAt);
+
+      if (updatedMs && now - updatedMs < minAgeMs) continue;
+
+      const payoutId = w.xenditPayoutId || null;
+
+      if (!payoutId) {
+        results.push({
+          id: doc.id,
+          status,
+          synced: false,
+          reason: "Payout never reached Xendit.",
+        });
+        continue;
+      }
+
+      try {
+        const payout = await getPayoutStatus(payoutId);
+        const event = payoutSyncEventForStatus(payout?.status);
+
+        const fresh = await doc.ref.get();
+        const current = fresh.exists ? String(fresh.data()?.status || "") : "";
+
+        if (TERMINAL_WITHDRAWAL_STATUSES.includes(current)) {
+          results.push({ id: doc.id, status: current, synced: false });
+          continue;
+        }
+
+        if (event) {
+          await applyFn({ db, withdrawalDoc: fresh, data: payout, event });
+          const after = await doc.ref.get();
+          synced += 1;
+          results.push({
+            id: doc.id,
+            status: String(after.data()?.status || current),
+            synced: true,
+            xenditStatus: payout?.status || null,
+          });
+        } else {
+          await doc.ref.set(
+            {
+              xenditStatus: payout?.status || w.xenditStatus || "PENDING",
+              lastSyncedAt: new Date(),
+              updatedAt: new Date(),
+            },
+            { merge: true }
+          );
+          results.push({
+            id: doc.id,
+            status: current,
+            synced: true,
+            xenditStatus: payout?.status || null,
+          });
+        }
+      } catch (syncError) {
+        results.push({
+          id: doc.id,
+          status,
+          synced: false,
+          reason: syncError.message || "Sync failed.",
+        });
+      }
+    }
+  } catch (error) {
+    console.error("RECONCILE WITHDRAWALS ERROR:", error?.message || error);
+  }
+
+  return { checked: results.length, synced, results };
+};
+
 /* =========================================================
    WITHDRAWAL WEBHOOK
 ========================================================= */
@@ -1790,6 +1893,15 @@ const createWalletRouter = ({ db, auth, inventory }) => {
     try {
       const { decoded } = await requireFarmer(req, auth, db);
       const farmerId = decoded.uid;
+
+      // Quiet auto-heal: stuck withdrawals reconcile against Xendit
+      // before the balance is read. Capped and never fails the request.
+      await reconcileStuckWithdrawals({
+        db,
+        collectionName: "farmerWithdrawals",
+        farmerId,
+        applyFn: applyWithdrawalWebhook,
+      });
 
       const walletRef = db.collection("farmerWallets").doc(farmerId);
 
@@ -3594,6 +3706,15 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   router.get("/admin/wallet", async (req, res) => {
     try {
       await requireAdmin(req, auth, db);
+
+      // Quiet auto-heal: stuck admin withdrawals reconcile against
+      // Xendit before the balance is read. Capped and never fails
+      // the request.
+      await reconcileStuckWithdrawals({
+        db,
+        collectionName: "adminWithdrawals",
+        applyFn: applyAdminWithdrawalWebhook,
+      });
 
       const ref = db.collection("adminWallets").doc(ADMIN_WALLET_ID);
       const snap = await ref.get();
