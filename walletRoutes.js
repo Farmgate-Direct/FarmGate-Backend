@@ -832,6 +832,83 @@ const payoutRequest = async ({
 };
 
 /* =========================================================
+   XENDIT PAYOUT STATUS SYNC (self-healing when webhooks
+   never arrive, e.g. wrong webhook URL in the dashboard)
+   - GET /v3/payouts/{payout_id} is the documented
+     "Get payout by ID" endpoint.
+   - Only terminal Xendit states change local records; anything
+     else just refreshes xenditStatus so the UI stops guessing.
+========================================================= */
+
+const getPayoutStatus = async (payoutId) => {
+  const secretKey = getEnv("XENDIT_PAYOUT_SECRET_KEY");
+
+  if (!secretKey) {
+    throw new Error("XENDIT_PAYOUT_SECRET_KEY is not configured.");
+  }
+
+  const response = await fetch(
+    `${XENDIT_BASE_URL}/v3/payouts/${encodeURIComponent(String(payoutId))}`,
+    {
+      method: "GET",
+      signal: AbortSignal.timeout(XENDIT_TIMEOUT_MS),
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`,
+        "api-version": XENDIT_PAYOUT_API_VERSION,
+      },
+    }
+  );
+
+  const text = await response.text();
+  let data = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+
+  if (!response.ok) {
+    const error = new Error(
+      data?.message ||
+        data?.error_code ||
+        `Xendit payout lookup failed with status ${response.status}.`
+    );
+    error.status = response.status;
+    error.response = data;
+    throw error;
+  }
+
+  return data;
+};
+
+// Terminal Xendit payout state -> webhook-style event. Anything else
+// (ACCEPTED / ROUTING / REQUESTED / READY / LOCKED / PENDING_...)
+// means "still in flight": no local state change.
+const payoutSyncEventForStatus = (status) => {
+  switch (String(status || "").toUpperCase()) {
+    case "SUCCEEDED":
+      return "v3_payout.succeeded";
+    case "FAILED":
+    case "REJECTED":
+      return "v3_payout.failed";
+    case "REVERSED":
+      return "v3_payout.reversed";
+    default:
+      return null;
+  }
+};
+
+const TERMINAL_WITHDRAWAL_STATUSES = [
+  "succeeded",
+  "failed",
+  "rejected",
+  "reversed",
+];
+
+const SYNCABLE_WITHDRAWAL_STATUSES = ["pending", "processing", "pending_review"];
+
+/* =========================================================
    WITHDRAWAL WEBHOOK
 ========================================================= */
 
@@ -3113,6 +3190,114 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   });
 
   // ------------------------------------------------------------
+  // SYNC STUCK WITHDRAWALS WITH XENDIT (farmer)
+  // Reconciles pending/processing/pending_review withdrawals against
+  // the live Xendit payout status, so funds unstick even when the
+  // payout webhook never arrives (wrong webhook URL, token, etc).
+  // Only terminal Xendit states change local records.
+  // ------------------------------------------------------------
+  router.post("/withdrawals/sync", async (req, res) => {
+    try {
+      const { decoded } = await requireFarmer(req, auth, db);
+      const uid = decoded.uid;
+
+      const snapshot = await db
+        .collection("farmerWithdrawals")
+        .where("farmerId", "==", uid)
+        .limit(20)
+        .get();
+
+      const results = [];
+      let synced = 0;
+
+      for (const doc of snapshot.docs) {
+        const w = doc.data() || {};
+        const status = String(w.status || "");
+
+        if (!SYNCABLE_WITHDRAWAL_STATUSES.includes(status)) continue;
+
+        const payoutId = w.xenditPayoutId || null;
+
+        if (!payoutId) {
+          results.push({
+            id: doc.id,
+            status,
+            synced: false,
+            reason: "Payout never reached Xendit.",
+          });
+          continue;
+        }
+
+        try {
+          const payout = await getPayoutStatus(payoutId);
+          const event = payoutSyncEventForStatus(payout?.status);
+
+          const fresh = await doc.ref.get();
+          const current = fresh.exists ? String(fresh.data()?.status || "") : "";
+
+          if (TERMINAL_WITHDRAWAL_STATUSES.includes(current)) {
+            results.push({ id: doc.id, status: current, synced: false });
+            continue;
+          }
+
+          if (event) {
+            await applyWithdrawalWebhook({
+              db,
+              withdrawalDoc: fresh,
+              data: payout,
+              event,
+            });
+            const after = await doc.ref.get();
+            synced += 1;
+            results.push({
+              id: doc.id,
+              status: String(after.data()?.status || current),
+              synced: true,
+              xenditStatus: payout?.status || null,
+            });
+          } else {
+            await doc.ref.set(
+              {
+                xenditStatus: payout?.status || w.xenditStatus || "PENDING",
+                lastSyncedAt: new Date(),
+                updatedAt: new Date(),
+              },
+              { merge: true }
+            );
+            results.push({
+              id: doc.id,
+              status: current,
+              synced: true,
+              xenditStatus: payout?.status || null,
+            });
+          }
+        } catch (syncError) {
+          results.push({
+            id: doc.id,
+            status,
+            synced: false,
+            reason: syncError.message || "Sync failed.",
+          });
+        }
+      }
+
+      return res.json({
+        success: true,
+        checked: results.length,
+        synced,
+        stillPending: results.filter((r) =>
+          SYNCABLE_WITHDRAWAL_STATUSES.includes(String(r.status || ""))
+        ).length,
+        results,
+      });
+    } catch (error) {
+      console.error("SYNC WITHDRAWALS ERROR:", error);
+
+      return sendWalletError(res, error, 500);
+    }
+  });
+
+  // ------------------------------------------------------------
   // DELIVER ORDER / FINANCIAL SETTLEMENT (idempotent)
   //
   // GCash: farmer earning (subtotal - commission) -> available balance.
@@ -3154,7 +3339,11 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           return;
         }
 
-        if (order.status !== "to_receive" && order.status !== "delivered") {
+        if (
+          order.status !== "to_receive" &&
+          order.status !== "delivered" &&
+          order.status !== "claimed"
+        ) {
           throw new Error("Only To Receive orders can be marked as delivered.");
         }
 
@@ -3354,8 +3543,13 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           { merge: true }
         );
 
+        // Pickup orders complete as "claimed", delivery orders as "delivered".
+        // Both share the same financial settlement above; only the stored
+        // status label differs.
+        const finalStatus = order.delivery === "pickup" ? "claimed" : "delivered";
+
         transaction.update(orderRef, {
-          status: "delivered",
+          status: finalStatus,
           deliveredAt: now,
 
           commissionRate: rate,
@@ -3869,6 +4063,110 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           ? { withdrawableAmount: error.withdrawableAmount }
           : {}),
       });
+    }
+  });
+
+  // ------------------------------------------------------------
+  // SYNC STUCK WITHDRAWALS WITH XENDIT (admin)
+  // Same self-healing as the farmer sync above, for the shared
+  // platform wallet. Only terminal Xendit states change records.
+  // ------------------------------------------------------------
+  router.post("/admin/withdrawals/sync", async (req, res) => {
+    try {
+      await requireAdmin(req, auth, db);
+
+      const snapshot = await db
+        .collection("adminWithdrawals")
+        .limit(20)
+        .get();
+
+      const results = [];
+      let synced = 0;
+
+      for (const doc of snapshot.docs) {
+        const w = doc.data() || {};
+        const status = String(w.status || "");
+
+        if (!SYNCABLE_WITHDRAWAL_STATUSES.includes(status)) continue;
+
+        const payoutId = w.xenditPayoutId || null;
+
+        if (!payoutId) {
+          results.push({
+            id: doc.id,
+            status,
+            synced: false,
+            reason: "Payout never reached Xendit.",
+          });
+          continue;
+        }
+
+        try {
+          const payout = await getPayoutStatus(payoutId);
+          const event = payoutSyncEventForStatus(payout?.status);
+
+          const fresh = await doc.ref.get();
+          const current = fresh.exists ? String(fresh.data()?.status || "") : "";
+
+          if (TERMINAL_WITHDRAWAL_STATUSES.includes(current)) {
+            results.push({ id: doc.id, status: current, synced: false });
+            continue;
+          }
+
+          if (event) {
+            await applyAdminWithdrawalWebhook({
+              db,
+              withdrawalDoc: fresh,
+              data: payout,
+              event,
+            });
+            const after = await doc.ref.get();
+            synced += 1;
+            results.push({
+              id: doc.id,
+              status: String(after.data()?.status || current),
+              synced: true,
+              xenditStatus: payout?.status || null,
+            });
+          } else {
+            await doc.ref.set(
+              {
+                xenditStatus: payout?.status || w.xenditStatus || "PENDING",
+                lastSyncedAt: new Date(),
+                updatedAt: new Date(),
+              },
+              { merge: true }
+            );
+            results.push({
+              id: doc.id,
+              status: current,
+              synced: true,
+              xenditStatus: payout?.status || null,
+            });
+          }
+        } catch (syncError) {
+          results.push({
+            id: doc.id,
+            status,
+            synced: false,
+            reason: syncError.message || "Sync failed.",
+          });
+        }
+      }
+
+      return res.json({
+        success: true,
+        checked: results.length,
+        synced,
+        stillPending: results.filter((r) =>
+          SYNCABLE_WITHDRAWAL_STATUSES.includes(String(r.status || ""))
+        ).length,
+        results,
+      });
+    } catch (error) {
+      console.error("SYNC ADMIN WITHDRAWALS ERROR:", error);
+
+      return sendWalletError(res, error, 500);
     }
   });
 

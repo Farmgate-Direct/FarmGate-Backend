@@ -1593,6 +1593,234 @@ app.get("/payment-status/:orderId", async (req, res) => {
 });
 
 /* =========================================================
+   PAYMENT SYNC (self-healing when the payment.capture webhook
+   never arrives, e.g. wrong webhook URL in the dashboard).
+   Asks Xendit for the live payment-request status and fulfills
+   the order with the SAME guards as the webhook path.
+   Never fulfills unless Xendit says SUCCEEDED and the amount
+   and request IDs match the order.
+========================================================= */
+
+app.post("/payment-sync/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const decodedUser = await verifyFirebaseUser(req);
+
+    const orderRef = db.collection("orders").doc(String(orderId));
+    const orderSnap = await orderRef.get();
+
+    if (!orderSnap.exists) {
+      return res.status(404).json({
+        success: false,
+        error: "Order not found.",
+      });
+    }
+
+    const order = orderSnap.data();
+
+    if (order.buyerId !== decodedUser.uid) {
+      return res.status(403).json({
+        success: false,
+        error: "You are not authorized to sync this order.",
+      });
+    }
+
+    if (order.paymentStatus === "paid" || order.inventoryFulfilled === true) {
+      return res.json({
+        success: true,
+        alreadyPaid: true,
+        orderId: orderSnap.id,
+        paymentStatus: order.paymentStatus || "paid",
+      });
+    }
+
+    const paymentRequestId = order.xenditPaymentRequestId || null;
+
+    if (!paymentRequestId) {
+      return res.status(400).json({
+        success: false,
+        error: "This order has no GCash payment request to sync.",
+      });
+    }
+
+    const pr = await xenditRequest(
+      `/v3/payment_requests/${encodeURIComponent(paymentRequestId)}`,
+      { method: "GET" }
+    );
+
+    const prStatus = String(pr.status || "").toUpperCase();
+
+    if (prStatus === "FAILED") {
+      await orderRef.update({
+        paymentStatus: "failed",
+        xenditPaymentStatus: "FAILED",
+        paymentFailureCode: pr.failure_code || pr.error_code || null,
+        paymentFailureReason:
+          pr.failure_reason || pr.message || "Payment failed.",
+        fulfillmentStatus: "pending",
+        inventoryFulfilled: false,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      return res.json({
+        success: true,
+        orderId: orderSnap.id,
+        paymentStatus: "failed",
+        xenditStatus: prStatus,
+      });
+    }
+
+    if (prStatus !== "SUCCEEDED") {
+      await orderRef.update({
+        xenditPaymentStatus: prStatus || order.xenditPaymentStatus || "PENDING",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      return res.json({
+        success: true,
+        orderId: orderSnap.id,
+        paymentStatus: order.paymentStatus || "pending",
+        xenditStatus: prStatus,
+      });
+    }
+
+    // Webhook-shaped data so the shared guards + fulfillment apply.
+    const data = {
+      payment_id: pr.latest_payment_id || pr.payment_id || null,
+      payment_request_id:
+        pr.payment_request_id || pr.id || paymentRequestId,
+      reference_id:
+        pr.reference_id || order.xenditReferenceId || order.orderNumber || null,
+      channel_code: pr.channel_code || order.xenditPaymentChannel || "GCASH",
+      status: "SUCCEEDED",
+      request_amount: pr.request_amount,
+      captures: Array.isArray(pr.captures) ? pr.captures : [],
+      metadata: pr.metadata || {},
+    };
+
+    if (data.channel_code && data.channel_code !== "GCASH") {
+      return res.status(400).json({
+        success: false,
+        error: "Unexpected payment channel.",
+      });
+    }
+
+    const orderTotal = Number(order.total);
+    const capturedAmount = getCapturedAmount(data);
+
+    if (
+      !Number.isFinite(orderTotal) ||
+      !Number.isFinite(capturedAmount) ||
+      Math.abs(orderTotal - capturedAmount) > 0.01
+    ) {
+      await recordPaidNeedsReview(
+        orderRef,
+        data,
+        "manual_review",
+        "Payment amount does not match the order total."
+      );
+
+      return res.json({
+        success: true,
+        orderId: orderSnap.id,
+        paymentStatus: "manual_review",
+        message: "Payment received but amount mismatch requires manual review.",
+      });
+    }
+
+    const requestMismatch =
+      order.xenditPaymentRequestId &&
+      data.payment_request_id &&
+      order.xenditPaymentRequestId !== data.payment_request_id;
+
+    const referenceMismatch =
+      order.xenditReferenceId &&
+      data.reference_id &&
+      order.xenditReferenceId !== data.reference_id;
+
+    if (requestMismatch || referenceMismatch) {
+      await recordPaidNeedsReview(
+        orderRef,
+        data,
+        "manual_review",
+        "Payment came from a different payment request than the one saved on the order."
+      );
+
+      return res.json({
+        success: true,
+        orderId: orderSnap.id,
+        paymentStatus: "manual_review",
+        message: "Payment received but request mismatch requires manual review.",
+      });
+    }
+
+    if (order.status === "cancelled") {
+      await recordPaidNeedsReview(
+        orderRef,
+        data,
+        "manual_review",
+        "Payment received after the order was cancelled."
+      );
+
+      return res.json({
+        success: true,
+        orderId: orderSnap.id,
+        paymentStatus: "manual_review",
+        message: "Payment received for cancelled order; manual review required.",
+      });
+    }
+
+    try {
+      const result = await fulfillPaidOrder(orderRef, data);
+
+      await orderRef.update({
+        xenditWebhookEvent: "payment.sync",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      return res.json({
+        success: true,
+        orderId: orderSnap.id,
+        paymentStatus: "paid",
+        inventoryFulfilled: true,
+        alreadyFulfilled: result.alreadyFulfilled === true,
+      });
+    } catch (fulfillmentError) {
+      if (
+        fulfillmentError.code === "STOCK_UNAVAILABLE" ||
+        fulfillmentError.code === "FULFILLMENT_BLOCKED"
+      ) {
+        await recordPaidNeedsReview(
+          orderRef,
+          data,
+          fulfillmentError.code === "STOCK_UNAVAILABLE"
+            ? "stock_unavailable"
+            : "manual_review",
+          fulfillmentError.message
+        );
+
+        return res.json({
+          success: true,
+          orderId: orderSnap.id,
+          paymentStatus: "manual_review",
+          message: "Payment received but order requires manual review.",
+        });
+      }
+
+      throw fulfillmentError;
+    }
+  } catch (error) {
+    console.error("PAYMENT SYNC ERROR:", error);
+
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to sync payment status.",
+    });
+  }
+});
+
+/* =========================================================
    XENDIT WEBHOOK
 ========================================================= */
 
