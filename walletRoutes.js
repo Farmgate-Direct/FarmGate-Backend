@@ -6,6 +6,11 @@ const {
   DeliveryFeeError,
 } = require("./deliveryFee");
 
+const {
+  normalizeEggVariant,
+  resolveEggLine,
+} = require("./eggVariants");
+
 /* =========================================================
    CONSTANTS
 ========================================================= */
@@ -483,6 +488,8 @@ const priceOrderOnServer = async (transaction, db, order) => {
     throw new Error("Order contains no products.");
   }
 
+  // Same egg product may appear as half tray + full tray lines.
+  // Duplicate means SAME product AND SAME variant.
   const seen = new Set();
 
   const refs = items.map((item) => {
@@ -490,11 +497,14 @@ const priceOrderOnServer = async (transaction, db, order) => {
 
     if (!productId) throw new Error("Order contains an invalid productId.");
 
-    if (seen.has(productId)) {
+    const variantKey = normalizeEggVariant(item?.eggVariant) || "";
+    const lineKey = `${productId}|${variantKey}`;
+
+    if (seen.has(lineKey)) {
       throw new Error(`Duplicate product in order: ${productId}`);
     }
 
-    seen.add(productId);
+    seen.add(lineKey);
 
     return db.collection("products").doc(productId);
   });
@@ -522,15 +532,29 @@ const priceOrderOnServer = async (transaction, db, order) => {
       throw new Error(`Product ${product.name || item.productId} is archived.`);
     }
 
-    const price = Number(product.price);
     const quantity = Number(item.quantity);
-
-    if (!Number.isFinite(price) || price < 0) {
-      throw new Error(`Invalid price for ${product.name || item.productId}.`);
-    }
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
       throw new Error(`Invalid quantity for ${product.name || item.productId}.`);
+    }
+
+    // Egg-variant lines are priced from the SERVER base price
+    // (client price ignored). Normal lines keep server price.
+    const egg = resolveEggLine(product, item);
+
+    let price;
+    let unit;
+
+    if (egg) {
+      price = egg.variantPrice;
+      unit = egg.variantUnit;
+    } else {
+      price = Number(product.price);
+      unit = product.unit || item.unit || "";
+
+      if (!Number.isFinite(price) || price < 0) {
+        throw new Error(`Invalid price for ${product.name || item.productId}.`);
+      }
     }
 
     subtotal += roundMoney(price * quantity);
@@ -540,7 +564,10 @@ const priceOrderOnServer = async (transaction, db, order) => {
       price,
       quantity,
       name: product.name || item.name || "",
-      unit: product.unit || item.unit || "",
+      unit,
+      eggVariant: egg ? egg.variant : null,
+      baseUnit: egg ? egg.baseUnit : product.unit || "",
+      baseQuantity: egg ? egg.baseQty : quantity,
     };
   });
 

@@ -65,6 +65,12 @@ const {
   DeliveryFeeError,
 } = require("./deliveryFee");
 
+const {
+  normalizeEggVariant,
+  resolveEggLine,
+  roundStock6,
+} = require("./eggVariants");
+
 // Legacy flat-fee fallback (kept ONLY for old orders with no barangay).
 // New orders always use barangay-level quoteDeliveryFee. Must match walletRoutes.js
 const getDeliveryFee = () => {
@@ -398,23 +404,27 @@ const validateOrderForPayment = async (orderRef) => {
       throw httpError(400, "Order contains no products.");
     }
 
-    const validatedProducts = [];
-    const seenProductIds = new Set();
+    // Group lines by product. The same egg product may appear twice
+    // (half tray + full tray) — duplicate means SAME product AND SAME
+    // variant. Stock is checked against the COMBINED base quantity.
+    const productGroups = new Map();
+    const seenLineKeys = new Set();
 
-    let computedSubtotal = 0;
-
-    for (const orderProduct of orderProducts) {
+    orderProducts.forEach((orderProduct, index) => {
       const productId = String(orderProduct.productId || "");
 
       if (!productId) {
         throw httpError(400, "Order contains an invalid productId.");
       }
 
-      if (seenProductIds.has(productId)) {
+      const variantKey = normalizeEggVariant(orderProduct.eggVariant) || "";
+      const lineKey = `${productId}|${variantKey}`;
+
+      if (seenLineKeys.has(lineKey)) {
         throw httpError(400, `Duplicate product in order: ${productId}`);
       }
 
-      seenProductIds.add(productId);
+      seenLineKeys.add(lineKey);
 
       const quantity = Number(orderProduct.quantity);
 
@@ -422,6 +432,15 @@ const validateOrderForPayment = async (orderRef) => {
         throw httpError(400, `Invalid quantity for ${productId}.`);
       }
 
+      if (!productGroups.has(productId)) productGroups.set(productId, []);
+      productGroups.get(productId).push({ orderProduct, index });
+    });
+
+    const validatedByIndex = new Array(orderProducts.length);
+
+    let computedSubtotal = 0;
+
+    for (const [productId, entries] of productGroups) {
       const productRef = db.collection("products").doc(productId);
       const productSnap = await transaction.get(productRef);
 
@@ -439,11 +458,39 @@ const validateOrderForPayment = async (orderRef) => {
         throw httpError(400, `Product ${product.name || productId} is archived.`);
       }
 
-      const price = Number(product.price);
+      // Resolve each line against the SERVER product. Egg-variant lines
+      // are priced from the server base price (client price ignored);
+      // normal lines keep the server price as before.
+      const resolved = entries.map(({ orderProduct, index }) => {
+        const egg = resolveEggLine(product, orderProduct);
+        const quantity = Number(orderProduct.quantity);
 
-      if (!Number.isFinite(price) || price < 0) {
-        throw httpError(400, `Invalid price for ${product.name || productId}.`);
-      }
+        if (egg) {
+          return {
+            orderProduct,
+            index,
+            egg,
+            price: egg.variantPrice,
+            unit: egg.variantUnit,
+            baseQty: egg.baseQty,
+          };
+        }
+
+        const price = Number(product.price);
+
+        if (!Number.isFinite(price) || price < 0) {
+          throw httpError(400, `Invalid price for ${product.name || productId}.`);
+        }
+
+        return {
+          orderProduct,
+          index,
+          egg: null,
+          price,
+          unit: product.unit || orderProduct.unit || "",
+          baseQty: quantity,
+        };
+      });
 
       const batchSnapshot = await transaction.get(
         db.collection("productBatches").where("productId", "==", productId)
@@ -469,28 +516,41 @@ const validateOrderForPayment = async (orderRef) => {
         );
       }
 
-      if (currentStock < quantity) {
+      const totalBase = roundStock6(
+        resolved.reduce((sum, r) => sum + Number(r.baseQty || 0), 0)
+      );
+
+      if (currentStock < totalBase) {
         throw new StockFulfillmentError(
-          `Insufficient stock for ${product.name || productId}. Available: ${currentStock}, Requested: ${quantity}.`
+          `Insufficient stock for ${product.name || productId}. Available: ${currentStock}, Requested: ${totalBase}.`
         );
       }
 
-      computedSubtotal += roundMoney(price * quantity);
+      for (const r of resolved) {
+        const quantity = Number(r.orderProduct.quantity);
 
-      validatedProducts.push({
-        productId,
-        batchId: null,
-        batchNumber: null,
-        harvestRecordId: null,
-        contributions: [],
-        name: product.name || orderProduct.name || "",
-        image: product.image || orderProduct.image || "",
-        price,
-        quantity,
-        unit: product.unit || orderProduct.unit || "",
-        reviewed: orderProduct.reviewed || false,
-      });
+        computedSubtotal += roundMoney(r.price * quantity);
+
+        validatedByIndex[r.index] = {
+          productId,
+          batchId: null,
+          batchNumber: null,
+          harvestRecordId: null,
+          contributions: [],
+          name: product.name || r.orderProduct.name || "",
+          image: product.image || r.orderProduct.image || "",
+          price: r.price,
+          quantity,
+          unit: r.unit,
+          eggVariant: r.egg ? r.egg.variant : null,
+          baseUnit: r.egg ? r.egg.baseUnit : product.unit || "",
+          baseQuantity: r.egg ? r.egg.baseQty : quantity,
+          reviewed: r.orderProduct.reviewed || false,
+        };
+      }
     }
+
+    const validatedProducts = validatedByIndex;
 
     // ---- Barangay-level delivery fee (never trusts client fee/distance) ----
     // Farm barangay from users/{farmerId}, buyer barangay from order.address.
@@ -578,6 +638,38 @@ const validateOrderForPayment = async (orderRef) => {
    applyInventoryPlans -> WRITES ONLY
 ========================================================= */
 
+// Splits fulfillment contributions across same-product order lines
+// (ex. half tray + full tray of one egg product) proportionally to
+// each line's base quantity, so per-line restock restores exactly
+// what was deducted. Quantities stay in BASE units.
+const splitContributions = (contributions, baseQuantities) => {
+  const total = roundStock6(
+    baseQuantities.reduce((sum, q) => sum + Number(q || 0), 0)
+  );
+  const result = baseQuantities.map(() => []);
+
+  if (!(total > 0)) return result;
+
+  contributions.forEach((c) => {
+    let assigned = 0;
+
+    baseQuantities.forEach((share, i) => {
+      if (i === baseQuantities.length - 1) {
+        const rest = roundStock6(Number(c.quantity) - assigned);
+        if (rest > 0) result[i].push({ ...c, quantity: rest });
+      } else {
+        const part = roundStock6(
+          (Number(c.quantity) * Number(share || 0)) / total
+        );
+        assigned = roundStock6(assigned + part);
+        if (part > 0) result[i].push({ ...c, quantity: part });
+      }
+    });
+  });
+
+  return result;
+};
+
 const planInventory = async (transaction, order) => {
   const orderProducts = Array.isArray(order.products) ? order.products : [];
 
@@ -585,11 +677,14 @@ const planInventory = async (transaction, order) => {
     throw new Error("Order contains no products.");
   }
 
-  const plans = [];
-  const updatedProducts = [];
-  const seenProductIds = new Set();
+  // Group lines by product. The same egg product may appear as half
+  // tray + full tray lines — duplicate means SAME product AND SAME
+  // variant. Stock is deducted ONCE per product using the combined
+  // BASE quantity (variant qty converted to farmer-listing units).
+  const productGroups = new Map();
+  const seenLineKeys = new Set();
 
-  for (const orderProduct of orderProducts) {
+  orderProducts.forEach((orderProduct, index) => {
     const productId = String(orderProduct.productId || "");
     const quantity = Number(orderProduct.quantity);
 
@@ -597,16 +692,27 @@ const planInventory = async (transaction, order) => {
       throw new Error("Invalid product ID in order.");
     }
 
-    if (seenProductIds.has(productId)) {
+    const variantKey = normalizeEggVariant(orderProduct.eggVariant) || "";
+    const lineKey = `${productId}|${variantKey}`;
+
+    if (seenLineKeys.has(lineKey)) {
       throw new Error(`Duplicate product in order: ${productId}`);
     }
 
-    seenProductIds.add(productId);
+    seenLineKeys.add(lineKey);
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
       throw new Error(`Invalid quantity for ${productId}.`);
     }
 
+    if (!productGroups.has(productId)) productGroups.set(productId, []);
+    productGroups.get(productId).push({ orderProduct, index });
+  });
+
+  const plans = [];
+  const updatedByIndex = new Array(orderProducts.length);
+
+  for (const [productId, entries] of productGroups) {
     const productRef = db.collection("products").doc(productId);
     const productSnap = await transaction.get(productRef);
 
@@ -618,6 +724,26 @@ const planInventory = async (transaction, order) => {
 
     if (product.farmerId !== order.farmerId) {
       throw new Error(`Product ${productId} does not belong to the order farmer.`);
+    }
+
+    // Resolve egg variants against the SERVER product. Client price
+    // is display-only here; stock math always uses base quantities.
+    const resolved = entries.map(({ orderProduct, index }) => {
+      const egg = resolveEggLine(product, orderProduct);
+      const quantity = Number(orderProduct.quantity);
+      return {
+        orderProduct,
+        index,
+        baseQty: egg ? egg.baseQty : quantity,
+      };
+    });
+
+    const totalBase = roundStock6(
+      resolved.reduce((sum, r) => sum + Number(r.baseQty || 0), 0)
+    );
+
+    if (!(totalBase > 0)) {
+      throw new Error(`Invalid quantity for ${productId}.`);
     }
 
     const batchSnapshot = await transaction.get(
@@ -644,9 +770,9 @@ const planInventory = async (transaction, order) => {
       );
     }
 
-    if (currentStock < quantity) {
+    if (currentStock < totalBase) {
       throw new StockFulfillmentError(
-        `Insufficient stock for ${product.name || productId}. Available: ${currentStock}, Requested: ${quantity}.`
+        `Insufficient stock for ${product.name || productId}. Available: ${currentStock}, Requested: ${totalBase}.`
       );
     }
 
@@ -663,7 +789,7 @@ const planInventory = async (transaction, order) => {
     const contributions = [];
     const harvestUpdates = [];
 
-    let remaining = quantity;
+    let remaining = totalBase;
 
     for (const record of harvestRecords) {
       if (remaining <= 0) break;
@@ -698,12 +824,12 @@ const planInventory = async (transaction, order) => {
       remaining = 0;
     }
 
-    const newStock = Number((currentStock - quantity).toFixed(6));
+    const newStock = Number((currentStock - totalBase).toFixed(6));
     const newStatus = newStock <= 0 ? "Out of Stock" : "Available";
 
     plans.push({
       productId,
-      quantity,
+      quantity: totalBase,
       batchRef: db.collection("productBatches").doc(currentBatch.id),
       newStock,
       newStatus,
@@ -711,18 +837,28 @@ const planInventory = async (transaction, order) => {
       harvestUpdates,
     });
 
-    const primary = contributions[0] || null;
-
-    updatedProducts.push({
-      ...orderProduct,
-      batchId: primary?.batchId ?? null,
-      batchNumber: primary?.batchNumber ?? null,
-      harvestRecordId: primary?.harvestRecordId ?? null,
+    // Split contributions across same-product lines so each line
+    // carries only its own share (restock-safe).
+    const split = splitContributions(
       contributions,
+      resolved.map((r) => r.baseQty)
+    );
+
+    resolved.forEach((r, i) => {
+      const lineContribs = split[i] && split[i].length > 0 ? split[i] : [];
+      const primary = lineContribs[0] || contributions[0] || null;
+
+      updatedByIndex[r.index] = {
+        ...r.orderProduct,
+        batchId: primary?.batchId ?? null,
+        batchNumber: primary?.batchNumber ?? null,
+        harvestRecordId: primary?.harvestRecordId ?? null,
+        contributions: lineContribs,
+      };
     });
   }
 
-  return { plans, updatedProducts };
+  return { plans, updatedProducts: updatedByIndex };
 };
 
 const applyInventoryPlans = (transaction, plans) => {
