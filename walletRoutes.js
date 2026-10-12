@@ -927,10 +927,18 @@ const reconcileStuckWithdrawals = async ({
 
     if (farmerId) {
       query = query.where("farmerId", "==", farmerId);
+    } else {
+      // Admin collection has no owner filter; single-field IN needs no
+      // composite index and targets only stuck records.
+      query = query.where("status", "in", SYNCABLE_WITHDRAWAL_STATUSES);
     }
 
     const snapshot = await query.limit(20).get();
     const now = Date.now();
+
+    console.log(
+      `RECONCILE ${collectionName}: scanned ${snapshot.docs.length} doc(s).`
+    );
 
     for (const doc of snapshot.docs) {
       if (results.length >= maxDocs) break;
@@ -943,9 +951,16 @@ const reconcileStuckWithdrawals = async ({
       // Let fresh withdrawals settle (webhook usually arrives in seconds).
       const updatedMs = toMillis(w.updatedAt || w.requestedAt || w.createdAt);
 
-      if (updatedMs && now - updatedMs < minAgeMs) continue;
+      if (updatedMs && now - updatedMs < minAgeMs) {
+        console.log(`RECONCILE ${collectionName}: skip fresh ${doc.id}.`);
+        continue;
+      }
 
       const payoutId = w.xenditPayoutId || null;
+
+      console.log(
+        `RECONCILE ${collectionName}: check ${doc.id} status=${status} payout=${payoutId || "none"}.`
+      );
 
       if (!payoutId) {
         results.push({
@@ -960,6 +975,10 @@ const reconcileStuckWithdrawals = async ({
       try {
         const payout = await getPayoutStatus(payoutId);
         const event = payoutSyncEventForStatus(payout?.status);
+
+        console.log(
+          `RECONCILE ${collectionName}: ${doc.id} xendit=${payout?.status || "?"} event=${event || "in-flight"}.`
+        );
 
         const fresh = await doc.ref.get();
         const current = fresh.exists ? String(fresh.data()?.status || "") : "";
@@ -996,6 +1015,10 @@ const reconcileStuckWithdrawals = async ({
           });
         }
       } catch (syncError) {
+        console.error(
+          `RECONCILE ${collectionName}: ${doc.id} failed:`,
+          syncError.message || syncError
+        );
         results.push({
           id: doc.id,
           status,
@@ -1004,6 +1027,10 @@ const reconcileStuckWithdrawals = async ({
         });
       }
     }
+
+    console.log(
+      `RECONCILE ${collectionName}: done checked=${results.length} synced=${synced}.`
+    );
   } catch (error) {
     console.error("RECONCILE WITHDRAWALS ERROR:", error?.message || error);
   }
