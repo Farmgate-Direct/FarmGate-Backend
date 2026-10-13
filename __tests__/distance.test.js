@@ -15,10 +15,10 @@ const {
   TIER_VERSION,
 } = require("../distance");
 
-test("config: 6 data-driven tiers, last uncapped, version stamped", () => {
+test("config: 11 data-driven tiers capped at 70 km, version stamped", () => {
   assert.ok(Array.isArray(FEE_TIERS));
-  assert.equal(FEE_TIERS.length, 6);
-  assert.equal(FEE_TIERS[5].maxKm, Infinity);
+  assert.equal(FEE_TIERS.length, 11);
+  assert.equal(FEE_TIERS[10].maxKm, 70);
   assert.equal(typeof TIER_VERSION, "string");
 });
 
@@ -42,20 +42,35 @@ test("haversine: zero for same coord, ~1.89 km San Isidro→Iba (Hagonoy)", () =
 
 test("tier boundary: 3.0 km = ₱25, 3.1 km = ₱35", () => {
   assert.deepEqual(feeForAdjustedDistance(3.0), { fee: 25, tier: "0–3 km" });
-  assert.deepEqual(feeForAdjustedDistance(3.1), { fee: 35, tier: "3.1–6 km" });
+  assert.deepEqual(feeForAdjustedDistance(3.1), { fee: 35, tier: "3.1–5 km" });
 });
 
 test("all tier boundaries (inclusive upper bounds)", () => {
   const cases = [
-    [3.0, 25, "0–3 km"], [3.1, 35, "3.1–6 km"],
-    [6.0, 35, "3.1–6 km"], [6.1, 50, "6.1–10 km"],
-    [10.0, 50, "6.1–10 km"], [10.1, 65, "10.1–15 km"],
-    [15.0, 65, "10.1–15 km"], [15.1, 80, "15.1–20 km"],
-    [20.0, 80, "15.1–20 km"], [20.1, 100, "20.1 km+"],
-    [120, 100, "20.1 km+"],
+    [3.0, 25, "0–3 km"], [3.1, 35, "3.1–5 km"],
+    [5.0, 35, "3.1–5 km"], [5.1, 50, "5.1–10 km"],
+    [10.0, 50, "5.1–10 km"], [10.1, 70, "10.1–15 km"],
+    [15.0, 70, "10.1–15 km"], [15.1, 90, "15.1–20 km"],
+    [20.0, 90, "15.1–20 km"], [20.1, 110, "20.1–25 km"],
+    [25.0, 110, "20.1–25 km"], [25.1, 130, "25.1–30 km"],
+    [30.0, 130, "25.1–30 km"], [30.1, 160, "30.1–40 km"],
+    [40.0, 160, "30.1–40 km"], [40.1, 190, "40.1–50 km"],
+    [50.0, 190, "40.1–50 km"], [50.1, 220, "50.1–60 km"],
+    [60.0, 220, "50.1–60 km"], [60.1, 250, "60.1–70 km"],
+    [70.0, 250, "60.1–70 km"],
   ];
   for (const [km, fee, tier] of cases) {
     assert.deepEqual(feeForAdjustedDistance(km), { fee, tier }, `${km} km`);
+  }
+});
+
+test("70.1 km throws TOO_FAR (delivery blocked, never a fee)", () => {
+  for (const bad of [70.1, 120]) {
+    assert.throws(
+      () => feeForAdjustedDistance(bad),
+      (e) => e instanceof DeliveryFeeError && e.code === "TOO_FAR",
+      `input ${bad}`
+    );
   }
 });
 
@@ -92,4 +107,15 @@ test("computeDeliveryFee: San Isidro→Iba = 2.5 km adjusted, ₱25", () => {
   assert.equal(q.deliveryFee, 25);
   assert.equal(q.tier, "0–3 km");
   assert.equal(q.feeStatus, "ok");
+});
+
+test("computeDeliveryFee: corner-to-corner Bulacan throws TOO_FAR", () => {
+  assert.throws(
+    () =>
+      computeDeliveryFee(
+        { lat: 14.41, lng: 120.51 },
+        { lat: 15.39, lng: 121.39 }
+      ),
+    (e) => e instanceof DeliveryFeeError && e.code === "TOO_FAR"
+  );
 });

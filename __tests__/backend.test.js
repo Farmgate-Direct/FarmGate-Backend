@@ -82,33 +82,34 @@ const buyerAddress = () => ({
   phone: "09123456789",
 });
 
-test("GCash total = subtotal (server prices) + barangay fee; client fee ignored", async () => {
+test("total = subtotal (server prices) + stored creation fee", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
     p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
   };
   const users = { f1: { ...FARM_PROFILE } };
   const { db, transaction } = fakeDb({ products, users });
+  // The fee below is what POST /orders wrote at creation (server-computed;
+  // clients cannot write fee fields — see firestore.rules). Pricing here
+  // re-prices products only and carries the stored fee to the total.
   const order = {
     farmerId: "f1",
     delivery: "delivery",
-    // Client tried to lie about the fee — server must ignore it.
-    deliveryFee: 1,
-    distanceKm: 999,
+    deliveryFee: 25,
+    distanceKm: 2.5,
+    adjustedDistanceKm: 2.5,
+    deliveryTier: "0–3 km",
+    feeStatus: "ok",
+    roadFactor: 1.3,
     address: buyerAddress(),
     products: [{ productId: "p1", quantity: 2, name: "Rice", price: 1, unit: "kg" }],
   };
-  // Hagonoy San Isidro → Iba: 2.5 km adjusted → ₱25 (0–3 km).
   const priced = await priceOrderOnServer(transaction, db, order);
   assert.equal(priced.subtotal, 200);
   assert.equal(priced.deliveryFee, 25);
   assert.equal(priced.distanceKm, 2.5);
   assert.equal(priced.deliveryTier, "0–3 km");
-  assert.equal(priced.feeStatus, "ok");
-  assert.equal(priced.roadFactor, 1.3);
-  assert.equal(priced.deliveryMethod, "barangay-road-factor");
   assert.equal(priced.total, 225);
-  assert.notEqual(priced.deliveryFee, 1);
 });
 
 test("pickup has no fee and no distance", () => {
@@ -120,7 +121,7 @@ test("pickup has no fee and no distance", () => {
   assert.equal(out.distanceKm, 0);
 });
 
-test("out-of-Bulacan address is blocked at accept (UNKNOWN_CITY)", async () => {
+test("stored fee is honored as-is (no recompute at pricing)", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
     p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
@@ -131,13 +132,18 @@ test("out-of-Bulacan address is blocked at accept (UNKNOWN_CITY)", async () => {
     farmerId: "f1",
     delivery: "delivery",
     status: "pending",
+    // Whatever was written at creation (even an unknown city) is used as-is.
+    deliveryFee: 40,
+    distanceKm: 9,
+    adjustedDistanceKm: 9,
+    deliveryTier: "5.1–10 km",
     address: { ...buyerAddress(), city: "Angeles", province: "Pampanga" },
     products: [{ productId: "p1", quantity: 1, name: "Rice", price: 100, unit: "kg" }],
   };
-  await assert.rejects(
-    priceOrderOnServer(transaction, db, order),
-    (e) => e.code === "UNKNOWN_CITY" || e.code === "INVALID_PROVINCE"
-  );
+  const priced = await priceOrderOnServer(transaction, db, order);
+  assert.equal(priced.subtotal, 100);
+  assert.equal(priced.deliveryFee, 40);
+  assert.equal(priced.total, 140);
 });
 
 test("legacy order without barangay keeps the fee already written (no recompute)", () => {

@@ -53,7 +53,7 @@ test("same city, far apart (SJDM Sapang Palay → Muzon): computed tier", () => 
   );
   assert.ok(q.distanceKm > 3, `got ${q.distanceKm}`);
   assert.equal(q.deliveryFee, 50);
-  assert.equal(q.tier, "6.1–10 km");
+  assert.equal(q.tier, "5.1–10 km");
 });
 
 test("same city, far apart (Norzagaray Poblacion → Bigte): computed tier", () => {
@@ -63,7 +63,7 @@ test("same city, far apart (Norzagaray Poblacion → Bigte): computed tier", () 
   );
   assert.ok(q.distanceKm > 3, `got ${q.distanceKm}`);
   assert.equal(q.deliveryFee, 50);
-  assert.equal(q.tier, "6.1–10 km");
+  assert.equal(q.tier, "5.1–10 km");
 });
 
 test("different cities across the province (Malolos → San Miguel)", () => {
@@ -71,9 +71,9 @@ test("different cities across the province (Malolos → San Miguel)", () => {
     farm("Malolos", "Santo Niño (Pob.)"),
     buyer("San Miguel", "Poblacion")
   );
-  assert.ok(q.distanceKm > 20, `got ${q.distanceKm}`);
-  assert.equal(q.deliveryFee, 100);
-  assert.equal(q.tier, "20.1 km+");
+  assert.ok(q.distanceKm > 40, `got ${q.distanceKm}`);
+  assert.equal(q.deliveryFee, 190);
+  assert.equal(q.tier, "40.1–50 km");
 });
 
 test("non-Bulacan province is blocked (INVALID_PROVINCE)", () => {
@@ -106,10 +106,11 @@ test("same barangay name in two cities resolves per-city (Iba)", () => {
   const meycauayan = lookupBarangay("Meycauayan", "Iba");
   assert.ok(hagonoy && meycauayan);
   assert.notDeepEqual(hagonoy, meycauayan);
-  // Meycauayan Iba → Hagonoy Iba is a long cross-province trip (₱100).
+  // Meycauayan Iba → Hagonoy Iba is a long cross-province trip (35.3 km → ₱160).
   const q = quoteDeliveryFee(farm("Meycauayan", "Iba"), buyer("Hagonoy", "Iba"));
   assert.ok(q.distanceKm > 20, `got ${q.distanceKm}`);
-  assert.equal(q.deliveryFee, 100);
+  assert.equal(q.deliveryFee, 160);
+  assert.equal(q.tier, "30.1–40 km");
 });
 
 test("missing farm barangay throws FARM_MISSING_BARANGAY", () => {
@@ -141,5 +142,5 @@ test("buyer location reads city/barangay text (never coords)", () => {
 
 test("rate table is data (array), not an if-else chain", () => {
   assert.ok(Array.isArray(FEE_TIERS));
-  assert.equal(FEE_TIERS.length, 6);
+  assert.equal(FEE_TIERS.length, 11);
 });

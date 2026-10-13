@@ -554,41 +554,20 @@ const validateOrderForPayment = async (orderRef) => {
 
     const validatedProducts = validatedByIndex;
 
-    // ---- Barangay delivery fee (never trusts client fee/distance) ----
-    // Farm barangay from users/{farmerId}, buyer barangay from
-    // order.address. Computed synchronously inside this transaction from
-    // tx-fresh reads, so the written fee/distance/total stay fixed after
-    // payment. Legacy orders with no barangay keep the fee already written.
-    // Undeliverable names throw -> order stays as-is.
-    let deliveryFee = 0;
-    let distanceKm = 0;
-    let adjustedDistanceKm = 0;
-    let deliveryTier = null;
-    let feeStatus = "ok";
-    let roadFactor = null;
-    let tierVersion = null;
-    let deliveryMethod = null;
-
-    if (order.delivery === "delivery") {
-      const farmerRef = db.collection("users").doc(String(order.farmerId));
-      const farmerSnap = await transaction.get(farmerRef);
-      const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
-      let q;
-      try {
-        q = resolveDeliveryForOrder({ farmerProfile, order });
-      } catch (e) {
-        if (e?.name === "DeliveryFeeError") throw httpError(400, e.message);
-        throw e;
-      }
-      deliveryFee = q.deliveryFee;
-      distanceKm = q.distanceKm;
-      adjustedDistanceKm = q.adjustedDistanceKm;
-      deliveryTier = q.tier;
-      feeStatus = q.feeStatus;
-      roadFactor = q.roadFactor;
-      tierVersion = q.tierVersion;
-      deliveryMethod = q.method;
-    }
+    // ---- Delivery fee: preview-only quote, fixed at creation ----
+    // The fee stored on the order (written by POST /orders) is used as-is
+    // here — the server does NOT recompute at payment. Products below are
+    // still re-priced from server data; the written fee/distance/total stay
+    // fixed after payment.
+    const numOrNull = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
+    const deliveryFee = order.delivery === "delivery" ? roundMoney(Number(order.deliveryFee) || 0) : 0;
+    const distanceKm = order.delivery === "delivery" ? numOrNull(order.distanceKm) ?? 0 : 0;
+    const adjustedDistanceKm = order.delivery === "delivery" ? numOrNull(order.adjustedDistanceKm) : null;
+    const deliveryTier = order.delivery === "delivery" ? (order.deliveryTier ?? null) : null;
+    const feeStatus = "ok";
+    const roadFactor = order.delivery === "delivery" ? numOrNull(order.roadFactor) : null;
+    const tierVersion = order.delivery === "delivery" ? (order.tierVersion ?? null) : null;
+    const deliveryMethod = order.delivery === "delivery" ? (order.deliveryMethod ?? null) : null;
 
     const finalSubtotal = roundMoney(computedSubtotal);
     const finalTotal = roundMoney(finalSubtotal + deliveryFee);

@@ -73,6 +73,9 @@ const normalizeAmount = (value) => {
   return roundMoney(number);
 };
 
+// Stored-field reader: finite numbers pass through, anything else is null.
+const numOrNull = (value) => (Number.isFinite(Number(value)) ? Number(value) : null);
+
 const getEnv = (name) => {
   const value = process.env[name];
   return typeof value === "string" && value.trim() !== ""
@@ -573,36 +576,20 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
 
   subtotal = roundMoney(subtotal);
 
-  // Haversine barangay-centroid delivery fee. Reads the farm profile inside
-  // the same transaction (read-before-write) and NEVER uses client-sent
-  // fee/distance. Pure local compute — no network. Throws when the address
-  // can't be delivered to — the caller must keep the order pending and
-  // return a clear error. /deliver settlement below is untouched.
-  let deliveryFee = 0;
-  let distanceKm = 0;
-  let adjustedDistanceKm = 0;
-  let deliveryTier = null;
-  let feeStatus = "ok";
-  let roadFactor = null;
-  let tierVersion = null;
-  let deliveryMethod = null;
-  let deliveryLegacy = false;
-
-  if (order.delivery === "delivery") {
-    const farmerRef = db.collection("users").doc(String(order.farmerId));
-    const farmerSnap = await transaction.get(farmerRef);
-    const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
-    const computed = resolveDeliveryForOrder({ farmerProfile, order });
-    deliveryFee = computed.deliveryFee;
-    distanceKm = computed.distanceKm;
-    adjustedDistanceKm = computed.adjustedDistanceKm;
-    deliveryTier = computed.tier;
-    feeStatus = computed.feeStatus;
-    roadFactor = computed.roadFactor;
-    tierVersion = computed.tierVersion;
-    deliveryMethod = computed.method;
-    deliveryLegacy = computed.legacy === true;
-  }
+  // Delivery fee: preview-only quote, fixed at creation. The fee stored on
+  // the order (written by POST /orders) is used as-is here — the server
+  // does NOT recompute at accept/payment. Subtotal below is still
+  // re-priced from server product prices. /deliver settlement below
+  // is untouched.
+  const deliveryFee = order.delivery === "delivery" ? roundMoney(Number(order.deliveryFee) || 0) : 0;
+  const distanceKm = order.delivery === "delivery" ? numOrNull(order.distanceKm) ?? 0 : 0;
+  const adjustedDistanceKm = order.delivery === "delivery" ? numOrNull(order.adjustedDistanceKm) : null;
+  const deliveryTier = order.delivery === "delivery" ? (order.deliveryTier ?? null) : null;
+  const feeStatus = "ok";
+  const roadFactor = order.delivery === "delivery" ? (Number(order.roadFactor) ?? null) : null;
+  const tierVersion = order.delivery === "delivery" ? (order.tierVersion ?? null) : null;
+  const deliveryMethod = order.delivery === "delivery" ? (order.deliveryMethod ?? null) : null;
+  const deliveryLegacy = false;
 
   return {
     products,
@@ -2567,31 +2554,24 @@ const createWalletRouter = ({ db, auth, inventory }) => {
             completedAt: now,
           });
         } else {
-          // GCash: provisional totals. The authoritative re-price happens in
-          // /create-payment (validateOrderForPayment). Still, the delivery
-          // quote is computed NOW (sync, inside the transaction) so invalid
-          // addresses are blocked at accept and the order stays pending
-          // with a clear error.
+          // GCash: provisional totals from the STORED fee (fixed at
+          // creation). The authoritative values were written by POST
+          // /orders; nothing is recomputed here.
           commissionAmount = roundMoney(getOrderSubtotal(order) * rate);
           if (order.delivery === "delivery") {
-            const acceptFarmerSnap = await transaction.get(
-              db.collection("users").doc(String(order.farmerId))
-            );
-            const acceptFarmerProfile = acceptFarmerSnap.exists ? acceptFarmerSnap.data() : {};
-            const q = resolveDeliveryForOrder({ farmerProfile: acceptFarmerProfile, order });
             pricing = {
               products: order.products,
               subtotal: getOrderSubtotal(order),
-              deliveryFee: q.deliveryFee,
-              distanceKm: q.distanceKm,
-              adjustedDistanceKm: q.adjustedDistanceKm,
-              deliveryTier: q.tier,
-              feeStatus: q.feeStatus,
-              roadFactor: q.roadFactor,
-              tierVersion: q.tierVersion,
-              deliveryMethod: q.method,
-              deliveryLegacy: q.legacy === true,
-              total: roundMoney(getOrderSubtotal(order) + q.deliveryFee),
+              deliveryFee: roundMoney(Number(order.deliveryFee) || 0),
+              distanceKm: numOrNull(order.distanceKm),
+              adjustedDistanceKm: numOrNull(order.adjustedDistanceKm),
+              deliveryTier: order.deliveryTier ?? null,
+              feeStatus: "ok",
+              roadFactor: numOrNull(order.roadFactor),
+              tierVersion: order.tierVersion ?? null,
+              deliveryMethod: order.deliveryMethod ?? null,
+              deliveryLegacy: false,
+              total: roundMoney(getOrderSubtotal(order) + roundMoney(Number(order.deliveryFee) || 0)),
             };
           }
         }

@@ -7,8 +7,8 @@ Automatic delivery fees from city + barangay only. No external calls.
 | Key | Default | Notes |
 |---|---|---|
 | `ROAD_FACTOR` (`FARMGATE_ROAD_DISTANCE_FACTOR` env, fallback `FARMGATE_ROAD_FACTOR`) | 1.3 | Clamped 1–2, out-of-range → 1.3 |
-| `FEE_TIERS` | 0–3 km ₱25 · 3.1–6 km ₱35 · 6.1–10 km ₱50 · 10.1–15 km ₱65 · 15.1–20 km ₱80 · 20.1 km+ ₱100 | Inclusive upper bounds on adjusted distance |
-| `TIER_VERSION` | `barangay-1.3-v1` | Stamped on every order for audit |
+| `FEE_TIERS` | 0–3 km ₱25 · 3.1–5 km ₱35 · 5.1–10 km ₱50 · 10.1–15 km ₱70 · 15.1–20 km ₱90 · 20.1–25 km ₱110 · 25.1–30 km ₱130 · 30.1–40 km ₱160 · 40.1–50 km ₱190 · 50.1–60 km ₱220 · 60.1–70 km ₱250 | Inclusive upper bounds on adjusted distance; over 70 km throws `TOO_FAR` (blocked) |
+| `TIER_VERSION` | `barangay-1.3-v2` | Stamped on every order for audit |
 
 Adjusted distance = haversine(barangay centroids) × factor, rounded to 0.1 km
 BEFORE the tier lookup. Same barangay (exact normalized city + barangay
@@ -23,19 +23,21 @@ match) = 0 km, ₱25. No municipality-center fallback for new orders.
 - Frontend dropdown source: `client/mobile/constants/bulacanBarangays.ts`
   (names must match the backend exactly; exact match only, no fuzzy).
 
-## Flow
+## Flow (preview-only quote, fixed at creation)
 
 - Farmer picks City → Barangay in Farm Profile (`users/{id}`:
   `municipality`/`city` + `barangay`, province locked to Bulacan). Missing
   barangay → amber banner; delivery blocked (`FARM_MISSING_BARANGAY`).
 - Buyer picks City → Barangay in address (`addresses/{id}`: `city`,
   `barangay`, `province`). Text kept for the courier, never geocoded.
-- Checkout calls `POST /delivery/quote` once for all farms (batch); server
-  reads each farm barangay from `users/{farmerId}`.
+- Checkout calls `POST /delivery/quote` once for all farms (batch preview);
+  server reads each farm barangay from `users/{farmerId}`.
 - `POST /orders` creates the order with the server-computed fee (client fee
-  ignored). `/accept` (COD) and `/create-payment` (GCash) recompute from
-  tx-fresh reads; post-pay values are immutable (`/deliver` untouched and
-  idempotent).
+  ignored — enforced by `firestore.rules`, which forbid clients from writing
+  fee fields).
+- `/accept` (COD) and `/create-payment` (GCash) use the STORED fee as-is —
+  no recompute. Products are still re-priced from server data; post-pay
+  values are immutable (`/deliver` untouched and idempotent).
 - Old orders without barangay keep their written fee (`legacy`, no recompute).
 
 ## Error codes

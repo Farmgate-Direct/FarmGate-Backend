@@ -23,17 +23,22 @@ function getRoadFactor(env = process.env) {
   return raw;
 }
 
-const TIER_VERSION = "barangay-1.3-v1";
+const TIER_VERSION = "barangay-1.3-v2";
 
 // Inclusive upper bounds on adjustedDistanceKm.
-// 3.0 => ₱25, 3.1 => ₱35. The last tier has no cap (20.1+ => ₱100).
+// 3.0 => ₱25, 3.1 => ₱35. Over 70 km throws TOO_FAR (delivery blocked).
 const FEE_TIERS = [
   { maxKm: 3, fee: 25, label: "0–3 km" },
-  { maxKm: 6, fee: 35, label: "3.1–6 km" },
-  { maxKm: 10, fee: 50, label: "6.1–10 km" },
-  { maxKm: 15, fee: 65, label: "10.1–15 km" },
-  { maxKm: 20, fee: 80, label: "15.1–20 km" },
-  { maxKm: Infinity, fee: 100, label: "20.1 km+" },
+  { maxKm: 5, fee: 35, label: "3.1–5 km" },
+  { maxKm: 10, fee: 50, label: "5.1–10 km" },
+  { maxKm: 15, fee: 70, label: "10.1–15 km" },
+  { maxKm: 20, fee: 90, label: "15.1–20 km" },
+  { maxKm: 25, fee: 110, label: "20.1–25 km" },
+  { maxKm: 30, fee: 130, label: "25.1–30 km" },
+  { maxKm: 40, fee: 160, label: "30.1–40 km" },
+  { maxKm: 50, fee: 190, label: "40.1–50 km" },
+  { maxKm: 60, fee: 220, label: "50.1–60 km" },
+  { maxKm: 70, fee: 250, label: "60.1–70 km" },
 ];
 
 class DeliveryFeeError extends Error {
@@ -65,8 +70,8 @@ function round1(km) {
 }
 
 // Pure fee lookup over FEE_TIERS (no if-else chain). Always returns
-// { fee, tier } (last tier uncapped). Throws INVALID_DISTANCE for
-// non-numeric/negative input.
+// { fee, tier }. Throws TOO_FAR past 70 km (delivery blocked, never a fee),
+// INVALID_DISTANCE for non-numeric/negative input.
 function feeForAdjustedDistance(adjustedKm) {
   if (
     adjustedKm === null ||
@@ -88,9 +93,10 @@ function feeForAdjustedDistance(adjustedKm) {
   for (const tier of FEE_TIERS) {
     if (km <= tier.maxKm) return { fee: tier.fee, tier: tier.label };
   }
-  // Unreachable while the last tier is uncapped; kept for safety.
-  const last = FEE_TIERS[FEE_TIERS.length - 1];
-  return { fee: last.fee, tier: last.label };
+  throw new DeliveryFeeError(
+    "TOO_FAR",
+    `This delivery is ${km.toFixed(1)} km — over the 70 km Bulacan delivery limit.`
+  );
 }
 
 // Full quote for one barangay-centroid pair (pure, sync, no network).
