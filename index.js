@@ -1523,6 +1523,66 @@ app.post("/delete-image", async (req, res) => {
 });
 
 /* =========================================================
+   ADMIN: REJECT REGISTRATION (authenticated, admin-only)
+   - Deletes the Firestore doc (users/{uid}) so the request
+     disappears from the approvals list.
+   - Deletes the Firebase Auth account so the email can be
+     used to register again.
+   Pending users never transact, so no orders/products cleanup
+   is needed here.
+========================================================= */
+
+app.delete("/admin/users/:uid", async (req, res) => {
+  try {
+    const decoded = await verifyFirebaseUser(req);
+
+    const adminSnap = await db.collection("admins").doc(decoded.uid).get();
+    let isAdmin =
+      adminSnap.exists && (adminSnap.data() || {}).status === "Active";
+
+    if (!isAdmin) {
+      const userSnap = await db.collection("users").doc(decoded.uid).get();
+      isAdmin =
+        userSnap.exists && (userSnap.data() || {}).role === "admin";
+    }
+
+    if (!isAdmin) {
+      throw httpError(403, "Only admin accounts can reject registrations.");
+    }
+
+    const uid = String(req.params.uid || "").trim();
+
+    if (!uid || uid.length > 128) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid user id.",
+      });
+    }
+
+    await db.collection("users").doc(uid).delete();
+
+    try {
+      await auth.deleteUser(uid);
+    } catch (authError) {
+      // Kapag wala nang Auth account (nabura na ng auto-screen),
+      // success pa rin — ang mahalaga ay malinis ang Firestore.
+      if (authError?.code !== "auth/user-not-found") {
+        throw authError;
+      }
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("REJECT USER ERROR:", error);
+
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to reject this registration.",
+    });
+  }
+});
+
+/* =========================================================
    ORDER STATUS: PROCESSING
    - GCash: payment + inventory must already be fulfilled.
    - COD  : stock is normally already deducted when the farmer accepted
