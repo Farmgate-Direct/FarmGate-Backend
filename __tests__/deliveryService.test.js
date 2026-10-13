@@ -8,8 +8,10 @@ const { resolveDeliveryForOrder, resolveDeliveryBatch } = require("../deliverySe
 const { checkQuoteRateLimit, resetQuoteRateLimits } = require("../quoteRateLimit");
 
 const FARM_A = { lat: 14.841, lng: 120.8107 }; // Malolos
-const FARM_FAR = { lat: 15.14, lng: 120.9771 }; // San Miguel (>20 km adjusted)
+const FARM_FAR = { lat: 15.14, lng: 120.9771 }; // San Miguel (49.1 km adjusted)
+const FARM_CORNER = { lat: 14.41, lng: 120.51 }; // bbox SW (manual case)
 const BUYER = { lat: 14.8298, lng: 120.8798 }; // Guiguinto
+const BUYER_CORNER = { lat: 15.39, lng: 121.39 }; // bbox NE (manual case)
 
 test("single: Malolos→Guiguinto = 7.5/9.8/₱75 ok", () => {
   const out = resolveDeliveryForOrder({
@@ -33,10 +35,20 @@ test("single: pickup has no fee and no distance", () => {
   assert.equal(out.distanceKm, 0);
 });
 
-test("single: far farm resolves needs_manual_fee (not an error)", () => {
+test("single: far farm (49.1 km) resolves ok at ₱190", () => {
   const out = resolveDeliveryForOrder({
     farmerProfile: { farmLat: FARM_FAR.lat, farmLng: FARM_FAR.lng },
     order: { delivery: "delivery", address: { ...BUYER } },
+  });
+  assert.equal(out.feeStatus, "ok");
+  assert.equal(out.deliveryFee, 190);
+  assert.equal(out.tier, ">40–50 km");
+});
+
+test("single: corner-to-corner resolves needs_manual_fee (not an error)", () => {
+  const out = resolveDeliveryForOrder({
+    farmerProfile: { farmLat: FARM_CORNER.lat, farmLng: FARM_CORNER.lng },
+    order: { delivery: "delivery", address: { ...BUYER_CORNER } },
   });
   assert.equal(out.feeStatus, "needs_manual_fee");
   assert.equal(out.deliveryFee, null);
@@ -53,17 +65,17 @@ test("single: pickupLocation shape is honored", () => {
 test("batch: one OK + one manual resolves mixed (never rejects)", () => {
   const out = resolveDeliveryBatch({
     pairs: [
-      { key: "f1", farmerId: "f1", farmerPin: FARM_A },
-      { key: "f2", farmerId: "f2", farmerPin: FARM_FAR },
+      { key: "f1", farmerId: "f1", farmerPin: FARM_FAR },
+      { key: "f2", farmerId: "f2", farmerPin: FARM_CORNER },
     ],
-    buyerPin: BUYER,
+    buyerPin: BUYER_CORNER,
   });
   assert.equal(out.length, 2);
   const ok = out.find((r) => r.key === "f1");
   const manual = out.find((r) => r.key === "f2");
   assert.equal(ok.success, true);
-  assert.equal(ok.deliveryFee, 75);
   assert.equal(ok.feeStatus, "ok");
+  assert.equal(ok.deliveryFee, 250); // 68 km adjusted -> >60–70 km
   assert.equal(manual.success, true);
   assert.equal(manual.feeStatus, "needs_manual_fee");
   assert.equal(manual.deliveryFee, null);

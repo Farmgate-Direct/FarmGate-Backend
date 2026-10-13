@@ -19,10 +19,10 @@ const {
   TIER_VERSION,
 } = require("../distance");
 
-test("config: 4 data-driven tiers, 20 km auto max, version stamped", () => {
+test("config: 9 data-driven tiers, 70 km auto max, version stamped", () => {
   assert.ok(Array.isArray(FEE_TIERS));
-  assert.equal(FEE_TIERS.length, 4);
-  assert.equal(MAX_AUTO_KM, 20);
+  assert.equal(FEE_TIERS.length, 9);
+  assert.equal(MAX_AUTO_KM, 70);
   assert.equal(typeof TIER_VERSION, "string");
 });
 
@@ -74,9 +74,14 @@ for (const [low, lowFee, lowTier, high, highFee, highTier] of BOUNDARIES) {
   });
 }
 
-test("20.0 km is auto (₱100); 20.1 km is manual (null, never a fee)", () => {
+test("20.0 km = ₱100; 20.1 km = ₱130 (>20–30 km tier)", () => {
   assert.deepEqual(feeForAdjustedDistance(20.0), { fee: 100, tier: ">12–20 km" });
-  assert.equal(feeForAdjustedDistance(20.1), null);
+  assert.deepEqual(feeForAdjustedDistance(20.1), { fee: 130, tier: ">20–30 km" });
+});
+
+test("70.0 km is auto (₱250); 70.1 km is manual (null, never a fee)", () => {
+  assert.deepEqual(feeForAdjustedDistance(70.0), { fee: 250, tier: ">60–70 km" });
+  assert.equal(feeForAdjustedDistance(70.1), null);
   assert.equal(feeForAdjustedDistance(120), null);
 });
 
@@ -114,15 +119,26 @@ test("computeDeliveryFee: Malolos→Guiguinto = 7.5/9.8/₱75 ok", () => {
   assert.equal(q.feeStatus, "ok");
 });
 
-test("computeDeliveryFee: Malolos→San Miguel = manual (null fee, never priced)", () => {
+test("computeDeliveryFee: Malolos→San Miguel = 37.7/49.1/₱190 ok", () => {
   const q = computeDeliveryFee(
     { lat: 14.841, lng: 120.8107 },
     { lat: 15.14, lng: 120.9771 }
   );
+  assert.equal(q.feeStatus, "ok");
+  assert.equal(q.deliveryFee, 190);
+  assert.equal(q.tier, ">40–50 km");
+  assert.ok(q.adjustedDistanceKm > 20);
+});
+
+test("computeDeliveryFee: corner-to-corner Bulacan = manual (null fee)", () => {
+  const q = computeDeliveryFee(
+    { lat: 14.41, lng: 120.51 },
+    { lat: 15.39, lng: 121.39 }
+  );
   assert.equal(q.feeStatus, "needs_manual_fee");
   assert.equal(q.deliveryFee, null);
   assert.equal(q.tier, null);
-  assert.ok(q.adjustedDistanceKm > 20);
+  assert.ok(q.adjustedDistanceKm > 70);
 });
 
 test("computeDeliveryFee: bad pins throw INVALID_COORDINATES", () => {

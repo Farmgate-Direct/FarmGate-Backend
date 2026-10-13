@@ -559,7 +559,7 @@ const validateOrderForPayment = async (orderRef) => {
     // Farm pickup from users/{farmerId}, buyer location from order.address.
     // Computed synchronously inside this transaction from tx-fresh reads, so
     // the written fee/distance/total stay fixed after payment. Legacy orders
-    // with no pins keep the fee already written. needs_manual_fee (>20 km
+    // with no pins keep the fee already written. needs_manual_fee (>70 km
     // adjusted) without a farmer-set fee blocks payment (400) — the order
     // stays as-is.
     let deliveryFee = 0;
@@ -586,7 +586,7 @@ const validateOrderForPayment = async (orderRef) => {
       if (q.feeStatus === "needs_manual_fee") {
         const kept = manualFeeRecord(order, farmerProfile);
         if (!kept) {
-          throw httpError(400, "The farmer hasn't set the delivery fee yet (over 20 km). You'll be able to pay once it's set.");
+          throw httpError(400, "The farmer hasn't set the delivery fee yet (over 70 km). You'll be able to pay once it's set.");
         }
         deliveryFee = kept.deliveryFee;
         distanceKm = q.distanceKm;
@@ -1268,7 +1268,7 @@ app.get("/health", (req, res) => {
      the courier only and are never geocoded).
    - One call quotes ALL farms in the cart (sync local compute).
      Client fee/distance preview is never trusted.
-   - needs_manual_fee (>20 km adjusted) is a SUCCESS with deliveryFee null.
+   - needs_manual_fee (>70 km adjusted) is a SUCCESS with deliveryFee null.
    ========================================================= */
 
 app.post("/delivery/quote", async (req, res) => {
@@ -1407,7 +1407,7 @@ app.post("/delivery/quote", async (req, res) => {
    - The buyer is the verified Firebase user (buyerId forced, never trusted).
    - The delivery fee is computed HERE from the farmer's stored pickup and
      the address pin. Any deliveryFee/distance sent by the client is ignored.
-   - needs_manual_fee (>20 km adjusted): order is created pending with
+   - needs_manual_fee (>70 km adjusted): order is created pending with
      deliveryFee null. Payment/accept stay blocked until the farmer sets
      the fee (POST /orders/:id/delivery-fee).
    - Stock/prices are still validated at accept/payment (existing lifecycle).

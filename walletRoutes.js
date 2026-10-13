@@ -578,7 +578,7 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
   // same transaction (read-before-write) and NEVER uses client-sent
   // fee/distance. Pure local compute — no network. Throws when the address
   // can't be delivered to — the caller must keep the order pending and
-  // return a clear error. needs_manual_fee (>20 km adjusted) without a
+  // return a clear error. needs_manual_fee (>70 km adjusted) without a
   // farmer-set manual fee throws MANUAL_FEE_REQUIRED. /deliver settlement
   // below is untouched.
   let deliveryFee = 0;
@@ -602,7 +602,7 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
       if (!kept) {
         throw new DeliveryFeeError(
           "MANUAL_FEE_REQUIRED",
-          "This delivery is over 20 km, so the farmer must set the delivery fee before this order can proceed."
+          "This delivery is over 70 km, so the farmer must set the delivery fee before this order can proceed."
         );
       }
       deliveryFee = kept.deliveryFee;
@@ -2608,7 +2608,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
               if (!kept) {
                 throw new DeliveryFeeError(
                   "MANUAL_FEE_REQUIRED",
-                  "This delivery is over 20 km, so you must set the delivery fee before accepting."
+                  "This delivery is over 70 km, so you must set the delivery fee before accepting."
                 );
               }
               pricing = {
@@ -2738,7 +2738,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   // or { farmerId, buyerLat, buyerLng } for a single farm.
   // Farm pickup is read from users/{farmerId} (pickupLocation, else
   // farmLat/farmLng — never from the client). Haversine × road factor,
-  // computed locally. needs_manual_fee (>20 km adjusted) is a SUCCESS with
+  // computed locally. needs_manual_fee (>70 km adjusted) is a SUCCESS with
   // deliveryFee null — checkout shows "farmer confirms fee" and blocks
   // payment until the farmer sets it.
   // ------------------------------------------------------------
@@ -2857,7 +2857,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   });
 
   // ------------------------------------------------------------
-  // SET MANUAL DELIVERY FEE (farmer, pending delivery orders over 20 km)
+  // SET MANUAL DELIVERY FEE (farmer, pending delivery orders over 70 km)
   // POST /orders/:orderId/delivery-fee { deliveryFee }
   // Allowed only while the server quote is needs_manual_fee. The fee and
   // the pins it was set for are stored; the fee is honored while the pins

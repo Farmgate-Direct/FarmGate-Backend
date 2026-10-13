@@ -4,7 +4,7 @@
 // Covers:
 // - total = subtotal (server prices) + Haversine fee (client fee ignored)
 // - pickup has no fee
-// - >20 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)
+// - >70 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)
 // - a farmer-set manual fee is honored while pins are unchanged
 // - legacy orders without pins keep the fee already written (no recompute)
 // - missing farm pickup blocks with FARM_MISSING_PICKUP
@@ -76,7 +76,9 @@ function fakeDb({ products = {}, users = {} } = {}) {
 
 const FARM_PROFILE = { farmLat: 14.841, farmLng: 120.8107, farmName: "Test Farm" };
 const FAR_FARM_PROFILE = { farmLat: 15.14, farmLng: 120.9771, farmName: "Far Farm" };
+const CORNER_FARM_PROFILE = { farmLat: 14.41, farmLng: 120.51, farmName: "Corner Farm" };
 const BUYER_PIN = { lat: 14.8298, lng: 120.8798 };
+const CORNER_BUYER_PIN = { lat: 15.39, lng: 121.39 };
 const buyerAddress = () => ({
   fullName: "Buyer",
   street: "123 Street",
@@ -126,17 +128,17 @@ test("pickup has no fee and no distance", async () => {
   assert.equal(out.distanceKm, 0);
 });
 
-test(">20 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)", async () => {
+test(">70 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
     p1: { farmerId: "f9", name: "Rice", price: 100, unit: "kg", archived: false },
   };
-  const users = { f9: { ...FAR_FARM_PROFILE } };
+  const users = { f9: { ...CORNER_FARM_PROFILE } };
   const { db, transaction } = fakeDb({ products, users });
   const order = {
     farmerId: "f9",
     delivery: "delivery",
-    address: buyerAddress(),
+    address: { ...buyerAddress(), ...CORNER_BUYER_PIN },
     products: [{ productId: "p1", quantity: 1, name: "Rice", price: 100, unit: "kg" }],
   };
   await assert.rejects(
@@ -150,18 +152,18 @@ test("farmer-set manual fee is honored while pins are unchanged", async () => {
   const products = {
     p1: { farmerId: "f9", name: "Rice", price: 100, unit: "kg", archived: false },
   };
-  const users = { f9: { ...FAR_FARM_PROFILE } };
+  const users = { f9: { ...CORNER_FARM_PROFILE } };
   const { db, transaction } = fakeDb({ products, users });
   const order = {
     farmerId: "f9",
     delivery: "delivery",
-    address: buyerAddress(),
+    address: { ...buyerAddress(), ...CORNER_BUYER_PIN },
     feeStatus: "ok",
     manualFee: true,
     manualDeliveryFee: 150,
     manualFeePins: {
-      farm: { lat: FAR_FARM_PROFILE.farmLat, lng: FAR_FARM_PROFILE.farmLng },
-      buyer: { ...BUYER_PIN },
+      farm: { lat: CORNER_FARM_PROFILE.farmLat, lng: CORNER_FARM_PROFILE.farmLng },
+      buyer: { ...CORNER_BUYER_PIN },
     },
     products: [{ productId: "p1", quantity: 2, name: "Rice", price: 100, unit: "kg" }],
   };

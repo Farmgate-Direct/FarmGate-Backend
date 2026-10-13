@@ -8,7 +8,7 @@ No external routing calls. No OSRM (removed).
 | Key | Default | Notes |
 |---|---|---|
 | `ROAD_FACTOR` (`FARMGATE_ROAD_FACTOR` env) | 1.3 | Clamped 1–2, out-of-range → 1.3 |
-| `FEE_TIERS` | 0–3 km ₱30 · >3–7 km ₱50 · >7–12 km ₱75 · >12–20 km ₱100 | Inclusive upper bounds on adjusted distance |
+| `FEE_TIERS` | 0–3 km ₱30 · >3–7 km ₱50 · >7–12 km ₱75 · >12–20 km ₱100 · >20–30 km ₱130 · >30–40 km ₱160 · >40–50 km ₱190 · >50–60 km ₱220 · >60–70 km ₱250 | Inclusive upper bounds on adjusted distance |
 | `MAX_AUTO_KM` | 20 | Over this → `needs_manual_fee`, fee null, never auto-priced |
 | `TIER_VERSION` | `haversine-1.3-v1` | Stamped on every order for audit |
 

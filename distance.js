@@ -20,16 +20,22 @@ function getRoadFactor(env = process.env) {
   return raw;
 }
 
-const MAX_AUTO_KM = 20;
-const TIER_VERSION = "haversine-1.3-v1";
+const MAX_AUTO_KM = 70;
+const TIER_VERSION = "haversine-1.3-v2";
 
 // Inclusive upper bounds on adjustedDistanceKm.
 // 3.0 => ₱30, 3.1 => ₱50. Over MAX_AUTO_KM => needs_manual_fee (fee null).
+// Tiers cover full-province trips (San Miguel ↔ SJDM ≈ 60 km road-adjusted).
 const FEE_TIERS = [
   { maxKm: 3, fee: 30, label: "0–3 km" },
   { maxKm: 7, fee: 50, label: ">3–7 km" },
   { maxKm: 12, fee: 75, label: ">7–12 km" },
   { maxKm: 20, fee: 100, label: ">12–20 km" },
+  { maxKm: 30, fee: 130, label: ">20–30 km" },
+  { maxKm: 40, fee: 160, label: ">30–40 km" },
+  { maxKm: 50, fee: 190, label: ">40–50 km" },
+  { maxKm: 60, fee: 220, label: ">50–60 km" },
+  { maxKm: 70, fee: 250, label: ">60–70 km" },
 ];
 
 class DeliveryFeeError extends Error {

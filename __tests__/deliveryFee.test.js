@@ -15,8 +15,8 @@ const {
 
 test("rate table is data (array), not an if-else chain", () => {
   assert.ok(Array.isArray(FEE_TIERS));
-  assert.equal(FEE_TIERS.length, 4);
-  assert.equal(MAX_AUTO_KM, 20);
+  assert.equal(FEE_TIERS.length, 9);
+  assert.equal(MAX_AUTO_KM, 70);
 });
 
 test("0 km (same pin) = ₱30", () => {
@@ -36,9 +36,11 @@ for (const [low, lowFee, lowTier, high, highFee, highTier] of BOUNDARIES) {
   });
 }
 
-test("20.0 km is auto (₱100); 20.1 km returns null (manual, never a fee)", () => {
+test("20.0 km is auto (₱100); 70.0 km is auto (₱250); 70.1 km is manual (null)", () => {
   assert.deepEqual(feeForDistance(20.0), { fee: 100, tier: ">12–20 km" });
-  assert.equal(feeForDistance(20.1), null);
+  assert.deepEqual(feeForDistance(20.1), { fee: 130, tier: ">20–30 km" });
+  assert.deepEqual(feeForDistance(70.0), { fee: 250, tier: ">60–70 km" });
+  assert.equal(feeForDistance(70.1), null);
 });
 
 test("farm pickup prefers pickupLocation, falls back to farmLat/farmLng", () => {
