@@ -1,4 +1,4 @@
-// deliveryService batch + rate-limit tests (pure local compute, no network).
+// deliveryService batch tests (pure local compute, no network).
 // Run: node --test __tests__/deliveryService.test.js
 "use strict";
 const test = require("node:test");
@@ -7,96 +7,91 @@ const assert = require("node:assert/strict");
 const { resolveDeliveryForOrder, resolveDeliveryBatch } = require("../deliveryService");
 const { checkQuoteRateLimit, resetQuoteRateLimits } = require("../quoteRateLimit");
 
-const FARM_A = { lat: 14.841, lng: 120.8107 }; // Malolos
-const FARM_FAR = { lat: 15.14, lng: 120.9771 }; // San Miguel (49.1 km adjusted)
-const FARM_CORNER = { lat: 14.41, lng: 120.51 }; // bbox SW (manual case)
-const BUYER = { lat: 14.8298, lng: 120.8798 }; // Guiguinto
-const BUYER_CORNER = { lat: 15.39, lng: 121.39 }; // bbox NE (manual case)
+const buyer = (city, barangay) => ({ province: "Bulacan", city, barangay });
+const farmProfile = (city, barangay) => ({ municipality: city, barangay, province: "Bulacan" });
 
-test("single: Malolos→Guiguinto = 7.5/9.8/₱75 ok", () => {
+test("single: Hagonoy San Isidro→Iba = 2.5 km, ₱25, ok", () => {
   const out = resolveDeliveryForOrder({
-    farmerProfile: { farmLat: FARM_A.lat, farmLng: FARM_A.lng },
-    order: { delivery: "delivery", address: { ...BUYER } },
+    farmerProfile: farmProfile("Hagonoy", "San Isidro"),
+    order: { delivery: "delivery", address: buyer("Hagonoy", "Iba") },
   });
-  assert.equal(out.deliveryFee, 75);
-  assert.equal(out.distanceKm, 7.5);
-  assert.equal(out.adjustedDistanceKm, 9.8);
-  assert.equal(out.tier, ">7–12 km");
+  assert.equal(out.deliveryFee, 25);
+  assert.equal(out.distanceKm, 2.5);
+  assert.equal(out.tier, "0–3 km");
   assert.equal(out.feeStatus, "ok");
-  assert.equal(out.method, "haversine-road-factor");
+  assert.equal(out.method, "barangay-road-factor");
+});
+
+test("single: same barangay = 0 km, ₱25", () => {
+  const out = resolveDeliveryForOrder({
+    farmerProfile: farmProfile("Hagonoy", "Iba"),
+    order: { delivery: "delivery", address: buyer("Hagonoy", "Iba") },
+  });
+  assert.equal(out.deliveryFee, 25);
+  assert.equal(out.distanceKm, 0);
 });
 
 test("single: pickup has no fee and no distance", () => {
   const out = resolveDeliveryForOrder({
-    farmerProfile: { farmLat: 1, farmLng: 1 },
+    farmerProfile: farmProfile("Hagonoy", "Iba"),
     order: { delivery: "pickup", address: null, deliveryFee: 35 },
   });
   assert.equal(out.deliveryFee, 0);
   assert.equal(out.distanceKm, 0);
 });
 
-test("single: far farm (49.1 km) resolves ok at ₱190", () => {
+test("single: legacy order without barangay keeps the written fee", () => {
   const out = resolveDeliveryForOrder({
-    farmerProfile: { farmLat: FARM_FAR.lat, farmLng: FARM_FAR.lng },
-    order: { delivery: "delivery", address: { ...BUYER } },
+    farmerProfile: { farmName: "Old Farm" },
+    order: { delivery: "delivery", address: { street: "old" }, deliveryFee: 35, distanceKm: 5, deliveryTier: "legacy" },
   });
-  assert.equal(out.feeStatus, "ok");
-  assert.equal(out.deliveryFee, 190);
-  assert.equal(out.tier, ">40–50 km");
+  assert.equal(out.legacy, true);
+  assert.equal(out.deliveryFee, 35);
 });
 
-test("single: corner-to-corner resolves needs_manual_fee (not an error)", () => {
-  const out = resolveDeliveryForOrder({
-    farmerProfile: { farmLat: FARM_CORNER.lat, farmLng: FARM_CORNER.lng },
-    order: { delivery: "delivery", address: { ...BUYER_CORNER } },
-  });
-  assert.equal(out.feeStatus, "needs_manual_fee");
-  assert.equal(out.deliveryFee, null);
+test("single: missing farm barangay throws FARM_MISSING_BARANGAY", () => {
+  assert.throws(
+    () =>
+      resolveDeliveryForOrder({
+        farmerProfile: { farmName: "No-barangay Farm" },
+        order: { delivery: "delivery", address: buyer("Hagonoy", "Iba") },
+      }),
+    (e) => e.code === "FARM_MISSING_BARANGAY"
+  );
 });
 
-test("single: pickupLocation shape is honored", () => {
-  const out = resolveDeliveryForOrder({
-    farmerProfile: { pickupLocation: { lat: FARM_A.lat, lng: FARM_A.lng, address: "Farm" } },
-    order: { delivery: "delivery", address: { ...BUYER } },
-  });
-  assert.equal(out.deliveryFee, 75);
-});
-
-test("batch: one OK + one manual resolves mixed (never rejects)", () => {
+test("batch: SJDM + Baliwag quotes resolve mixed never-rejecting", () => {
   const out = resolveDeliveryBatch({
     pairs: [
-      { key: "f1", farmerId: "f1", farmerPin: FARM_FAR },
-      { key: "f2", farmerId: "f2", farmerPin: FARM_CORNER },
+      { key: "f1", farmerId: "f1", farmerLocation: { city: "San Jose del Monte", barangay: "Sapang Palay", province: "Bulacan" } },
+      { key: "f2", farmerId: "f2", farmerLocation: { city: "Baliwag", barangay: "Poblacion", province: "Bulacan" } },
     ],
-    buyerPin: BUYER_CORNER,
+    buyerLocation: buyer("Hagonoy", "Iba"),
   });
   assert.equal(out.length, 2);
-  const ok = out.find((r) => r.key === "f1");
-  const manual = out.find((r) => r.key === "f2");
-  assert.equal(ok.success, true);
-  assert.equal(ok.feeStatus, "ok");
-  assert.equal(ok.deliveryFee, 250); // 68 km adjusted -> >60–70 km
-  assert.equal(manual.success, true);
-  assert.equal(manual.feeStatus, "needs_manual_fee");
-  assert.equal(manual.deliveryFee, null);
+  for (const r of out) {
+    assert.equal(r.success, true);
+    assert.ok(Number(r.deliveryFee) > 0);
+    assert.ok(Number(r.distanceKm) > 0);
+  }
 });
 
-test("batch without buyer pin fails every farm with ADDRESS_MISSING_PIN", () => {
+test("batch without buyer barangay fails every farm with ADDRESS_MISSING_BARANGAY", () => {
   const out = resolveDeliveryBatch({
-    pairs: [{ key: "f1", farmerId: "f1", farmerPin: FARM_A }],
-    buyerPin: null,
+    pairs: [{ key: "f1", farmerId: "f1", farmerLocation: { city: "Hagonoy", barangay: "Iba" } }],
+    buyerLocation: null,
   });
   assert.equal(out[0].success, false);
-  assert.equal(out[0].code, "ADDRESS_MISSING_PIN");
+  assert.equal(out[0].code, "ADDRESS_MISSING_BARANGAY");
 });
 
-test("batch without farm pin fails with FARM_MISSING_PICKUP", () => {
+test("batch without farm barangay fails with FARM_MISSING_BARANGAY", () => {
   const out = resolveDeliveryBatch({
-    pairs: [{ key: "f1", farmerId: "f1", farmerPin: null }],
-    buyerPin: BUYER,
+    pairs: [{ key: "f1", farmerId: "f1", farmerLocation: null }],
+    buyerLocation: buyer("Hagonoy", "Iba"),
   });
   assert.equal(out[0].success, false);
-  assert.equal(out[0].code, "FARM_MISSING_PICKUP");
+  assert.equal(out[0].code, "FARM_MISSING_BARANGAY");
 });
 
 test("quote rate limit: 30/min allowed, 31st blocked with retry hint", () => {

@@ -2,14 +2,12 @@
 // Run: node --test __tests__/backend.test.js
 //
 // Covers:
-// - total = subtotal (server prices) + Haversine fee (client fee ignored)
-// - pickup has no fee
-// - >70 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)
-// - a farmer-set manual fee is honored while pins are unchanged
-// - legacy orders without pins keep the fee already written (no recompute)
-// - missing farm pickup blocks with FARM_MISSING_PICKUP
+// - GCash total = subtotal (server prices) + barangay fee (client ignored)
 // - second /deliver press does not double-credit (idempotent guard)
 // - COD adds no wallet credit (delivery fee is cash the farmer already holds)
+// - pickup has no fee
+// - an out-of-Bulacan address is blocked at accept (order stays pending)
+// - legacy orders without barangay keep the fee already written
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -74,22 +72,17 @@ function fakeDb({ products = {}, users = {} } = {}) {
   return { db, transaction, store };
 }
 
-const FARM_PROFILE = { farmLat: 14.841, farmLng: 120.8107, farmName: "Test Farm" };
-const FAR_FARM_PROFILE = { farmLat: 15.14, farmLng: 120.9771, farmName: "Far Farm" };
-const CORNER_FARM_PROFILE = { farmLat: 14.41, farmLng: 120.51, farmName: "Corner Farm" };
-const BUYER_PIN = { lat: 14.8298, lng: 120.8798 };
-const CORNER_BUYER_PIN = { lat: 15.39, lng: 121.39 };
+const FARM_PROFILE = { municipality: "Hagonoy", barangay: "San Isidro", province: "Bulacan", farmName: "Test Farm" };
 const buyerAddress = () => ({
   fullName: "Buyer",
   street: "123 Street",
-  barangay: "Poblacion",
-  city: "Guiguinto",
+  barangay: "Iba",
+  city: "Hagonoy",
   province: "Bulacan",
   phone: "09123456789",
-  ...BUYER_PIN,
 });
 
-test("total = subtotal (server prices) + Haversine fee; client fee ignored", async () => {
+test("GCash total = subtotal (server prices) + barangay fee; client fee ignored", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
     p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
@@ -105,22 +98,21 @@ test("total = subtotal (server prices) + Haversine fee; client fee ignored", asy
     address: buyerAddress(),
     products: [{ productId: "p1", quantity: 2, name: "Rice", price: 1, unit: "kg" }],
   };
-  // Malolos→Guiguinto: 7.5 km straight, 9.8 adjusted → ₱75 (>7–12 km).
+  // Hagonoy San Isidro → Iba: 2.5 km adjusted → ₱25 (0–3 km).
   const priced = await priceOrderOnServer(transaction, db, order);
   assert.equal(priced.subtotal, 200);
-  assert.equal(priced.deliveryFee, 75);
-  assert.equal(priced.distanceKm, 7.5);
-  assert.equal(priced.adjustedDistanceKm, 9.8);
-  assert.equal(priced.deliveryTier, ">7–12 km");
+  assert.equal(priced.deliveryFee, 25);
+  assert.equal(priced.distanceKm, 2.5);
+  assert.equal(priced.deliveryTier, "0–3 km");
   assert.equal(priced.feeStatus, "ok");
   assert.equal(priced.roadFactor, 1.3);
-  assert.equal(priced.deliveryMethod, "haversine-road-factor");
-  assert.equal(priced.total, 275);
+  assert.equal(priced.deliveryMethod, "barangay-road-factor");
+  assert.equal(priced.total, 225);
   assert.notEqual(priced.deliveryFee, 1);
 });
 
-test("pickup has no fee and no distance", async () => {
-  const out = await resolveDeliveryForOrder({
+test("pickup has no fee and no distance", () => {
+  const out = resolveDeliveryForOrder({
     farmerProfile: FARM_PROFILE,
     order: { delivery: "pickup", address: null, deliveryFee: 35 },
   });
@@ -128,55 +120,28 @@ test("pickup has no fee and no distance", async () => {
   assert.equal(out.distanceKm, 0);
 });
 
-test(">70 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)", async () => {
+test("out-of-Bulacan address is blocked at accept (UNKNOWN_CITY)", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
-    p1: { farmerId: "f9", name: "Rice", price: 100, unit: "kg", archived: false },
+    p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
   };
-  const users = { f9: { ...CORNER_FARM_PROFILE } };
+  const users = { f1: { ...FARM_PROFILE } };
   const { db, transaction } = fakeDb({ products, users });
   const order = {
-    farmerId: "f9",
+    farmerId: "f1",
     delivery: "delivery",
-    address: { ...buyerAddress(), ...CORNER_BUYER_PIN },
+    status: "pending",
+    address: { ...buyerAddress(), city: "Angeles", province: "Pampanga" },
     products: [{ productId: "p1", quantity: 1, name: "Rice", price: 100, unit: "kg" }],
   };
   await assert.rejects(
     priceOrderOnServer(transaction, db, order),
-    (e) => e.code === "MANUAL_FEE_REQUIRED"
+    (e) => e.code === "UNKNOWN_CITY" || e.code === "INVALID_PROVINCE"
   );
 });
 
-test("farmer-set manual fee is honored while pins are unchanged", async () => {
-  const { priceOrderOnServer } = walletRoutes._test;
-  const products = {
-    p1: { farmerId: "f9", name: "Rice", price: 100, unit: "kg", archived: false },
-  };
-  const users = { f9: { ...CORNER_FARM_PROFILE } };
-  const { db, transaction } = fakeDb({ products, users });
-  const order = {
-    farmerId: "f9",
-    delivery: "delivery",
-    address: { ...buyerAddress(), ...CORNER_BUYER_PIN },
-    feeStatus: "ok",
-    manualFee: true,
-    manualDeliveryFee: 150,
-    manualFeePins: {
-      farm: { lat: CORNER_FARM_PROFILE.farmLat, lng: CORNER_FARM_PROFILE.farmLng },
-      buyer: { ...CORNER_BUYER_PIN },
-    },
-    products: [{ productId: "p1", quantity: 2, name: "Rice", price: 100, unit: "kg" }],
-  };
-  const priced = await priceOrderOnServer(transaction, db, order);
-  assert.equal(priced.subtotal, 200);
-  assert.equal(priced.deliveryFee, 150);
-  assert.equal(priced.deliveryTier, "manual");
-  assert.equal(priced.manualFee, true);
-  assert.equal(priced.total, 350);
-});
-
-test("legacy order without pins keeps the fee already written (no recompute)", async () => {
-  const out = await resolveDeliveryForOrder({
+test("legacy order without barangay keeps the fee already written (no recompute)", () => {
+  const out = resolveDeliveryForOrder({
     farmerProfile: { farmName: "Old Farm" },
     order: { delivery: "delivery", address: { street: "old" }, deliveryFee: 35, distanceKm: 5, deliveryTier: "legacy" },
   });
@@ -184,14 +149,14 @@ test("legacy order without pins keeps the fee already written (no recompute)", a
   assert.equal(out.deliveryFee, 35);
 });
 
-test("missing farm pickup blocks with FARM_MISSING_PICKUP (no stored fee)", () => {
+test("missing farm barangay blocks with FARM_MISSING_BARANGAY (no stored fee)", () => {
   assert.throws(
     () =>
       resolveDeliveryForOrder({
-        farmerProfile: { farmName: "Pin-less Farm" },
+        farmerProfile: { farmName: "No-barangay Farm" },
         order: { delivery: "delivery", address: buyerAddress() },
       }),
-    (e) => e.code === "FARM_MISSING_PICKUP"
+    (e) => e.code === "FARM_MISSING_BARANGAY"
   );
 });
 

@@ -1,4 +1,4 @@
-// Unit tests for distance.js (Haversine × road factor, data-driven tiers).
+// Unit tests for distance.js (barangay-centroid Haversine × road factor).
 // Run: node --test __tests__/distance.test.js
 // No network, no external APIs — everything here is pure local compute.
 "use strict";
@@ -9,80 +9,54 @@ const {
   DeliveryFeeError,
   getRoadFactor,
   haversineKm,
-  validateLatLng,
   feeForAdjustedDistance,
   computeDeliveryFee,
-  getRoadDistanceKm,
-  clearRoadCache,
   FEE_TIERS,
-  MAX_AUTO_KM,
   TIER_VERSION,
 } = require("../distance");
 
-test("config: 9 data-driven tiers, 70 km auto max, version stamped", () => {
+test("config: 6 data-driven tiers, last uncapped, version stamped", () => {
   assert.ok(Array.isArray(FEE_TIERS));
-  assert.equal(FEE_TIERS.length, 9);
-  assert.equal(MAX_AUTO_KM, 70);
+  assert.equal(FEE_TIERS.length, 6);
+  assert.equal(FEE_TIERS[5].maxKm, Infinity);
   assert.equal(typeof TIER_VERSION, "string");
 });
 
-test("getRoadFactor: default 1.3, clamps 1–2, honors env", () => {
+test("getRoadFactor: default 1.3, both env names, clamps 1–2", () => {
   assert.equal(getRoadFactor({}), 1.3);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_FACTOR: "1.3" }), 1.3);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_FACTOR: "0.5" }), 1.3);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_FACTOR: "9" }), 1.3);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_FACTOR: "abc" }), 1.3);
+  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "1.5" }), 1.5);
   assert.equal(getRoadFactor({ FARMGATE_ROAD_FACTOR: "1.5" }), 1.5);
+  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "0.5" }), 1.3);
+  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "9" }), 1.3);
+  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "abc" }), 1.3);
 });
 
-test("haversine: zero for same pin, ~7.5 km Malolos→Guiguinto", () => {
-  const a = { lat: 14.841, lng: 120.8107 };
+test("haversine: zero for same coord, ~1.89 km San Isidro→Iba (Hagonoy)", () => {
+  const a = { lat: 14.8661, lng: 120.7392 };
   assert.equal(haversineKm(a, { ...a }), 0);
-  const b = { lat: 14.8298, lng: 120.8798 };
+  const b = { lat: 14.8655, lng: 120.7568 };
   const km = haversineKm(a, b);
-  assert.ok(km > 7 && km < 8, `got ${km}`);
+  assert.ok(km > 1.8 && km < 2.0, `got ${km}`);
   assert.equal(haversineKm(a, b), haversineKm(b, a)); // symmetric
 });
 
-test("validateLatLng: numbers pass, junk and out-of-range throw", () => {
-  assert.deepEqual(validateLatLng("14.841", "120.8107"), { lat: 14.841, lng: 120.8107 });
-  for (const [lat, lng] of [
-    [NaN, 120.8], ["abc", 120.8], [14.8, "x"], [null, null], [undefined, undefined],
-    [91, 120.8], [-91, 120.8], [14.8, 181], [14.8, -181],
-  ]) {
-    assert.throws(
-      () => validateLatLng(lat, lng),
-      (e) => e instanceof DeliveryFeeError && e.code === "INVALID_COORDINATES",
-      `input ${lat},${lng}`
-    );
+test("tier boundary: 3.0 km = ₱25, 3.1 km = ₱35", () => {
+  assert.deepEqual(feeForAdjustedDistance(3.0), { fee: 25, tier: "0–3 km" });
+  assert.deepEqual(feeForAdjustedDistance(3.1), { fee: 35, tier: "3.1–6 km" });
+});
+
+test("all tier boundaries (inclusive upper bounds)", () => {
+  const cases = [
+    [3.0, 25, "0–3 km"], [3.1, 35, "3.1–6 km"],
+    [6.0, 35, "3.1–6 km"], [6.1, 50, "6.1–10 km"],
+    [10.0, 50, "6.1–10 km"], [10.1, 65, "10.1–15 km"],
+    [15.0, 65, "10.1–15 km"], [15.1, 80, "15.1–20 km"],
+    [20.0, 80, "15.1–20 km"], [20.1, 100, "20.1 km+"],
+    [120, 100, "20.1 km+"],
+  ];
+  for (const [km, fee, tier] of cases) {
+    assert.deepEqual(feeForAdjustedDistance(km), { fee, tier }, `${km} km`);
   }
-  // World range edges are fine (bbox checks live in validatePin).
-  assert.deepEqual(validateLatLng(-90, -180), { lat: -90, lng: -180 });
-  assert.deepEqual(validateLatLng(90, 180), { lat: 90, lng: 180 });
-});
-
-const BOUNDARIES = [
-  [3.0, 30, "0–3 km", 3.1, 50, ">3–7 km"],
-  [7.0, 50, ">3–7 km", 7.1, 75, ">7–12 km"],
-  [12.0, 75, ">7–12 km", 12.1, 100, ">12–20 km"],
-];
-
-for (const [low, lowFee, lowTier, high, highFee, highTier] of BOUNDARIES) {
-  test(`tier boundary: ${low} km = ₱${lowFee}, ${high} km = ₱${highFee}`, () => {
-    assert.deepEqual(feeForAdjustedDistance(low), { fee: lowFee, tier: lowTier });
-    assert.deepEqual(feeForAdjustedDistance(high), { fee: highFee, tier: highTier });
-  });
-}
-
-test("20.0 km = ₱100; 20.1 km = ₱130 (>20–30 km tier)", () => {
-  assert.deepEqual(feeForAdjustedDistance(20.0), { fee: 100, tier: ">12–20 km" });
-  assert.deepEqual(feeForAdjustedDistance(20.1), { fee: 130, tier: ">20–30 km" });
-});
-
-test("70.0 km is auto (₱250); 70.1 km is manual (null, never a fee)", () => {
-  assert.deepEqual(feeForAdjustedDistance(70.0), { fee: 250, tier: ">60–70 km" });
-  assert.equal(feeForAdjustedDistance(70.1), null);
-  assert.equal(feeForAdjustedDistance(120), null);
 });
 
 test("invalid distances throw INVALID_DISTANCE (never a fee)", () => {
@@ -95,65 +69,27 @@ test("invalid distances throw INVALID_DISTANCE (never a fee)", () => {
   }
 });
 
-test("computeDeliveryFee: same pin = 0 km straight, 0 adjusted, ₱30", () => {
-  const a = { lat: 14.841, lng: 120.8107 };
+test("computeDeliveryFee: identical coords = 0 km, ₱25, ok", () => {
+  const a = { lat: 14.8661, lng: 120.7392 };
   const q = computeDeliveryFee(a, { ...a });
   assert.equal(q.distanceKm, 0);
   assert.equal(q.adjustedDistanceKm, 0);
-  assert.equal(q.deliveryFee, 30);
+  assert.equal(q.deliveryFee, 25);
   assert.equal(q.tier, "0–3 km");
   assert.equal(q.feeStatus, "ok");
   assert.equal(q.roadFactor, 1.3);
   assert.equal(q.tierVersion, TIER_VERSION);
+  assert.equal(q.method, "barangay-road-factor");
 });
 
-test("computeDeliveryFee: Malolos→Guiguinto = 7.5/9.8/₱75 ok", () => {
+test("computeDeliveryFee: San Isidro→Iba = 2.5 km adjusted, ₱25", () => {
   const q = computeDeliveryFee(
-    { lat: 14.841, lng: 120.8107 },
-    { lat: 14.8298, lng: 120.8798 }
+    { lat: 14.8661, lng: 120.7392 },
+    { lat: 14.8655, lng: 120.7568 }
   );
-  assert.equal(q.distanceKm, 7.5);
-  assert.equal(q.adjustedDistanceKm, 9.8);
-  assert.equal(q.deliveryFee, 75);
-  assert.equal(q.tier, ">7–12 km");
+  assert.equal(q.distanceKm, 2.5);
+  assert.equal(q.adjustedDistanceKm, 2.5);
+  assert.equal(q.deliveryFee, 25);
+  assert.equal(q.tier, "0–3 km");
   assert.equal(q.feeStatus, "ok");
-});
-
-test("computeDeliveryFee: Malolos→San Miguel = 37.7/49.1/₱190 ok", () => {
-  const q = computeDeliveryFee(
-    { lat: 14.841, lng: 120.8107 },
-    { lat: 15.14, lng: 120.9771 }
-  );
-  assert.equal(q.feeStatus, "ok");
-  assert.equal(q.deliveryFee, 190);
-  assert.equal(q.tier, ">40–50 km");
-  assert.ok(q.adjustedDistanceKm > 20);
-});
-
-test("computeDeliveryFee: corner-to-corner Bulacan = manual (null fee)", () => {
-  const q = computeDeliveryFee(
-    { lat: 14.41, lng: 120.51 },
-    { lat: 15.39, lng: 121.39 }
-  );
-  assert.equal(q.feeStatus, "needs_manual_fee");
-  assert.equal(q.deliveryFee, null);
-  assert.equal(q.tier, null);
-  assert.ok(q.adjustedDistanceKm > 70);
-});
-
-test("computeDeliveryFee: bad pins throw INVALID_COORDINATES", () => {
-  assert.throws(
-    () => computeDeliveryFee({ lat: "x", lng: 1 }, { lat: 2, lng: 3 }),
-    (e) => e instanceof DeliveryFeeError && e.code === "INVALID_COORDINATES"
-  );
-});
-
-test("getRoadDistanceKm: memoized, road-factor aware", () => {
-  clearRoadCache();
-  const a = { lat: 14.841, lng: 120.8107 };
-  const b = { lat: 14.8298, lng: 120.8798 };
-  assert.equal(getRoadDistanceKm(a, b, { roadFactor: 1.3 }), 9.8);
-  assert.equal(getRoadDistanceKm(b, a, { roadFactor: 1.3 }), 9.8); // order-free
-  assert.equal(getRoadDistanceKm(a, b, { roadFactor: 1.5 }), 11.3);
-  clearRoadCache();
 });

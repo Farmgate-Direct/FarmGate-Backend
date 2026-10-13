@@ -59,14 +59,13 @@ const getCommissionRate = () => {
 
 const {
   DeliveryFeeError,
-  farmPinFromProfile,
-  buyerPinFromAddress,
+  farmLocationFromProfile,
+  buyerLocationFromAddress,
 } = require("./deliveryFee");
 
 const {
   resolveDeliveryForOrder,
   resolveDeliveryBatch,
-  manualFeeRecord,
 } = require("./deliveryService");
 
 const { checkQuoteRateLimit } = require("./quoteRateLimit");
@@ -555,13 +554,12 @@ const validateOrderForPayment = async (orderRef) => {
 
     const validatedProducts = validatedByIndex;
 
-    // ---- Haversine × road-factor delivery fee (never trusts client fee/distance) ----
-    // Farm pickup from users/{farmerId}, buyer location from order.address.
-    // Computed synchronously inside this transaction from tx-fresh reads, so
-    // the written fee/distance/total stay fixed after payment. Legacy orders
-    // with no pins keep the fee already written. needs_manual_fee (>70 km
-    // adjusted) without a farmer-set fee blocks payment (400) — the order
-    // stays as-is.
+    // ---- Barangay delivery fee (never trusts client fee/distance) ----
+    // Farm barangay from users/{farmerId}, buyer barangay from
+    // order.address. Computed synchronously inside this transaction from
+    // tx-fresh reads, so the written fee/distance/total stay fixed after
+    // payment. Legacy orders with no barangay keep the fee already written.
+    // Undeliverable names throw -> order stays as-is.
     let deliveryFee = 0;
     let distanceKm = 0;
     let adjustedDistanceKm = 0;
@@ -570,7 +568,6 @@ const validateOrderForPayment = async (orderRef) => {
     let roadFactor = null;
     let tierVersion = null;
     let deliveryMethod = null;
-    let manualFee = false;
 
     if (order.delivery === "delivery") {
       const farmerRef = db.collection("users").doc(String(order.farmerId));
@@ -583,30 +580,14 @@ const validateOrderForPayment = async (orderRef) => {
         if (e?.name === "DeliveryFeeError") throw httpError(400, e.message);
         throw e;
       }
-      if (q.feeStatus === "needs_manual_fee") {
-        const kept = manualFeeRecord(order, farmerProfile);
-        if (!kept) {
-          throw httpError(400, "The farmer hasn't set the delivery fee yet (over 70 km). You'll be able to pay once it's set.");
-        }
-        deliveryFee = kept.deliveryFee;
-        distanceKm = q.distanceKm;
-        adjustedDistanceKm = q.adjustedDistanceKm;
-        deliveryTier = "manual";
-        feeStatus = "ok";
-        roadFactor = q.roadFactor;
-        tierVersion = q.tierVersion;
-        deliveryMethod = "manual";
-        manualFee = true;
-      } else {
-        deliveryFee = q.deliveryFee;
-        distanceKm = q.distanceKm;
-        adjustedDistanceKm = q.adjustedDistanceKm;
-        deliveryTier = q.tier;
-        feeStatus = q.feeStatus;
-        roadFactor = q.roadFactor;
-        tierVersion = q.tierVersion;
-        deliveryMethod = q.method;
-      }
+      deliveryFee = q.deliveryFee;
+      distanceKm = q.distanceKm;
+      adjustedDistanceKm = q.adjustedDistanceKm;
+      deliveryTier = q.tier;
+      feeStatus = q.feeStatus;
+      roadFactor = q.roadFactor;
+      tierVersion = q.tierVersion;
+      deliveryMethod = q.method;
     }
 
     const finalSubtotal = roundMoney(computedSubtotal);
@@ -637,7 +618,6 @@ const validateOrderForPayment = async (orderRef) => {
       roadFactor: roadFactor ?? null,
       tierVersion: tierVersion ?? null,
       deliveryMethod: deliveryMethod ?? null,
-      manualFee,
       total: finalTotal,
 
       commissionRate,
@@ -669,7 +649,6 @@ const validateOrderForPayment = async (orderRef) => {
       roadFactor: roadFactor ?? null,
       tierVersion: tierVersion ?? null,
       deliveryMethod: deliveryMethod ?? null,
-      manualFee,
       products: validatedProducts,
     };
   });
@@ -1259,16 +1238,14 @@ app.get("/health", (req, res) => {
 });
 
 /* =========================================================
-   DELIVERY QUOTE (authoritative, Haversine × road factor, Bulacan only)
-   POST /delivery/quote { items: [{ farmerId, key? }], buyerPin: {lat,lng}, delivery? }
-   or { farmerId, buyerLat, buyerLng } for a single farm.
-   - Farm pickup is read from users/{farmerId} (pickupLocation, else
-     farmLat/farmLng — never from the client).
-   - Buyer location comes from the saved address pin (text fields are for
-     the courier only and are never geocoded).
+   DELIVERY QUOTE (authoritative, barangay-centroid, Bulacan only, no GPS)
+   POST /delivery/quote { items: [{ farmerId, key? }],
+     buyerCity, buyerBarangay, buyerProvince?, delivery? }
+   or { farmerId, buyerCity, buyerBarangay } for a single farm.
+   - Farm barangay is read from users/{farmerId} (never from the client).
+   - Buyer barangay comes from the picked address (city + barangay text).
    - One call quotes ALL farms in the cart (sync local compute).
      Client fee/distance preview is never trusted.
-   - needs_manual_fee (>70 km adjusted) is a SUCCESS with deliveryFee null.
    ========================================================= */
 
 app.post("/delivery/quote", async (req, res) => {
@@ -1296,7 +1273,13 @@ app.post("/delivery/quote", async (req, res) => {
     }
 
     const items = Array.isArray(req.body?.items) ? req.body.items : null;
-    const buyerPin = req.body?.buyerPin || null;
+    // Buyer barangay comes from the picked address (city + barangay text).
+    const address = req.body?.address || null;
+    const buyer = {
+      province: req.body?.buyerProvince ?? address?.province ?? "",
+      city: req.body?.buyerCity ?? address?.city ?? address?.municipality ?? "",
+      barangay: req.body?.buyerBarangay ?? address?.barangay ?? "",
+    };
 
     // ---- Batch path: one call for all farms in the cart ----
     if (items) {
@@ -1306,17 +1289,13 @@ app.post("/delivery/quote", async (req, res) => {
       if (items.length > 20) {
         return res.status(400).json({ success: false, error: "Too many farms in one quote (max 20)." });
       }
-      const buyer =
-        buyerPin && (buyerPin.lat !== undefined || buyerPin.lng !== undefined)
-          ? { lat: Number(buyerPin.lat), lng: Number(buyerPin.lng) }
-          : null;
       const pairs = [];
       for (let i = 0; i < items.length; i++) {
         const farmerId = String(items[i]?.farmerId || "").trim();
         if (!farmerId) {
           return res.status(400).json({ success: false, error: `items[${i}].farmerId is missing.` });
         }
-        pairs.push({ key: items[i]?.key || farmerId, farmerId, farmerPin: null });
+        pairs.push({ key: items[i]?.key || farmerId, farmerId, farmerLocation: null });
       }
       const snaps = await Promise.all(
         pairs.map((p) => db.collection("users").doc(p.farmerId).get())
@@ -1325,14 +1304,13 @@ app.post("/delivery/quote", async (req, res) => {
         if (!snaps[i].exists) {
           pairs[i].missingFarm = true;
         } else {
-          pairs[i].farmerPin = farmPinFromProfile(snaps[i].data() || {});
+          pairs[i].farmerLocation = farmLocationFromProfile(snaps[i].data() || {});
         }
       }
       const missing = pairs.filter((p) => p.missingFarm);
-      const results = await resolveDeliveryBatch({
-        db,
+      const results = resolveDeliveryBatch({
         pairs: pairs.filter((p) => !p.missingFarm),
-        buyerPin: buyer,
+        buyerLocation: buyer,
       });      const byKey = new Map(results.map((r) => [r.key, r]));
       return res.json({
         success: true,
@@ -1344,29 +1322,25 @@ app.post("/delivery/quote", async (req, res) => {
       });
     }
 
-    // ---- Single-farm path ({ farmerId, buyerLat, buyerLng } + compat) ----
+    // ---- Single-farm path ({ farmerId, buyerCity, buyerBarangay }) ----
     const farmerId = String(req.body?.farmerId || "").trim();
-    const address = req.body?.address || null;
     if (!farmerId) {
       return res.status(400).json({ success: false, error: "Missing farmerId." });
     }
-    const latRaw = req.body?.buyerLat ?? buyerPin?.lat ?? address?.lat;
-    const lngRaw = req.body?.buyerLng ?? buyerPin?.lng ?? address?.lng;
-    const singleBuyerPin =
-      latRaw !== undefined && lngRaw !== undefined
-        ? { lat: Number(latRaw), lng: Number(lngRaw) }
-        : address
-          ? buyerPinFromAddress(address)
-          : null;
+    const singleBuyer = {
+      province: req.body?.buyerProvince ?? address?.province ?? "",
+      city: req.body?.buyerCity ?? address?.city ?? address?.municipality ?? "",
+      barangay: req.body?.buyerBarangay ?? address?.barangay ?? "",
+    };
 
     const farmerSnap = await db.collection("users").doc(farmerId).get();
     if (!farmerSnap.exists) {
       return res.status(404).json({ success: false, error: "Farm not found." });
     }
     try {
-      const r = await resolveDeliveryForOrder({
+      const r = resolveDeliveryForOrder({
         farmerProfile: farmerSnap.data() || {},
-        order: { delivery: "delivery", address: { lat: singleBuyerPin?.lat, lng: singleBuyerPin?.lng } },
+        order: { delivery: "delivery", address: singleBuyer },
       });
       return res.json({
         success: true,
@@ -1405,11 +1379,8 @@ app.post("/delivery/quote", async (req, res) => {
      pickupDate?, pickupTime?, subTotal? (informational only)
    }
    - The buyer is the verified Firebase user (buyerId forced, never trusted).
-   - The delivery fee is computed HERE from the farmer's stored pickup and
-     the address pin. Any deliveryFee/distance sent by the client is ignored.
-   - needs_manual_fee (>70 km adjusted): order is created pending with
-     deliveryFee null. Payment/accept stay blocked until the farmer sets
-     the fee (POST /orders/:id/delivery-fee).
+   - The delivery fee is computed HERE from the farmer's stored barangay and
+     the address barangay. Any deliveryFee/distance sent by the client is ignored.
    - Stock/prices are still validated at accept/payment (existing lifecycle).
    ========================================================= */
 
@@ -1503,7 +1474,6 @@ app.post("/orders", async (req, res) => {
       roadFactor: delivery === "delivery" ? quote.roadFactor : null,
       tierVersion: delivery === "delivery" ? quote.tierVersion : null,
       deliveryMethod: delivery === "delivery" ? quote.method : null,
-      manualFee: false,
       total: roundMoney(subTotal + (deliveryFee || 0)),
       status: "pending",
       paymentStatus: "pending",

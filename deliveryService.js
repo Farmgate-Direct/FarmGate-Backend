@@ -1,35 +1,33 @@
 // Delivery orchestration shared by /delivery/quote, order creation,
 // /accept (COD) and /create-payment (validateOrderForPayment, GCash).
 //
-// Haversine × road factor, computed locally and synchronously — no network,
-// no estimates beyond the documented ROAD_FACTOR approximation. Pins only;
-// text address fields are for the courier and are never geocoded.
+// Barangay-centroid distance (Haversine × road factor), computed locally
+// and synchronously — no network, no GPS. Text city/barangay only; exact
+// normalized match, never fuzzy, never a municipality-center fallback.
 // Client-sent fee/distance is never read here.
-//
-// feeStatus "needs_manual_fee" (adjusted distance over MAX_AUTO_KM):
-// deliveryFee is null and the order must NOT auto-confirm or take payment
-// until the farmer sets a manual fee (POST /orders/:id/delivery-fee).
 "use strict";
 
 const {
   DeliveryFeeError,
-  validatePin,
-  farmPinFromProfile,
-  buyerPinFromAddress,
+  quoteDeliveryFee,
+  farmLocationFromProfile,
+  buyerLocationFromAddress,
 } = require("./deliveryFee");
-const { computeDeliveryFee } = require("./distance");
 
 function storedLegacyRecord(order) {
   const stored = Number(order?.deliveryFee);
   if (!Number.isFinite(stored) || stored < 0) return null;
   const d = Number(order?.distanceKm);
-  const a = Number(order?.adjustedDistanceKm);
   return {
     deliveryFee: stored,
     distanceKm: Number.isFinite(d) && d >= 0 ? d : null,
-    adjustedDistanceKm: Number.isFinite(a) && a >= 0 ? a : null,
+    adjustedDistanceKm: Number.isFinite(Number(order?.adjustedDistanceKm))
+      ? Number(order.adjustedDistanceKm)
+      : Number.isFinite(d) && d >= 0
+        ? d
+        : null,
     tier: order?.deliveryTier || order?.tier || "legacy",
-    feeStatus: order?.feeStatus || "ok",
+    feeStatus: "ok",
     roadFactor: order?.roadFactor ?? null,
     tierVersion: order?.tierVersion || null,
     method: order?.deliveryMethod || "legacy",
@@ -38,10 +36,10 @@ function storedLegacyRecord(order) {
 }
 
 // Resolve delivery money for ONE farm/order. Sync (pure local compute).
-// - pickup => zeros. - missing pins + stored fee => legacy keep.
-// - missing pins otherwise => FARM_MISSING_PICKUP / ADDRESS_MISSING_PIN.
-// - over MAX_AUTO_KM => needs_manual_fee with deliveryFee null (not an error:
-//   the order is created/kept pending until the farmer sets the fee).
+// - pickup => zeros. - missing barangay + stored fee => legacy keep.
+// - missing farm barangay otherwise => FARM_MISSING_BARANGAY.
+// - missing buyer barangay otherwise => ADDRESS_MISSING_BARANGAY.
+// - undeliverable names propagate (caller keeps the order pending).
 function resolveDeliveryForOrder({ farmerProfile, order }) {
   if (order?.delivery !== "delivery") {
     return {
@@ -56,27 +54,25 @@ function resolveDeliveryForOrder({ farmerProfile, order }) {
       legacy: false,
     };
   }
-  const farmPin = farmPinFromProfile(farmerProfile);
-  const buyerPin = buyerPinFromAddress(order?.address);
+  const farm = farmLocationFromProfile(farmerProfile);
+  const buyer = buyerLocationFromAddress(order?.address);
 
-  if (!farmPin || !buyerPin) {
+  if (!farm || !buyer) {
     const legacy = storedLegacyRecord(order);
     if (legacy) return legacy; // old order: keep the written fee, no recompute
-    if (!farmPin) {
+    if (!farm) {
       throw new DeliveryFeeError(
-        "FARM_MISSING_PICKUP",
-        "This farm has no pickup location yet. Ask the farmer to set it in Farm Profile before delivery."
+        "FARM_MISSING_BARANGAY",
+        "This farm has no barangay set. Ask the farmer to pick their City and Barangay in Farm Profile before delivery."
       );
     }
     throw new DeliveryFeeError(
-      "ADDRESS_MISSING_PIN",
-      "This address has no delivery location yet. Please set your pin on the map."
+      "ADDRESS_MISSING_BARANGAY",
+      "This address has no barangay set. Please pick your City and Barangay again."
     );
   }
 
-  const farm = validatePin(farmPin, "Farm pickup");
-  const buyer = validatePin(buyerPin, "Delivery location");
-  const q = computeDeliveryFee(farm, buyer);
+  const q = quoteDeliveryFee(farm, buyer);
   return {
     deliveryFee: q.deliveryFee,
     distanceKm: q.distanceKm,
@@ -91,42 +87,35 @@ function resolveDeliveryForOrder({ farmerProfile, order }) {
 }
 
 // Batch quotes for checkout: ONE endpoint call for all farms in the cart.
-// pairs: [{ key, farmerId, farmerPin }]. Returns [{ key, farmerId, success,
-// deliveryFee, distanceKm, adjustedDistanceKm, tier, feeStatus, ... }].
-// needs_manual_fee is a per-farm SUCCESS with deliveryFee null (checkout
-// shows "farmer confirms fee" and blocks payment). Per-farm errors never
-// reject the batch.
-function resolveDeliveryBatch({ pairs, buyerPin }) {
-  let buyer;
-  try {
-    if (!buyerPin) {
-      throw new DeliveryFeeError(
-        "ADDRESS_MISSING_PIN",
-        "Set your delivery location on the map first."
-      );
-    }
-    buyer = validatePin(buyerPin, "Delivery location");
-  } catch (e) {
+// pairs: [{ key, farmerId, farmerLocation }]. Returns [{ key, farmerId,
+// success, deliveryFee, distanceKm, adjustedDistanceKm, tier, ... }].
+// Per-farm failures never reject the batch.
+function resolveDeliveryBatch({ pairs, buyerLocation }) {
+  let buyer = buyerLocation || null;
+  if (!buyer || !buyer.city || !buyer.barangay) {
+    const e = new DeliveryFeeError(
+      "ADDRESS_MISSING_BARANGAY",
+      "Pick your City and Barangay first."
+    );
     return (pairs || []).map((p) => ({
       key: p.key,
       farmerId: p.farmerId,
       success: false,
-      code: e?.code || "ADDRESS_MISSING_PIN",
-      error: e?.message || "Set your delivery location on the map first.",
+      code: e.code,
+      error: e.message,
     }));
   }
 
   return (pairs || []).map((p) => {
     const out = { key: p.key, farmerId: p.farmerId };
     try {
-      if (!p.farmerPin) {
+      if (!p.farmerLocation) {
         throw new DeliveryFeeError(
-          "FARM_MISSING_PICKUP",
-          "This farm has no pickup location yet, so delivery is blocked until the farmer sets it."
+          "FARM_MISSING_BARANGAY",
+          "This farm has no barangay set, so delivery is blocked until the farmer picks it."
         );
       }
-      const farm = validatePin(p.farmerPin, "Farm pickup");
-      const q = computeDeliveryFee(farm, buyer);
+      const q = quoteDeliveryFee(p.farmerLocation, buyer);
       return {
         ...out,
         success: true,
@@ -150,30 +139,7 @@ function resolveDeliveryBatch({ pairs, buyerPin }) {
   });
 }
 
-function pinsEqual(a, b) {
-  const norm = (p) =>
-    p == null || p.lat === null || p.lat === undefined || p.lng === null || p.lng === undefined
-      ? null
-      : `${Number(p.lat)},${Number(p.lng)}`;
-  return norm(a) === norm(b);
-}
-
-// A farmer-set manual fee is honored only while the pins it was set for
-// are unchanged. Otherwise the order falls back to a fresh quote (and the
-// farmer must set the fee again for >20 km). Returns { deliveryFee } | null.
-function manualFeeRecord(order, farmerProfile) {
-  if (order?.manualFee !== true) return null;
-  const fee = Number(order?.manualDeliveryFee);
-  if (!Number.isFinite(fee) || fee < 0) return null;
-  const saved = order?.manualFeePins || {};
-  if (!pinsEqual(farmPinFromProfile(farmerProfile), saved.farm)) return null;
-  if (!pinsEqual(buyerPinFromAddress(order?.address), saved.buyer)) return null;
-  return { deliveryFee: Math.round(fee * 100) / 100 };
-}
-
 module.exports = {
   resolveDeliveryForOrder,
   resolveDeliveryBatch,
-  manualFeeRecord,
-  pinsEqual,
 };
