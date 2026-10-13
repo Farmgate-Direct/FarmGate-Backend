@@ -1,5 +1,5 @@
 // Per-user rate limit for the delivery quote endpoint so one client
-// cannot spam OSRM. In-memory fixed window (single instance).
+// cannot spam quote computation. In-memory fixed window (single instance).
 // 429 + Retry-After when exceeded.
 "use strict";
 

@@ -1,63 +1,60 @@
-// Delivery orchestration shared by /delivery/quote, /accept (COD) and
-// /create-payment (validateOrderForPayment, GCash).
+// Delivery orchestration shared by /delivery/quote, order creation,
+// /accept (COD) and /create-payment (validateOrderForPayment, GCash).
 //
-// Pins only — text address fields are for the courier and are never
-// geocoded. Client-sent fee/distance is never read here.
-// Distances for all farms in one order are fetched in parallel
-// (Promise.all) with the osrmClient timeout. The fee/distance/total
-// written to the order must not change after the buyer pays (callers
-// store distanceKm, deliveryFee, deliveryTier, osrmDataVersion and
-// method "osrm" on the order; post-pay paths reject paid orders).
+// Haversine × road factor, computed locally and synchronously — no network,
+// no estimates beyond the documented ROAD_FACTOR approximation. Pins only;
+// text address fields are for the courier and are never geocoded.
+// Client-sent fee/distance is never read here.
+//
+// feeStatus "needs_manual_fee" (adjusted distance over MAX_AUTO_KM):
+// deliveryFee is null and the order must NOT auto-confirm or take payment
+// until the farmer sets a manual fee (POST /orders/:id/delivery-fee).
 "use strict";
 
 const {
   DeliveryFeeError,
-  feeForDistance,
   validatePin,
   farmPinFromProfile,
   buyerPinFromAddress,
 } = require("./deliveryFee");
-const { cacheKeyFor, readCache, readCacheTx, writeCache } = require("./deliveryCache");
-const { getRouteDistanceKm, getDataVersion } = require("./osrmClient");
+const { computeDeliveryFee } = require("./distance");
 
 function storedLegacyRecord(order) {
   const stored = Number(order?.deliveryFee);
   if (!Number.isFinite(stored) || stored < 0) return null;
   const d = Number(order?.distanceKm);
+  const a = Number(order?.adjustedDistanceKm);
   return {
     deliveryFee: stored,
     distanceKm: Number.isFinite(d) && d >= 0 ? d : null,
+    adjustedDistanceKm: Number.isFinite(a) && a >= 0 ? a : null,
     tier: order?.deliveryTier || order?.tier || "legacy",
-    osrmDataVersion: order?.osrmDataVersion || null,
+    feeStatus: order?.feeStatus || "ok",
+    roadFactor: order?.roadFactor ?? null,
+    tierVersion: order?.tierVersion || null,
     method: order?.deliveryMethod || "legacy",
     legacy: true,
   };
 }
 
-// Default distance fetch: cache-first, OSRM on miss (writes cache).
-function defaultGetDistanceKm(db) {
-  return async (farmPin, buyerPin) => {
-    const osrmDataVersion = getDataVersion();
-    const key = cacheKeyFor(farmPin, buyerPin, osrmDataVersion);
-    const hit = await readCache(db, key);
-    if (hit) {
-      return { distanceKm: hit.distanceKm, osrmDataVersion: hit.osrmDataVersion || osrmDataVersion, cached: true };
-    }
-    const r = await getRouteDistanceKm(farmPin, buyerPin);
-    await writeCache(db, key, { distanceKm: r.distanceKm, osrmDataVersion: r.osrmDataVersion });
-    return { distanceKm: r.distanceKm, osrmDataVersion: r.osrmDataVersion, cached: false };
-  };
-}
-
-// Resolve delivery money for ONE farm/order. Async (may call OSRM).
-// opts: { db, transaction?, farmerProfile, order, getDistanceKm? }
+// Resolve delivery money for ONE farm/order. Sync (pure local compute).
 // - pickup => zeros. - missing pins + stored fee => legacy keep.
-// - missing pins otherwise => FARM_MISSING_PIN / ADDRESS_MISSING_PIN.
-// - NO_ROUTE / TOO_FAR / UNAVAILABLE / PIN errors propagate (caller keeps
-//   the order pending and returns a clear error).
-async function resolveDeliveryForOrder({ db, transaction, farmerProfile, order, getDistanceKm }) {
+// - missing pins otherwise => FARM_MISSING_PICKUP / ADDRESS_MISSING_PIN.
+// - over MAX_AUTO_KM => needs_manual_fee with deliveryFee null (not an error:
+//   the order is created/kept pending until the farmer sets the fee).
+function resolveDeliveryForOrder({ farmerProfile, order }) {
   if (order?.delivery !== "delivery") {
-    return { deliveryFee: 0, distanceKm: 0, tier: null, osrmDataVersion: null, method: null, legacy: false };
+    return {
+      deliveryFee: 0,
+      distanceKm: 0,
+      adjustedDistanceKm: 0,
+      tier: null,
+      feeStatus: "ok",
+      roadFactor: null,
+      tierVersion: null,
+      method: null,
+      legacy: false,
+    };
   }
   const farmPin = farmPinFromProfile(farmerProfile);
   const buyerPin = buyerPinFromAddress(order?.address);
@@ -67,113 +64,91 @@ async function resolveDeliveryForOrder({ db, transaction, farmerProfile, order, 
     if (legacy) return legacy; // old order: keep the written fee, no recompute
     if (!farmPin) {
       throw new DeliveryFeeError(
-        "FARM_MISSING_PIN",
-        "This farm has no map pin yet. Ask the farmer to set their pin in Farm Profile before delivery."
+        "FARM_MISSING_PICKUP",
+        "This farm has no pickup location yet. Ask the farmer to set it in Farm Profile before delivery."
       );
     }
     throw new DeliveryFeeError(
       "ADDRESS_MISSING_PIN",
-      "This address has no map pin yet. Please set your pin on the map."
+      "This address has no delivery location yet. Please set your pin on the map."
     );
   }
 
-  const farm = validatePin(farmPin, "Farm pin");
-  const buyer = validatePin(buyerPin, "Delivery pin");
-  const fetchFn = getDistanceKm || defaultGetDistanceKm(db);
-
-  let distanceKm;
-  let osrmDataVersion;
-  if (transaction) {
-    const key = cacheKeyFor(farm, buyer, getDataVersion());
-    const hit = await readCacheTx(transaction, db, key);
-    if (hit) {
-      distanceKm = hit.distanceKm;
-      osrmDataVersion = hit.osrmDataVersion || getDataVersion();
-    } else {
-      const r = await fetchFn(farm, buyer);
-      distanceKm = r.distanceKm;
-      osrmDataVersion = r.osrmDataVersion || getDataVersion();
-      await writeCache(db, key, { distanceKm, osrmDataVersion });
-    }
-  } else {
-    const r = await fetchFn(farm, buyer);
-    distanceKm = r.distanceKm;
-    osrmDataVersion = r.osrmDataVersion || getDataVersion();
-  }
-
-  const { fee, tier } = feeForDistance(distanceKm);
-  return { deliveryFee: fee, distanceKm, tier, osrmDataVersion, method: "osrm", legacy: false };
+  const farm = validatePin(farmPin, "Farm pickup");
+  const buyer = validatePin(buyerPin, "Delivery location");
+  const q = computeDeliveryFee(farm, buyer);
+  return {
+    deliveryFee: q.deliveryFee,
+    distanceKm: q.distanceKm,
+    adjustedDistanceKm: q.adjustedDistanceKm,
+    tier: q.tier,
+    feeStatus: q.feeStatus,
+    roadFactor: q.roadFactor,
+    tierVersion: q.tierVersion,
+    method: q.method,
+    legacy: false,
+  };
 }
 
-// Batch quotes for checkout: ONE endpoint call, parallel on the server.
-// pairs: [{ key, farmerPin }]. Returns [{ key, success, deliveryFee,
-// distanceKm, tier, osrmDataVersion, method, code?, error? }].
-// Per-farm failures never reject the batch.
-async function resolveDeliveryBatch({ db, pairs, buyerPin, getDistanceKm }) {
-  const fetchFn = getDistanceKm || defaultGetDistanceKm(db);
+// Batch quotes for checkout: ONE endpoint call for all farms in the cart.
+// pairs: [{ key, farmerId, farmerPin }]. Returns [{ key, farmerId, success,
+// deliveryFee, distanceKm, adjustedDistanceKm, tier, feeStatus, ... }].
+// needs_manual_fee is a per-farm SUCCESS with deliveryFee null (checkout
+// shows "farmer confirms fee" and blocks payment). Per-farm errors never
+// reject the batch.
+function resolveDeliveryBatch({ pairs, buyerPin }) {
   let buyer;
   try {
     if (!buyerPin) {
       throw new DeliveryFeeError(
         "ADDRESS_MISSING_PIN",
-        "Set your delivery pin on the map first."
+        "Set your delivery location on the map first."
       );
     }
-    buyer = validatePin(buyerPin, "Delivery pin");
+    buyer = validatePin(buyerPin, "Delivery location");
   } catch (e) {
     return (pairs || []).map((p) => ({
       key: p.key,
       farmerId: p.farmerId,
       success: false,
       code: e?.code || "ADDRESS_MISSING_PIN",
-      error: e?.message || "Set your delivery pin on the map first.",
+      error: e?.message || "Set your delivery location on the map first.",
     }));
   }
 
-  return Promise.all(
-    (pairs || []).map(async (p) => {
-      const out = { key: p.key, farmerId: p.farmerId };
-      try {
-        if (!p.farmerPin) {
-          throw new DeliveryFeeError(
-            "FARM_MISSING_PIN",
-            "This farm has no map pin yet, so delivery is blocked until the farmer sets it."
-          );
-        }
-        const farm = validatePin(p.farmerPin, "Farm pin");
-        const key = cacheKeyFor(farm, buyer, getDataVersion());
-        let distanceKm;
-        let osrmDataVersion;
-        const hit = await readCache(db, key);
-        if (hit) {
-          distanceKm = hit.distanceKm;
-          osrmDataVersion = hit.osrmDataVersion || getDataVersion();
-        } else {
-          const r = await fetchFn(farm, buyer);
-          distanceKm = r.distanceKm;
-          osrmDataVersion = r.osrmDataVersion || getDataVersion();
-          await writeCache(db, key, { distanceKm, osrmDataVersion });
-        }
-        const { fee, tier } = feeForDistance(distanceKm);
-        return { ...out, success: true, deliveryFee: fee, distanceKm, tier, osrmDataVersion, method: "osrm" };
-      } catch (e) {
-        return {
-          ...out,
-          success: false,
-          code: e?.code || (e?.name === "OsrmError" ? "UNAVAILABLE" : "UNAVAILABLE"),
-          error: e?.message || "Unable to quote delivery.",
-        };
+  return (pairs || []).map((p) => {
+    const out = { key: p.key, farmerId: p.farmerId };
+    try {
+      if (!p.farmerPin) {
+        throw new DeliveryFeeError(
+          "FARM_MISSING_PICKUP",
+          "This farm has no pickup location yet, so delivery is blocked until the farmer sets it."
+        );
       }
-    })
-  );
+      const farm = validatePin(p.farmerPin, "Farm pickup");
+      const q = computeDeliveryFee(farm, buyer);
+      return {
+        ...out,
+        success: true,
+        deliveryFee: q.deliveryFee,
+        distanceKm: q.distanceKm,
+        adjustedDistanceKm: q.adjustedDistanceKm,
+        tier: q.tier,
+        feeStatus: q.feeStatus,
+        roadFactor: q.roadFactor,
+        tierVersion: q.tierVersion,
+        method: q.method,
+      };
+    } catch (e) {
+      return {
+        ...out,
+        success: false,
+        code: e?.code || "QUOTE_FAILED",
+        error: e?.message || "Unable to quote delivery.",
+      };
+    }
+  });
 }
-
-module.exports = {
-  resolveDeliveryForOrder,
-  resolveDeliveryBatch,
-  defaultGetDistanceKm,
-  pinsEqual,
-};
 
 function pinsEqual(a, b) {
   const norm = (p) =>
@@ -182,3 +157,23 @@ function pinsEqual(a, b) {
       : `${Number(p.lat)},${Number(p.lng)}`;
   return norm(a) === norm(b);
 }
+
+// A farmer-set manual fee is honored only while the pins it was set for
+// are unchanged. Otherwise the order falls back to a fresh quote (and the
+// farmer must set the fee again for >20 km). Returns { deliveryFee } | null.
+function manualFeeRecord(order, farmerProfile) {
+  if (order?.manualFee !== true) return null;
+  const fee = Number(order?.manualDeliveryFee);
+  if (!Number.isFinite(fee) || fee < 0) return null;
+  const saved = order?.manualFeePins || {};
+  if (!pinsEqual(farmPinFromProfile(farmerProfile), saved.farm)) return null;
+  if (!pinsEqual(buyerPinFromAddress(order?.address), saved.buyer)) return null;
+  return { deliveryFee: Math.round(fee * 100) / 100 };
+}
+
+module.exports = {
+  resolveDeliveryForOrder,
+  resolveDeliveryBatch,
+  manualFeeRecord,
+  pinsEqual,
+};

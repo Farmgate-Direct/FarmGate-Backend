@@ -1,31 +1,32 @@
-// Unit tests for deliveryFee (OSRM pins, data-driven rate table).
+// Unit tests for deliveryFee (Haversine tiers + pin shapes).
 // Run: node --test __tests__/deliveryFee.test.js
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { feeForDistance, DeliveryFeeError, FEE_TIERS } = require("../deliveryFee");
+const {
+  feeForDistance,
+  farmPinFromProfile,
+  buyerPinFromAddress,
+  hasPin,
+  FEE_TIERS,
+  MAX_AUTO_KM,
+} = require("../deliveryFee");
 
 test("rate table is data (array), not an if-else chain", () => {
   assert.ok(Array.isArray(FEE_TIERS));
-  assert.equal(FEE_TIERS.length, 11);
+  assert.equal(FEE_TIERS.length, 4);
+  assert.equal(MAX_AUTO_KM, 20);
 });
 
-test("0 km (same pin) = ₱25", () => {
-  assert.deepEqual(feeForDistance(0), { fee: 25, tier: "0–3 km" });
+test("0 km (same pin) = ₱30", () => {
+  assert.deepEqual(feeForDistance(0), { fee: 30, tier: "0–3 km" });
 });
 
 const BOUNDARIES = [
-  [3.0, 25, "0–3 km", 3.1, 35, "3.1–5 km"],
-  [5.0, 35, "3.1–5 km", 5.1, 50, "5.1–10 km"],
-  [10.0, 50, "5.1–10 km", 10.1, 70, "10.1–15 km"],
-  [15.0, 70, "10.1–15 km", 15.1, 90, "15.1–20 km"],
-  [20.0, 90, "15.1–20 km", 20.1, 110, "20.1–25 km"],
-  [25.0, 110, "20.1–25 km", 25.1, 130, "25.1–30 km"],
-  [30.0, 130, "25.1–30 km", 30.1, 160, "30.1–40 km"],
-  [40.0, 160, "30.1–40 km", 40.1, 190, "40.1–50 km"],
-  [50.0, 190, "40.1–50 km", 50.1, 220, "50.1–60 km"],
-  [60.0, 220, "50.1–60 km", 60.1, 250, "60.1–70 km"],
+  [3.0, 30, "0–3 km", 3.1, 50, ">3–7 km"],
+  [7.0, 50, ">3–7 km", 7.1, 75, ">7–12 km"],
+  [12.0, 75, ">7–12 km", 12.1, 100, ">12–20 km"],
 ];
 
 for (const [low, lowFee, lowTier, high, highFee, highTier] of BOUNDARIES) {
@@ -35,27 +36,38 @@ for (const [low, lowFee, lowTier, high, highFee, highTier] of BOUNDARIES) {
   });
 }
 
-test("70.0 km is allowed (₱250); 70.1 km is blocked", () => {
-  assert.deepEqual(feeForDistance(70.0), { fee: 250, tier: "60.1–70 km" });
-  assert.throws(
-    () => feeForDistance(70.1),
-    (e) => e instanceof DeliveryFeeError && e.code === "TOO_FAR"
-  );
+test("20.0 km is auto (₱100); 20.1 km returns null (manual, never a fee)", () => {
+  assert.deepEqual(feeForDistance(20.0), { fee: 100, tier: ">12–20 km" });
+  assert.equal(feeForDistance(20.1), null);
 });
 
-test("over 70 km is blocked (no fee returned)", () => {
-  assert.throws(
-    () => feeForDistance(120),
-    (e) => e instanceof DeliveryFeeError && e.code === "TOO_FAR"
+test("farm pickup prefers pickupLocation, falls back to farmLat/farmLng", () => {
+  assert.deepEqual(
+    farmPinFromProfile({
+      pickupLocation: { lat: 14.9, lng: 120.9, address: "Farm" },
+      farmLat: 14.1,
+      farmLng: 120.1,
+    }),
+    { lat: 14.9, lng: 120.9 }
   );
+  assert.deepEqual(
+    farmPinFromProfile({ farmLat: 14.841, farmLng: 120.8107 }),
+    { lat: 14.841, lng: 120.8107 }
+  );
+  assert.equal(farmPinFromProfile({ farmName: "No pin" }), null);
+  assert.equal(farmPinFromProfile({ pickupLocation: { lat: "", lng: "" } }), null);
 });
 
-test("invalid distances throw INVALID_DISTANCE (never a fee)", () => {
-  for (const bad of [NaN, -1, "abc", undefined, null]) {
-    assert.throws(
-      () => feeForDistance(bad),
-      (e) => e instanceof DeliveryFeeError && e.code === "INVALID_DISTANCE",
-      `input ${String(bad)}`
-    );
-  }
+test("buyer pin comes from address lat/lng only (never text)", () => {
+  assert.deepEqual(
+    buyerPinFromAddress({ city: "Malolos", barangay: "X", lat: 14.8, lng: 120.8 }),
+    { lat: 14.8, lng: 120.8 }
+  );
+  assert.equal(buyerPinFromAddress({ city: "Malolos", barangay: "X" }), null);
+});
+
+test("hasPin guards missing coordinates", () => {
+  assert.equal(hasPin({ lat: 14.8, lng: 120.8 }), true);
+  assert.equal(hasPin(null), false);
+  assert.equal(hasPin({}), false);
 });

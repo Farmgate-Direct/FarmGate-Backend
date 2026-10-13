@@ -66,6 +66,7 @@ const {
 const {
   resolveDeliveryForOrder,
   resolveDeliveryBatch,
+  manualFeeRecord,
 } = require("./deliveryService");
 
 const { checkQuoteRateLimit } = require("./quoteRateLimit");
@@ -76,7 +77,7 @@ const {
   roundStock6,
 } = require("./eggVariants");
 
-// No flat-fee fallback: new orders always use OSRM road distance.
+// No flat-fee fallback: new orders always use Haversine × road factor.
 // Old orders that already have a fee keep the written fee (legacy keep).
 
 const escapeHtml = (value) =>
@@ -372,46 +373,8 @@ const findOrderFromWebhook = async (data) => {
 ========================================================= */
 
 const validateOrderForPayment = async (orderRef) => {
-  // Resolve the OSRM delivery BEFORE the transaction: network calls
-  // (OSRM + cache) must not run inside it. The pins used are re-checked
-  // against the transaction-fresh order below; on mismatch the buyer
-  // must re-quote (400, order untouched).
-  const preOrderSnap = await orderRef.get();
-  const preOrder = preOrderSnap.exists ? preOrderSnap.data() : null;
-  let precomputedDelivery = null;
-  let precomputedPins = null;
-  if (preOrder && preOrder.delivery === "delivery") {
-    const preFarmerSnap = await db
-      .collection("users")
-      .doc(String(preOrder.farmerId))
-      .get();
-    const preFarmerProfile = preFarmerSnap.exists ? preFarmerSnap.data() : {};
-    precomputedPins = {
-      farm: farmPinFromProfile(preFarmerProfile),
-      buyer: buyerPinFromAddress(preOrder.address),
-    };
-    try {
-      const r = await resolveDeliveryForOrder({
-        db,
-        farmerProfile: preFarmerProfile,
-        order: preOrder,
-      });
-      precomputedDelivery = {
-        deliveryFee: r.deliveryFee,
-        distanceKm: r.distanceKm,
-        tier: r.tier,
-        osrmDataVersion: r.osrmDataVersion || null,
-        method: r.method || null,
-        legacy: r.legacy === true,
-      };
-    } catch (e) {
-      if (e?.name === "DeliveryFeeError" || e?.name === "OsrmError") {
-        throw httpError(400, e.message);
-      }
-      throw e;
-    }
-  }
-
+  // Delivery is priced synchronously inside the transaction below
+  // (Haversine × road factor, pure local compute) — no pre-resolution needed.
   return await db.runTransaction(async (transaction) => {
     const orderSnap = await transaction.get(orderRef);
 
@@ -592,39 +555,58 @@ const validateOrderForPayment = async (orderRef) => {
 
     const validatedProducts = validatedByIndex;
 
-    // ---- OSRM pin delivery fee (never trusts client fee/distance) ----
-    // Farm pin from users/{farmerId}, buyer pin from order.address.
-    // Resolved BEFORE the transaction above; the pins are re-verified
-    // here so the written fee/distance/total stay fixed after payment.
-    // Legacy orders with no pins keep the fee already written.
-    // Undeliverable addresses throw -> order stays as-is.
+    // ---- Haversine × road-factor delivery fee (never trusts client fee/distance) ----
+    // Farm pickup from users/{farmerId}, buyer location from order.address.
+    // Computed synchronously inside this transaction from tx-fresh reads, so
+    // the written fee/distance/total stay fixed after payment. Legacy orders
+    // with no pins keep the fee already written. needs_manual_fee (>20 km
+    // adjusted) without a farmer-set fee blocks payment (400) — the order
+    // stays as-is.
     let deliveryFee = 0;
     let distanceKm = 0;
+    let adjustedDistanceKm = 0;
     let deliveryTier = null;
-    let osrmDataVersion = null;
+    let feeStatus = "ok";
+    let roadFactor = null;
+    let tierVersion = null;
     let deliveryMethod = null;
+    let manualFee = false;
 
     if (order.delivery === "delivery") {
       const farmerRef = db.collection("users").doc(String(order.farmerId));
       const farmerSnap = await transaction.get(farmerRef);
       const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
-      const freshPins = {
-        farm: farmPinFromProfile(farmerProfile),
-        buyer: buyerPinFromAddress(order.address),
-      };
-      const { pinsEqual } = require("./deliveryService");
-      const samePins =
-        precomputedDelivery &&
-        pinsEqual(freshPins.farm, precomputedPins?.farm) &&
-        pinsEqual(freshPins.buyer, precomputedPins?.buyer);
-      if (!samePins) {
-        throw httpError(400, "The delivery address changed. Please re-quote delivery and try again.");
+      let q;
+      try {
+        q = resolveDeliveryForOrder({ farmerProfile, order });
+      } catch (e) {
+        if (e?.name === "DeliveryFeeError") throw httpError(400, e.message);
+        throw e;
       }
-      deliveryFee = precomputedDelivery.deliveryFee;
-      distanceKm = precomputedDelivery.distanceKm;
-      deliveryTier = precomputedDelivery.tier;
-      osrmDataVersion = precomputedDelivery.osrmDataVersion;
-      deliveryMethod = precomputedDelivery.method;
+      if (q.feeStatus === "needs_manual_fee") {
+        const kept = manualFeeRecord(order, farmerProfile);
+        if (!kept) {
+          throw httpError(400, "The farmer hasn't set the delivery fee yet (over 20 km). You'll be able to pay once it's set.");
+        }
+        deliveryFee = kept.deliveryFee;
+        distanceKm = q.distanceKm;
+        adjustedDistanceKm = q.adjustedDistanceKm;
+        deliveryTier = "manual";
+        feeStatus = "ok";
+        roadFactor = q.roadFactor;
+        tierVersion = q.tierVersion;
+        deliveryMethod = "manual";
+        manualFee = true;
+      } else {
+        deliveryFee = q.deliveryFee;
+        distanceKm = q.distanceKm;
+        adjustedDistanceKm = q.adjustedDistanceKm;
+        deliveryTier = q.tier;
+        feeStatus = q.feeStatus;
+        roadFactor = q.roadFactor;
+        tierVersion = q.tierVersion;
+        deliveryMethod = q.method;
+      }
     }
 
     const finalSubtotal = roundMoney(computedSubtotal);
@@ -649,9 +631,13 @@ const validateOrderForPayment = async (orderRef) => {
       subTotal: finalSubtotal,
       deliveryFee,
       distanceKm: distanceKm ?? null,
+      adjustedDistanceKm: adjustedDistanceKm ?? null,
       deliveryTier: deliveryTier ?? null,
-      osrmDataVersion: osrmDataVersion ?? null,
+      feeStatus: feeStatus ?? "ok",
+      roadFactor: roadFactor ?? null,
+      tierVersion: tierVersion ?? null,
       deliveryMethod: deliveryMethod ?? null,
+      manualFee,
       total: finalTotal,
 
       commissionRate,
@@ -677,9 +663,13 @@ const validateOrderForPayment = async (orderRef) => {
       subtotal: finalSubtotal,
       deliveryFee,
       distanceKm: distanceKm ?? null,
+      adjustedDistanceKm: adjustedDistanceKm ?? null,
       deliveryTier: deliveryTier ?? null,
-      osrmDataVersion: osrmDataVersion ?? null,
+      feeStatus: feeStatus ?? "ok",
+      roadFactor: roadFactor ?? null,
+      tierVersion: tierVersion ?? null,
       deliveryMethod: deliveryMethod ?? null,
+      manualFee,
       products: validatedProducts,
     };
   });
@@ -1269,15 +1259,16 @@ app.get("/health", (req, res) => {
 });
 
 /* =========================================================
-   DELIVERY QUOTE (authoritative, OSRM pins, Bulacan only)
+   DELIVERY QUOTE (authoritative, Haversine × road factor, Bulacan only)
    POST /delivery/quote { items: [{ farmerId, key? }], buyerPin: {lat,lng}, delivery? }
-   - Farm pins are read from users/{farmerId}, never from the client.
-   - Buyer pin comes from the saved address pin (text fields are for
+   or { farmerId, buyerLat, buyerLng } for a single farm.
+   - Farm pickup is read from users/{farmerId} (pickupLocation, else
+     farmLat/farmLng — never from the client).
+   - Buyer location comes from the saved address pin (text fields are for
      the courier only and are never geocoded).
-   - One call quotes ALL farms in the cart; distances resolve in
-     parallel on the server. Client fee/distance preview is never trusted.
-   - Single-farm shape { farmerId, address } is still accepted for
-     compatibility (address may carry lat/lng).
+   - One call quotes ALL farms in the cart (sync local compute).
+     Client fee/distance preview is never trusted.
+   - needs_manual_fee (>20 km adjusted) is a SUCCESS with deliveryFee null.
    ========================================================= */
 
 app.post("/delivery/quote", async (req, res) => {
@@ -1342,8 +1333,7 @@ app.post("/delivery/quote", async (req, res) => {
         db,
         pairs: pairs.filter((p) => !p.missingFarm),
         buyerPin: buyer,
-      });
-      const byKey = new Map(results.map((r) => [r.key, r]));
+      });      const byKey = new Map(results.map((r) => [r.key, r]));
       return res.json({
         success: true,
         quotes: pairs.map((p) =>
@@ -1354,15 +1344,17 @@ app.post("/delivery/quote", async (req, res) => {
       });
     }
 
-    // ---- Single-farm path (compatibility) ----
+    // ---- Single-farm path ({ farmerId, buyerLat, buyerLng } + compat) ----
     const farmerId = String(req.body?.farmerId || "").trim();
     const address = req.body?.address || null;
     if (!farmerId) {
       return res.status(400).json({ success: false, error: "Missing farmerId." });
     }
+    const latRaw = req.body?.buyerLat ?? buyerPin?.lat ?? address?.lat;
+    const lngRaw = req.body?.buyerLng ?? buyerPin?.lng ?? address?.lng;
     const singleBuyerPin =
-      buyerPin && (buyerPin.lat !== undefined || buyerPin.lng !== undefined)
-        ? { lat: Number(buyerPin.lat), lng: Number(buyerPin.lng) }
+      latRaw !== undefined && lngRaw !== undefined
+        ? { lat: Number(latRaw), lng: Number(lngRaw) }
         : address
           ? buyerPinFromAddress(address)
           : null;
@@ -1373,16 +1365,19 @@ app.post("/delivery/quote", async (req, res) => {
     }
     try {
       const r = await resolveDeliveryForOrder({
-        db,
         farmerProfile: farmerSnap.data() || {},
         order: { delivery: "delivery", address: { lat: singleBuyerPin?.lat, lng: singleBuyerPin?.lng } },
       });
       return res.json({
         success: true,
-        deliveryFee: r.deliveryFee,
         distanceKm: r.distanceKm,
+        adjustedDistanceKm: r.adjustedDistanceKm,
+        deliveryFee: r.deliveryFee,
         tier: r.tier,
-        osrmDataVersion: r.osrmDataVersion || null,
+        feeStatus: r.feeStatus,
+        status: r.feeStatus,
+        roadFactor: r.roadFactor,
+        tierVersion: r.tierVersion,
         method: r.method || null,
       });
     } catch (e) {
@@ -1397,6 +1392,153 @@ app.post("/delivery/quote", async (req, res) => {
     return res.status(error.status || 500).json({
       success: false,
       error: error.message || "Unable to quote delivery.",
+    });
+  }
+});
+
+/* =========================================================
+   CREATE ORDER (server-side — fee recomputed, client fee ignored)
+   POST /orders {
+     farmerId, farmName?, buyerName?, products: [{ productId, quantity,
+       unit?, name?, image?, eggVariant?, baseQuantity? }],
+     address | null, delivery: "delivery" | "pickup", payment: "gcash" | "cod",
+     pickupDate?, pickupTime?, subTotal? (informational only)
+   }
+   - The buyer is the verified Firebase user (buyerId forced, never trusted).
+   - The delivery fee is computed HERE from the farmer's stored pickup and
+     the address pin. Any deliveryFee/distance sent by the client is ignored.
+   - needs_manual_fee (>20 km adjusted): order is created pending with
+     deliveryFee null. Payment/accept stay blocked until the farmer sets
+     the fee (POST /orders/:id/delivery-fee).
+   - Stock/prices are still validated at accept/payment (existing lifecycle).
+   ========================================================= */
+
+const generateOrderNumber = () => {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  const datePart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+  const timePart = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `FG-${datePart}-${timePart}-${random}`;
+};
+
+app.post("/orders", async (req, res) => {
+  try {
+    const decoded = await verifyFirebaseUser(req);
+    const body = req.body || {};
+
+    const farmerId = String(body.farmerId || "").trim();
+    if (!farmerId) {
+      return res.status(400).json({ success: false, error: "Missing farmerId." });
+    }
+
+    const products = Array.isArray(body.products) ? body.products : [];
+    if (products.length === 0) {
+      return res.status(400).json({ success: false, error: "Order contains no products." });
+    }
+    for (const item of products) {
+      if (!String(item?.productId || "").trim()) {
+        return res.status(400).json({ success: false, error: "Order contains an invalid productId." });
+      }
+      const qty = Number(item?.quantity);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        return res.status(400).json({ success: false, error: `Invalid quantity for ${item?.productId}.` });
+      }
+    }
+
+    const delivery = body.delivery === "pickup" ? "pickup" : "delivery";
+    const payment = body.payment === "cod" ? "cod" : "gcash";
+    if (body.payment && body.payment !== "cod" && body.payment !== "gcash") {
+      return res.status(400).json({ success: false, error: "Order has an invalid payment method." });
+    }
+
+    const farmerSnap = await db.collection("users").doc(farmerId).get();
+    if (!farmerSnap.exists) {
+      return res.status(404).json({ success: false, error: "Farm not found." });
+    }
+    const farmerProfile = farmerSnap.data() || {};
+
+    // Server-side fee (client fee/distance ignored). Throws for invalid
+    // pins — order is not created.
+    let quote = null;
+    if (delivery === "delivery") {
+      try {
+        quote = resolveDeliveryForOrder({
+          farmerProfile,
+          order: { delivery: "delivery", address: body.address || null },
+        });
+      } catch (e) {
+        return res.status(400).json({
+          success: false,
+          error: e.message,
+          ...(e?.code ? { code: e.code } : {}),
+        });
+      }
+    }
+
+    const subTotal = roundMoney(Number(body.subTotal) || 0);
+    const deliveryFee = delivery === "delivery" ? quote.deliveryFee : 0;
+    const orderNumber = generateOrderNumber();
+    const commissionRate = getCommissionRate();
+    const commissionAmount = roundMoney(subTotal * commissionRate);
+
+    const record = {
+      buyerId: decoded.uid,
+      buyerName: String(body.buyerName || ""),
+      farmerId,
+      farmName: String(body.farmName || farmerProfile.farmName || ""),
+      products,
+      delivery,
+      payment,
+      address: body.address || null,
+      pickupDate: body.pickupDate || null,
+      pickupTime: body.pickupTime || null,
+      subTotal,
+      // Fee fields are SERVER-written. Clients cannot write them (rules).
+      deliveryFee,
+      distanceKm: delivery === "delivery" ? quote.distanceKm : 0,
+      adjustedDistanceKm: delivery === "delivery" ? quote.adjustedDistanceKm : 0,
+      deliveryTier: delivery === "delivery" ? quote.tier : null,
+      feeStatus: delivery === "delivery" ? quote.feeStatus : "ok",
+      roadFactor: delivery === "delivery" ? quote.roadFactor : null,
+      tierVersion: delivery === "delivery" ? quote.tierVersion : null,
+      deliveryMethod: delivery === "delivery" ? quote.method : null,
+      manualFee: false,
+      total: roundMoney(subTotal + (deliveryFee || 0)),
+      status: "pending",
+      paymentStatus: "pending",
+      inventoryFulfilled: false,
+      fulfillmentStatus: "pending",
+      commissionRate,
+      commissionAmount,
+      commissionStatus: "pending",
+      farmerEarning: roundMoney(Math.max(0, subTotal - commissionAmount)),
+      farmerWalletCredited: false,
+      financialStatus: "pending",
+      orderNumber,
+      serverValidated: false,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    const docRef = await db.collection("orders").add(record);
+    return res.json({
+      success: true,
+      orderId: docRef.id,
+      orderNumber,
+      deliveryFee,
+      distanceKm: record.distanceKm,
+      adjustedDistanceKm: record.adjustedDistanceKm,
+      deliveryTier: record.deliveryTier,
+      feeStatus: record.feeStatus,
+      status: record.feeStatus,
+      total: record.total,
+    });
+  } catch (error) {
+    console.error("CREATE ORDER ERROR:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to create this order.",
     });
   }
 });

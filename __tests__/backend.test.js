@@ -1,19 +1,20 @@
-// Backend contract tests with a fake Firestore + mocked OSRM (no network).
+// Backend contract tests with a fake Firestore (no network — pure compute).
 // Run: node --test __tests__/backend.test.js
 //
 // Covers:
-// - GCash total = subtotal + OSRM fee (server recomputed, client ignored)
+// - total = subtotal (server prices) + Haversine fee (client fee ignored)
+// - pickup has no fee
+// - >20 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)
+// - a farmer-set manual fee is honored while pins are unchanged
+// - legacy orders without pins keep the fee already written (no recompute)
+// - missing farm pickup blocks with FARM_MISSING_PICKUP
 // - second /deliver press does not double-credit (idempotent guard)
 // - COD adds no wallet credit (delivery fee is cash the farmer already holds)
-// - pickup has no fee
-// - a blocked address (NO_ROUTE) is rejected at accept (order stays pending)
-// - legacy orders without pins keep the fee already written (no recompute)
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const { resolveDeliveryForOrder } = require("../deliveryService");
-const { OsrmError } = require("../osrmClient");
 
 // ---- Stub heavy deps so walletRoutes loads without node_modules ----
 const Module = require("node:module");
@@ -41,8 +42,8 @@ Module._load = function (request, parent, isMain) {
 const walletRoutes = require("../walletRoutes");
 
 // ---- Minimal fake Firestore ----
-function fakeDb({ products = {}, users = {}, cache = {} } = {}) {
-  const store = { products, users, deliveryDistanceCache: cache };
+function fakeDb({ products = {}, users = {} } = {}) {
+  const store = { products, users };
   const ref = (collection, id) => ({
     _collection: collection,
     _id: String(id),
@@ -74,6 +75,7 @@ function fakeDb({ products = {}, users = {}, cache = {} } = {}) {
 }
 
 const FARM_PROFILE = { farmLat: 14.841, farmLng: 120.8107, farmName: "Test Farm" };
+const FAR_FARM_PROFILE = { farmLat: 15.14, farmLng: 120.9771, farmName: "Far Farm" };
 const BUYER_PIN = { lat: 14.8298, lng: 120.8798 };
 const buyerAddress = () => ({
   fullName: "Buyer",
@@ -85,9 +87,7 @@ const buyerAddress = () => ({
   ...BUYER_PIN,
 });
 
-const mockKm = (km, version = "test-v1") => async () => ({ distanceKm: km, osrmDataVersion: version });
-
-test("GCash total = subtotal (server prices) + OSRM fee; client fee ignored", async () => {
+test("total = subtotal (server prices) + Haversine fee; client fee ignored", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
     p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
@@ -103,77 +103,93 @@ test("GCash total = subtotal (server prices) + OSRM fee; client fee ignored", as
     address: buyerAddress(),
     products: [{ productId: "p1", quantity: 2, name: "Rice", price: 1, unit: "kg" }],
   };
-  // 4.2 km -> ₱35 tier (3.1–5 km).
-  const priced = await priceOrderOnServer(transaction, db, order, { getDistanceKm: mockKm(4.2) });
+  // Malolos→Guiguinto: 7.5 km straight, 9.8 adjusted → ₱75 (>7–12 km).
+  const priced = await priceOrderOnServer(transaction, db, order);
   assert.equal(priced.subtotal, 200);
-  assert.equal(priced.deliveryFee, 35);
-  assert.equal(priced.distanceKm, 4.2);
-  assert.equal(priced.deliveryTier, "3.1–5 km");
-  assert.equal(priced.osrmDataVersion, "test-v1");
-  assert.equal(priced.deliveryMethod, "osrm");
-  assert.equal(priced.total, 235);
+  assert.equal(priced.deliveryFee, 75);
+  assert.equal(priced.distanceKm, 7.5);
+  assert.equal(priced.adjustedDistanceKm, 9.8);
+  assert.equal(priced.deliveryTier, ">7–12 km");
+  assert.equal(priced.feeStatus, "ok");
+  assert.equal(priced.roadFactor, 1.3);
+  assert.equal(priced.deliveryMethod, "haversine-road-factor");
+  assert.equal(priced.total, 275);
   assert.notEqual(priced.deliveryFee, 1);
 });
 
 test("pickup has no fee and no distance", async () => {
   const out = await resolveDeliveryForOrder({
-    db: fakeDb().db,
     farmerProfile: FARM_PROFILE,
     order: { delivery: "pickup", address: null, deliveryFee: 35 },
-    getDistanceKm: async () => { throw new Error("must not call OSRM for pickup"); },
   });
   assert.equal(out.deliveryFee, 0);
   assert.equal(out.distanceKm, 0);
 });
 
-test("blocked address (NO_ROUTE) is rejected at accept — order stays pending", async () => {
-  const noRoute = async () => { throw new OsrmError("NO_ROUTE", "No driving route."); };
+test(">20 km without a farmer-set fee is rejected (MANUAL_FEE_REQUIRED)", async () => {
+  const { priceOrderOnServer } = walletRoutes._test;
+  const products = {
+    p1: { farmerId: "f9", name: "Rice", price: 100, unit: "kg", archived: false },
+  };
+  const users = { f9: { ...FAR_FARM_PROFILE } };
+  const { db, transaction } = fakeDb({ products, users });
+  const order = {
+    farmerId: "f9",
+    delivery: "delivery",
+    address: buyerAddress(),
+    products: [{ productId: "p1", quantity: 1, name: "Rice", price: 100, unit: "kg" }],
+  };
   await assert.rejects(
-    resolveDeliveryForOrder({
-      db: fakeDb().db,
-      farmerProfile: FARM_PROFILE,
-      order: { delivery: "delivery", status: "pending", address: buyerAddress() },
-      getDistanceKm: noRoute,
-    }),
-    (e) => e.code === "NO_ROUTE"
+    priceOrderOnServer(transaction, db, order),
+    (e) => e.code === "MANUAL_FEE_REQUIRED"
   );
-  // The accept transaction aborts on this error, so status stays "pending".
-  const orderStatus = "pending";
-  assert.equal(orderStatus, "pending");
 });
 
-test("over-70 km is blocked (TOO_FAR), never priced", async () => {
-  await assert.rejects(
-    resolveDeliveryForOrder({
-      db: fakeDb().db,
-      farmerProfile: FARM_PROFILE,
-      order: { delivery: "delivery", address: buyerAddress() },
-      getDistanceKm: mockKm(70.1),
-    }),
-    (e) => e.code === "TOO_FAR"
-  );
+test("farmer-set manual fee is honored while pins are unchanged", async () => {
+  const { priceOrderOnServer } = walletRoutes._test;
+  const products = {
+    p1: { farmerId: "f9", name: "Rice", price: 100, unit: "kg", archived: false },
+  };
+  const users = { f9: { ...FAR_FARM_PROFILE } };
+  const { db, transaction } = fakeDb({ products, users });
+  const order = {
+    farmerId: "f9",
+    delivery: "delivery",
+    address: buyerAddress(),
+    feeStatus: "ok",
+    manualFee: true,
+    manualDeliveryFee: 150,
+    manualFeePins: {
+      farm: { lat: FAR_FARM_PROFILE.farmLat, lng: FAR_FARM_PROFILE.farmLng },
+      buyer: { ...BUYER_PIN },
+    },
+    products: [{ productId: "p1", quantity: 2, name: "Rice", price: 100, unit: "kg" }],
+  };
+  const priced = await priceOrderOnServer(transaction, db, order);
+  assert.equal(priced.subtotal, 200);
+  assert.equal(priced.deliveryFee, 150);
+  assert.equal(priced.deliveryTier, "manual");
+  assert.equal(priced.manualFee, true);
+  assert.equal(priced.total, 350);
 });
 
 test("legacy order without pins keeps the fee already written (no recompute)", async () => {
   const out = await resolveDeliveryForOrder({
-    db: fakeDb().db,
     farmerProfile: { farmName: "Old Farm" },
     order: { delivery: "delivery", address: { street: "old" }, deliveryFee: 35, distanceKm: 5, deliveryTier: "legacy" },
-    getDistanceKm: async () => { throw new Error("must not call OSRM for legacy"); },
   });
   assert.equal(out.legacy, true);
   assert.equal(out.deliveryFee, 35);
 });
 
-test("missing farm pin blocks with FARM_MISSING_PIN (no stored fee)", async () => {
-  await assert.rejects(
-    resolveDeliveryForOrder({
-      db: fakeDb().db,
-      farmerProfile: { farmName: "Pin-less Farm" },
-      order: { delivery: "delivery", address: buyerAddress() },
-      getDistanceKm: mockKm(4.2),
-    }),
-    (e) => e.code === "FARM_MISSING_PIN"
+test("missing farm pickup blocks with FARM_MISSING_PICKUP (no stored fee)", () => {
+  assert.throws(
+    () =>
+      resolveDeliveryForOrder({
+        farmerProfile: { farmName: "Pin-less Farm" },
+        order: { delivery: "delivery", address: buyerAddress() },
+      }),
+    (e) => e.code === "FARM_MISSING_PICKUP"
   );
 });
 

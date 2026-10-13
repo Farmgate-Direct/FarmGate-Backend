@@ -1,92 +1,41 @@
-// FarmGate delivery fee — OSRM road distance (Bulacan only, pins only).
+// FarmGate delivery fee — Haversine straight line × road factor.
 //
-// Distance comes from the self-hosted OSRM instance (see osrm/README.md),
-// converted to km and rounded to 0.1 km BEFORE the tier lookup below.
-// This module is pure: feeForDistance(distanceKm) -> { fee, tier }.
-// It never estimates, never geocodes, never calls the network.
-// Client preview is NEVER trusted; the server recomputes in
-// /delivery/quote, /accept (COD) and /create-payment
-// (validateOrderForPayment, GCash).
+// Distance = haversineKm(farm, buyer) × ROAD_FACTOR (default 1.3),
+// rounded to 0.1 km BEFORE the tier lookup. Tiers live in distance.js
+// (single config point). No external API calls.
+//
+// Pins only: the farm pickup comes from users/{farmerId} (pickupLocation,
+// else farmLat/farmLng), the buyer location from the order address pin.
+// Text fields are for the courier and are NEVER geocoded. Client-sent
+// fee/distance is never trusted — the server recomputes everywhere.
 "use strict";
 
-// Bulacan bounding box (must match the OSM extract bbox in osrm/README.md).
-// Pins outside this box are rejected — delivery is Bulacan-only.
+const {
+  DeliveryFeeError,
+  feeForAdjustedDistance,
+  getRoadFactor,
+  FEE_TIERS,
+  MAX_AUTO_KM,
+  TIER_VERSION,
+} = require("./distance");
+
+// Bulacan bounding box for map pins (must match the OSM picker bbox in
+// client/mobile/utils/deliveryFee.ts). Pins outside are rejected —
+// delivery is Bulacan-only.
 const BULACAN_BBOX = { minLat: 14.4, maxLat: 15.4, minLng: 120.5, maxLng: 121.4 };
 
-// Rate table, INCLUSIVE upper bounds, in data (no if-else chain).
-// Distance must already be rounded to 0.1 km: 3.0 => ₱25, 3.1 => ₱35.
-// Over 70 km: blocked (TOO_FAR). Same pin (0 km): ₱25.
-const FEE_TIERS = [
-  { maxKm: 3, fee: 25, label: "0–3 km" },
-  { maxKm: 5, fee: 35, label: "3.1–5 km" },
-  { maxKm: 10, fee: 50, label: "5.1–10 km" },
-  { maxKm: 15, fee: 70, label: "10.1–15 km" },
-  { maxKm: 20, fee: 90, label: "15.1–20 km" },
-  { maxKm: 25, fee: 110, label: "20.1–25 km" },
-  { maxKm: 30, fee: 130, label: "25.1–30 km" },
-  { maxKm: 40, fee: 160, label: "30.1–40 km" },
-  { maxKm: 50, fee: 190, label: "40.1–50 km" },
-  { maxKm: 60, fee: 220, label: "50.1–60 km" },
-  { maxKm: 70, fee: 250, label: "60.1–70 km" },
-];
-
-const MAX_DELIVERY_KM = 70;
-
-class DeliveryFeeError extends Error {
-  constructor(code, message) {
-    super(message);
-    this.name = "DeliveryFeeError";
-    this.code = code;
-  }
+// Pure lookup over FEE_TIERS (no if-else chain).
+// Returns { fee, tier }, or null when over MAX_AUTO_KM (caller marks
+// needs_manual_fee — never invents a fee).
+// Throws INVALID_DISTANCE for non-numeric/negative input.
+function feeForDistance(adjustedKm) {
+  const hit = feeForAdjustedDistance(adjustedKm);
+  return hit; // { fee, tier } | null
 }
 
-// Pure lookup over the FEE_TIERS data above (no if-else chain).
-// Throws DeliveryFeeError TOO_FAR when distanceKm > 70,
-// INVALID_DISTANCE for non-numeric/negative input.
-function feeForDistance(distanceKm) {
-  if (
-    distanceKm === null ||
-    distanceKm === undefined ||
-    (typeof distanceKm === "string" && distanceKm.trim() === "")
-  ) {
-    throw new DeliveryFeeError(
-      "INVALID_DISTANCE",
-      "Invalid delivery distance. Please try quoting again."
-    );
-  }
-  const km = Number(distanceKm);
-  if (!Number.isFinite(km) || km < 0) {
-    throw new DeliveryFeeError(
-      "INVALID_DISTANCE",
-      "Invalid delivery distance. Please try quoting again."
-    );
-  }
-  for (const tier of FEE_TIERS) {
-    if (km <= tier.maxKm) {
-      return { fee: tier.fee, tier: tier.label };
-    }
-  }
-  throw new DeliveryFeeError(
-    "TOO_FAR",
-    `This delivery is ${km.toFixed(1)} km — over the 70 km Bulacan delivery limit.`
-  );
-}
-
-// Round an OSRM meter value to 0.1 km (single place this happens).
-function roundDistanceKm(meters) {
-  const km = Number(meters) / 1000;
-  if (!Number.isFinite(km) || km < 0) {
-    throw new DeliveryFeeError(
-      "INVALID_DISTANCE",
-      "Invalid delivery distance. Please try quoting again."
-    );
-  }
-  return Math.round(km * 10) / 10;
-}
-
-// Validate a dropped map pin. Returns { lat, lng } as numbers.
-// Throws INVALID_PIN (non-numeric or out of world range) or
-// PIN_OUT_OF_AREA (outside the Bulacan bbox).
+// Validate a map pin: numeric, in world range, inside the Bulacan bbox.
+// Returns { lat, lng } numbers.
+// Throws INVALID_PIN or PIN_OUT_OF_AREA.
 function validatePin(pin, who = "Pin") {
   const rawLat = pin?.lat;
   const rawLng = pin?.lng;
@@ -97,7 +46,7 @@ function validatePin(pin, who = "Pin") {
   ) {
     throw new DeliveryFeeError(
       "INVALID_PIN",
-      `${who}: missing or invalid coordinates. Please drop the map pin again.`
+      `${who}: missing or invalid coordinates. Please set the location again.`
     );
   }
   const lat = Number(rawLat);
@@ -105,13 +54,13 @@ function validatePin(pin, who = "Pin") {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     throw new DeliveryFeeError(
       "INVALID_PIN",
-      `${who}: missing or invalid coordinates. Please drop the map pin again.`
+      `${who}: missing or invalid coordinates. Please set the location again.`
     );
   }
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
     throw new DeliveryFeeError(
       "INVALID_PIN",
-      `${who}: coordinates are out of range. Please drop the map pin again.`
+      `${who}: coordinates are out of range (lat -90..90, lng -180..180).`
     );
   }
   if (
@@ -122,7 +71,7 @@ function validatePin(pin, who = "Pin") {
   ) {
     throw new DeliveryFeeError(
       "PIN_OUT_OF_AREA",
-      `${who} is outside the Bulacan delivery area. Please drop the pin inside Bulacan.`
+      `${who} is outside the Bulacan delivery area. Please set it inside Bulacan.`
     );
   }
   return { lat, lng };
@@ -138,10 +87,16 @@ function hasPin(pin) {
 
 // ---- Firestore-shape helpers (pure, no db access) ----
 
-// Farm pin from users/{farmerId}. Stored as farmLat/farmLng
-// (legacy aliases lat/lng also accepted). Returns a pin or null.
+// Farm pickup from users/{farmerId}. Canonical: pickupLocation { lat, lng,
+// address }. Legacy farmLat/farmLng (and lat/lng aliases) still accepted.
+// Returns a pin or null.
 function farmPinFromProfile(profile) {
   const p = profile || {};
+  const pl = p.pickupLocation || null;
+  if (pl && pl.lat !== undefined && pl.lng !== undefined) {
+    if (String(pl.lat) === "" || String(pl.lng) === "") return null;
+    return { lat: Number(pl.lat), lng: Number(pl.lng) };
+  }
   const lat = p.farmLat ?? p.lat ?? null;
   const lng = p.farmLng ?? p.lng ?? null;
   if (lat === null || lat === undefined || lng === null || lng === undefined) {
@@ -151,8 +106,8 @@ function farmPinFromProfile(profile) {
   return { lat: Number(lat), lng: Number(lng) };
 }
 
-// Buyer pin from the order's saved address. Text fields (street/city/
-// barangay) are kept for the courier only and are NEVER geocoded.
+// Buyer location from the order's saved address pin (text fields are for
+// the courier only and are NEVER geocoded).
 function buyerPinFromAddress(address) {
   const a = address || {};
   const lat = a.lat ?? null;
@@ -167,12 +122,13 @@ function buyerPinFromAddress(address) {
 module.exports = {
   DeliveryFeeError,
   feeForDistance,
-  roundDistanceKm,
   validatePin,
   hasPin,
   farmPinFromProfile,
   buyerPinFromAddress,
   FEE_TIERS,
-  MAX_DELIVERY_KM,
+  MAX_AUTO_KM,
+  TIER_VERSION,
   BULACAN_BBOX,
+  getRoadFactor,
 };

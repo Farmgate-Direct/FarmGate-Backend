@@ -10,7 +10,7 @@ const {
 const {
   resolveDeliveryForOrder,
   resolveDeliveryBatch,
-  pinsEqual,
+  manualFeeRecord,
 } = require("./deliveryService");
 
 const { checkQuoteRateLimit } = require("./quoteRateLimit");
@@ -477,11 +477,9 @@ const getExpectedFarmerEarning = (order) => {
 
 /*
   Re-prices an order from the products collection (never trusts the client).
-  Delivery is OSRM pin-based: the caller resolves it BEFORE the transaction
-  (network must not run inside it) and passes opts.precomputedDelivery
-  { farmPin, buyerPin, result }. Pins are re-verified against the
-  transaction-fresh reads here; on mismatch an error is thrown and the
-  order stays pending. Tests may pass opts.getDistanceKm instead.
+  Delivery is Haversine × road-factor, computed synchronously from the
+  transaction-fresh farmer profile and order address (pure local compute).
+  On any delivery error an error is thrown and the order stays pending.
   MUST be called inside a transaction BEFORE any transaction write.
 */
 const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
@@ -576,52 +574,56 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
 
   subtotal = roundMoney(subtotal);
 
-  // OSRM pin delivery fee. Reads the farm profile inside the same
-  // transaction (read-before-write) and NEVER uses client-sent fee/distance.
-  // Throws when the address can't be delivered to — the caller must keep
-  // the order pending and return a clear error. /deliver settlement below
-  // is untouched.
+  // Haversine × road-factor delivery fee. Reads the farm profile inside the
+  // same transaction (read-before-write) and NEVER uses client-sent
+  // fee/distance. Pure local compute — no network. Throws when the address
+  // can't be delivered to — the caller must keep the order pending and
+  // return a clear error. needs_manual_fee (>20 km adjusted) without a
+  // farmer-set manual fee throws MANUAL_FEE_REQUIRED. /deliver settlement
+  // below is untouched.
   let deliveryFee = 0;
   let distanceKm = 0;
+  let adjustedDistanceKm = 0;
   let deliveryTier = null;
-  let osrmDataVersion = null;
+  let feeStatus = "ok";
+  let roadFactor = null;
+  let tierVersion = null;
   let deliveryMethod = null;
   let deliveryLegacy = false;
+  let manualFee = false;
 
   if (order.delivery === "delivery") {
     const farmerRef = db.collection("users").doc(String(order.farmerId));
     const farmerSnap = await transaction.get(farmerRef);
     const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
-    const pre = opts.precomputedDelivery || null;
-    if (
-      pre &&
-      pinsEqual(farmPinFromProfile(farmerProfile), pre.farmPin) &&
-      pinsEqual(buyerPinFromAddress(order.address), pre.buyerPin)
-    ) {
-      deliveryFee = pre.result.deliveryFee;
-      distanceKm = pre.result.distanceKm;
-      deliveryTier = pre.result.tier;
-      osrmDataVersion = pre.result.osrmDataVersion || null;
-      deliveryMethod = pre.result.method || null;
-      deliveryLegacy = pre.result.legacy === true;
-    } else if (pre) {
-      throw new Error("The delivery address changed. Please re-quote delivery and try again.");
-    } else if (opts.getDistanceKm) {
-      const computed = await resolveDeliveryForOrder({
-        db,
-        transaction,
-        farmerProfile,
-        order,
-        getDistanceKm: opts.getDistanceKm,
-      });
+    const computed = resolveDeliveryForOrder({ farmerProfile, order });
+    if (computed.feeStatus === "needs_manual_fee") {
+      const kept = manualFeeRecord(order, farmerProfile);
+      if (!kept) {
+        throw new DeliveryFeeError(
+          "MANUAL_FEE_REQUIRED",
+          "This delivery is over 20 km, so the farmer must set the delivery fee before this order can proceed."
+        );
+      }
+      deliveryFee = kept.deliveryFee;
+      distanceKm = computed.distanceKm;
+      adjustedDistanceKm = computed.adjustedDistanceKm;
+      deliveryTier = "manual";
+      feeStatus = "ok";
+      roadFactor = computed.roadFactor;
+      tierVersion = computed.tierVersion;
+      deliveryMethod = "manual";
+      manualFee = true;
+    } else {
       deliveryFee = computed.deliveryFee;
       distanceKm = computed.distanceKm;
+      adjustedDistanceKm = computed.adjustedDistanceKm;
       deliveryTier = computed.tier;
-      osrmDataVersion = computed.osrmDataVersion || null;
-      deliveryMethod = computed.method || null;
+      feeStatus = computed.feeStatus;
+      roadFactor = computed.roadFactor;
+      tierVersion = computed.tierVersion;
+      deliveryMethod = computed.method;
       deliveryLegacy = computed.legacy === true;
-    } else {
-      throw new Error("Delivery must be resolved before the transaction (no estimate allowed).");
     }
   }
 
@@ -630,10 +632,14 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
     subtotal,
     deliveryFee,
     distanceKm,
+    adjustedDistanceKm,
     deliveryTier,
-    osrmDataVersion,
+    feeStatus,
+    roadFactor,
+    tierVersion,
     deliveryMethod,
     deliveryLegacy,
+    manualFee,
     total: roundMoney(subtotal + deliveryFee),
   };
 };
@@ -2488,43 +2494,9 @@ const createWalletRouter = ({ db, auth, inventory }) => {
     const orderRef = db.collection("orders").doc(String(req.params.orderId));
     const walletRef = db.collection("farmerWallets").doc(decoded.uid);
 
-    // Resolve OSRM delivery BEFORE the transaction (network must not run
-    // inside it). Pins are re-verified against transaction-fresh reads;
-    // on mismatch the accept aborts and the order stays pending.
-    // Failure here returns 400 before any write happens.
-    const preSnap = await orderRef.get();
-    const preOrder = preSnap.exists ? preSnap.data() : null;
-    let precomputedDelivery = null;
-    if (preOrder && preOrder.delivery === "delivery" && preOrder.status === "pending") {
-      const preFarmerSnap = await db
-        .collection("users")
-        .doc(String(preOrder.farmerId))
-        .get();
-      const preFarmerProfile = preFarmerSnap.exists ? preFarmerSnap.data() : {};
-      const farmPin = farmPinFromProfile(preFarmerProfile);
-      const buyerPin = buyerPinFromAddress(preOrder.address);
-      try {
-        const r = await resolveDeliveryForOrder({ db, farmerProfile: preFarmerProfile, order: preOrder });
-        precomputedDelivery = {
-          farmPin,
-          buyerPin,
-          result: {
-            deliveryFee: r.deliveryFee,
-            distanceKm: r.distanceKm,
-            tier: r.tier,
-            osrmDataVersion: r.osrmDataVersion || null,
-            method: r.method || null,
-            legacy: r.legacy === true,
-          },
-        };
-      } catch (e) {
-        return res.status(400).json({
-          success: false,
-          error: e.message,
-          ...(e?.code ? { code: e.code } : {}),
-        });
-      }
-    }
+    // Delivery is priced synchronously inside the transaction below
+    // (Haversine × road factor, pure local compute), so no pre-resolution
+    // is needed here. Failure returns 400 before any write happens.
 
     const result = await db.runTransaction(async (transaction) => {
         // ---------- READS ----------
@@ -2568,7 +2540,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
             throw new Error("Stock was already deducted for this order.");
           }
 
-          pricing = await priceOrderOnServer(transaction, db, order, { precomputedDelivery });
+          pricing = await priceOrderOnServer(transaction, db, order);
 
           reservationAmount = roundMoney(pricing.subtotal * rate);
           commissionAmount = reservationAmount;
@@ -2621,33 +2593,56 @@ const createWalletRouter = ({ db, auth, inventory }) => {
         } else {
           // GCash: provisional totals. The authoritative re-price happens in
           // /create-payment (validateOrderForPayment). Still, the delivery
-          // address must be validated NOW so out-of-Bulacan orders are blocked
-          // at accept and the order stays pending with a clear error.
+          // quote is computed NOW (sync, inside the transaction) so invalid
+          // addresses and unset manual fees are blocked at accept and the
+          // order stays pending with a clear error.
           commissionAmount = roundMoney(getOrderSubtotal(order) * rate);
           if (order.delivery === "delivery") {
-            // Precomputed BEFORE the transaction above; verified here so a
-            // changed address aborts accept and the order stays pending.
-            if (
-              !precomputedDelivery ||
-              !pinsEqual(farmPinFromProfile((await transaction.get(
-                db.collection("users").doc(String(order.farmerId))
-              )).data() || {}), precomputedDelivery.farmPin) ||
-              !pinsEqual(buyerPinFromAddress(order.address), precomputedDelivery.buyerPin)
-            ) {
-              throw new Error("The delivery address changed. Please re-quote delivery and try again.");
+            const acceptFarmerSnap = await transaction.get(
+              db.collection("users").doc(String(order.farmerId))
+            );
+            const acceptFarmerProfile = acceptFarmerSnap.exists ? acceptFarmerSnap.data() : {};
+            const q = resolveDeliveryForOrder({ farmerProfile: acceptFarmerProfile, order });
+            if (q.feeStatus === "needs_manual_fee") {
+              const kept = manualFeeRecord(order, acceptFarmerProfile);
+              if (!kept) {
+                throw new DeliveryFeeError(
+                  "MANUAL_FEE_REQUIRED",
+                  "This delivery is over 20 km, so you must set the delivery fee before accepting."
+                );
+              }
+              pricing = {
+                products: order.products,
+                subtotal: getOrderSubtotal(order),
+                deliveryFee: kept.deliveryFee,
+                distanceKm: q.distanceKm,
+                adjustedDistanceKm: q.adjustedDistanceKm,
+                deliveryTier: "manual",
+                feeStatus: "ok",
+                roadFactor: q.roadFactor,
+                tierVersion: q.tierVersion,
+                deliveryMethod: "manual",
+                deliveryLegacy: false,
+                manualFee: true,
+                total: roundMoney(getOrderSubtotal(order) + kept.deliveryFee),
+              };
+            } else {
+              pricing = {
+                products: order.products,
+                subtotal: getOrderSubtotal(order),
+                deliveryFee: q.deliveryFee,
+                distanceKm: q.distanceKm,
+                adjustedDistanceKm: q.adjustedDistanceKm,
+                deliveryTier: q.tier,
+                feeStatus: q.feeStatus,
+                roadFactor: q.roadFactor,
+                tierVersion: q.tierVersion,
+                deliveryMethod: q.method,
+                deliveryLegacy: q.legacy === true,
+                manualFee: false,
+                total: roundMoney(getOrderSubtotal(order) + q.deliveryFee),
+              };
             }
-            const r = precomputedDelivery.result;
-            pricing = {
-              products: order.products,
-              subtotal: getOrderSubtotal(order),
-              deliveryFee: r.deliveryFee,
-              distanceKm: r.distanceKm,
-              deliveryTier: r.tier,
-              osrmDataVersion: r.osrmDataVersion || null,
-              deliveryMethod: r.method || null,
-              deliveryLegacy: r.legacy === true,
-              total: roundMoney(getOrderSubtotal(order) + r.deliveryFee),
-            };
           }
         }
 
@@ -2665,9 +2660,13 @@ const createWalletRouter = ({ db, auth, inventory }) => {
                   subTotal: pricing.subtotal,
                   deliveryFee: pricing.deliveryFee,
                   distanceKm: pricing.distanceKm ?? null,
+                  adjustedDistanceKm: pricing.adjustedDistanceKm ?? null,
                   deliveryTier: pricing.deliveryTier ?? null,
-                  osrmDataVersion: pricing.osrmDataVersion ?? null,
+                  feeStatus: pricing.feeStatus ?? "ok",
+                  roadFactor: pricing.roadFactor ?? null,
+                  tierVersion: pricing.tierVersion ?? null,
                   deliveryMethod: pricing.deliveryMethod ?? null,
+                  manualFee: pricing.manualFee === true,
                   total: pricing.total,
                   serverValidated: true,
                   serverValidatedAt: now,
@@ -2680,9 +2679,13 @@ const createWalletRouter = ({ db, auth, inventory }) => {
                   // GCash provisional delivery quote (authoritative at payment).
                   deliveryFee: pricing.deliveryFee,
                   distanceKm: pricing.distanceKm ?? null,
+                  adjustedDistanceKm: pricing.adjustedDistanceKm ?? null,
                   deliveryTier: pricing.deliveryTier ?? null,
-                  osrmDataVersion: pricing.osrmDataVersion ?? null,
+                  feeStatus: pricing.feeStatus ?? "ok",
+                  roadFactor: pricing.roadFactor ?? null,
+                  tierVersion: pricing.tierVersion ?? null,
                   deliveryMethod: pricing.deliveryMethod ?? null,
+                  manualFee: pricing.manualFee === true,
                   total: pricing.total,
                   inventoryFulfilled: false,
                   fulfillmentStatus: "pending",
@@ -2722,7 +2725,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
         .json({
           success: false,
           error: error.message,
-          ...((error?.name === "DeliveryFeeError" || error?.name === "OsrmError") && error?.code
+          ...(error?.name === "DeliveryFeeError" && error?.code
             ? { code: error.code }
             : {}),
         });
@@ -2732,8 +2735,12 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   // ------------------------------------------------------------
   // DELIVERY QUOTE (authoritative preview, never trusts client fee/distance)
   // POST /wallet/delivery/quote { items: [{ farmerId, key? }], buyerPin, delivery? }
-  // Farm pins are read from users/{farmerId}; buyer pin from the saved
-  // address pin. One call quotes all farms; distances resolve in parallel.
+  // or { farmerId, buyerLat, buyerLng } for a single farm.
+  // Farm pickup is read from users/{farmerId} (pickupLocation, else
+  // farmLat/farmLng — never from the client). Haversine × road factor,
+  // computed locally. needs_manual_fee (>20 km adjusted) is a SUCCESS with
+  // deliveryFee null — checkout shows "farmer confirms fee" and blocks
+  // payment until the farmer sets it.
   // ------------------------------------------------------------
   router.post("/delivery/quote", async (req, res) => {
     try {
@@ -2797,15 +2804,17 @@ const createWalletRouter = ({ db, auth, inventory }) => {
         });
       }
 
-      // ---- Single-farm path (compatibility) ----
+      // ---- Single-farm path ({ farmerId, buyerLat, buyerLng } + compat) ----
       const farmerId = String(req.body?.farmerId || "").trim();
       const address = req.body?.address || null;
       if (!farmerId) {
         return res.status(400).json({ success: false, error: "Missing farmerId." });
       }
+      const latRaw = req.body?.buyerLat ?? buyerPinRaw?.lat ?? address?.lat;
+      const lngRaw = req.body?.buyerLng ?? buyerPinRaw?.lng ?? address?.lng;
       const singleBuyerPin =
-        buyerPinRaw && (buyerPinRaw.lat !== undefined || buyerPinRaw.lng !== undefined)
-          ? { lat: Number(buyerPinRaw.lat), lng: Number(buyerPinRaw.lng) }
+        latRaw !== undefined && lngRaw !== undefined
+          ? { lat: Number(latRaw), lng: Number(lngRaw) }
           : address
             ? buyerPinFromAddress(address)
             : null;
@@ -2815,17 +2824,20 @@ const createWalletRouter = ({ db, auth, inventory }) => {
         return res.status(404).json({ success: false, error: "Farm not found." });
       }
       try {
-        const r = await resolveDeliveryForOrder({
-          db,
+        const r = resolveDeliveryForOrder({
           farmerProfile: farmerSnap.data() || {},
           order: { delivery: "delivery", address: { lat: singleBuyerPin?.lat, lng: singleBuyerPin?.lng } },
         });
         return res.json({
           success: true,
-          deliveryFee: r.deliveryFee,
           distanceKm: r.distanceKm,
+          adjustedDistanceKm: r.adjustedDistanceKm,
+          deliveryFee: r.deliveryFee,
           tier: r.tier,
-          osrmDataVersion: r.osrmDataVersion || null,
+          feeStatus: r.feeStatus,
+          status: r.feeStatus,
+          roadFactor: r.roadFactor,
+          tierVersion: r.tierVersion,
           method: r.method || null,
         });
       } catch (e) {
@@ -2840,6 +2852,82 @@ const createWalletRouter = ({ db, auth, inventory }) => {
       return res.status(error.status || 400).json({
         success: false,
         error: error.message || "Unable to quote delivery.",
+      });
+    }
+  });
+
+  // ------------------------------------------------------------
+  // SET MANUAL DELIVERY FEE (farmer, pending delivery orders over 20 km)
+  // POST /orders/:orderId/delivery-fee { deliveryFee }
+  // Allowed only while the server quote is needs_manual_fee. The fee and
+  // the pins it was set for are stored; the fee is honored while the pins
+  // are unchanged (see manualFeeRecord). Accept/payment stay blocked until
+  // this is set.
+  // ------------------------------------------------------------
+  router.post("/orders/:orderId/delivery-fee", async (req, res) => {
+    try {
+      const decoded = await getAuthUser(req, auth);
+      const orderRef = db.collection("orders").doc(String(req.params.orderId));
+      const fee = Number(req.body?.deliveryFee);
+      if (!Number.isFinite(fee) || fee < 0 || fee > 5000) {
+        return res.status(400).json({
+          success: false,
+          code: "INVALID_FEE",
+          error: "Delivery fee must be a number between ₱0 and ₱5000.",
+        });
+      }
+      const now = new Date();
+      await db.runTransaction(async (transaction) => {
+        const orderSnap = await transaction.get(orderRef);
+        if (!orderSnap.exists) throw new DeliveryFeeError("ORDER_NOT_FOUND", "Order not found.");
+        const order = orderSnap.data() || {};
+        if (order.farmerId !== decoded.uid) {
+          throw new DeliveryFeeError("FORBIDDEN", "You are not authorized to set this fee.");
+        }
+        if (order.status !== "pending") {
+          throw new DeliveryFeeError("INVALID_STATUS", "Only pending orders can have the fee set.");
+        }
+        if (order.delivery !== "delivery") {
+          throw new DeliveryFeeError("INVALID_STATUS", "Only delivery orders need a delivery fee.");
+        }
+        const farmerSnap = await transaction.get(
+          db.collection("users").doc(String(order.farmerId))
+        );
+        const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
+        const q = resolveDeliveryForOrder({ farmerProfile, order });
+        if (q.feeStatus !== "needs_manual_fee") {
+          throw new DeliveryFeeError(
+            "USE_AUTO_FEE",
+            "This order has an automatic delivery fee — no manual fee needed."
+          );
+        }
+        const farmPin = farmPinFromProfile(farmerProfile);
+        const buyerPin = buyerPinFromAddress(order.address);
+        transaction.update(orderRef, {
+          deliveryFee: roundMoney(fee),
+          deliveryTier: "manual",
+          feeStatus: "ok",
+          manualFee: true,
+          manualDeliveryFee: roundMoney(fee),
+          manualFeePins: { farm: farmPin, buyer: buyerPin },
+          manualFeeSetBy: decoded.uid,
+          manualFeeSetAt: now,
+          distanceKm: q.distanceKm,
+          adjustedDistanceKm: q.adjustedDistanceKm,
+          roadFactor: q.roadFactor,
+          tierVersion: q.tierVersion,
+          deliveryMethod: "manual",
+          total: roundMoney(getOrderSubtotal(order) + roundMoney(fee)),
+          updatedAt: now,
+        });
+      });
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("SET MANUAL FEE ERROR:", error);
+      return res.status(400).json({
+        success: false,
+        error: error.message || "Unable to set the delivery fee.",
+        ...(error?.name === "DeliveryFeeError" && error?.code ? { code: error.code } : {}),
       });
     }
   });

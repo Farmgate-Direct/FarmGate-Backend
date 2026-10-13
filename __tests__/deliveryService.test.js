@@ -1,63 +1,90 @@
-// deliveryService batch + rate-limit tests (mocked OSRM, fake cache db).
+// deliveryService batch + rate-limit tests (pure local compute, no network).
 // Run: node --test __tests__/deliveryService.test.js
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { resolveDeliveryBatch } = require("../deliveryService");
-const { OsrmError } = require("../osrmClient");
+const { resolveDeliveryForOrder, resolveDeliveryBatch } = require("../deliveryService");
 const { checkQuoteRateLimit, resetQuoteRateLimits } = require("../quoteRateLimit");
 
-function fakeDb(store = {}) {
-  return {
-    collection: (name) => ({
-      doc: (id) => ({
-        get: async () =>
-          store[`${name}/${id}`] === undefined
-            ? { exists: false, data: () => ({}) }
-            : { exists: true, data: () => store[`${name}/${id}`] },
-        set: async (record) => { store[`${name}/${id}`] = record; },
-      }),
-    }),
-  };
-}
+const FARM_A = { lat: 14.841, lng: 120.8107 }; // Malolos
+const FARM_FAR = { lat: 15.14, lng: 120.9771 }; // San Miguel (>20 km adjusted)
+const BUYER = { lat: 14.8298, lng: 120.8798 }; // Guiguinto
 
-const FARM_A = { lat: 14.841, lng: 120.8107 };
-const FARM_B = { lat: 15.14, lng: 120.9771 };
-const BUYER = { lat: 14.8298, lng: 120.8798 };
+test("single: Malolos→Guiguinto = 7.5/9.8/₱75 ok", () => {
+  const out = resolveDeliveryForOrder({
+    farmerProfile: { farmLat: FARM_A.lat, farmLng: FARM_A.lng },
+    order: { delivery: "delivery", address: { ...BUYER } },
+  });
+  assert.equal(out.deliveryFee, 75);
+  assert.equal(out.distanceKm, 7.5);
+  assert.equal(out.adjustedDistanceKm, 9.8);
+  assert.equal(out.tier, ">7–12 km");
+  assert.equal(out.feeStatus, "ok");
+  assert.equal(out.method, "haversine-road-factor");
+});
 
-test("batch: one OK + one NO_ROUTE resolves mixed (never rejects)", async () => {
-  const getDistanceKm = async (farm) => {
-    if (farm.lat === FARM_B.lat) throw new OsrmError("NO_ROUTE", "No route.");
-    return { distanceKm: 6.1, osrmDataVersion: "v-test" };
-  };
-  const out = await resolveDeliveryBatch({
-    db: fakeDb(),
+test("single: pickup has no fee and no distance", () => {
+  const out = resolveDeliveryForOrder({
+    farmerProfile: { farmLat: 1, farmLng: 1 },
+    order: { delivery: "pickup", address: null, deliveryFee: 35 },
+  });
+  assert.equal(out.deliveryFee, 0);
+  assert.equal(out.distanceKm, 0);
+});
+
+test("single: far farm resolves needs_manual_fee (not an error)", () => {
+  const out = resolveDeliveryForOrder({
+    farmerProfile: { farmLat: FARM_FAR.lat, farmLng: FARM_FAR.lng },
+    order: { delivery: "delivery", address: { ...BUYER } },
+  });
+  assert.equal(out.feeStatus, "needs_manual_fee");
+  assert.equal(out.deliveryFee, null);
+});
+
+test("single: pickupLocation shape is honored", () => {
+  const out = resolveDeliveryForOrder({
+    farmerProfile: { pickupLocation: { lat: FARM_A.lat, lng: FARM_A.lng, address: "Farm" } },
+    order: { delivery: "delivery", address: { ...BUYER } },
+  });
+  assert.equal(out.deliveryFee, 75);
+});
+
+test("batch: one OK + one manual resolves mixed (never rejects)", () => {
+  const out = resolveDeliveryBatch({
     pairs: [
       { key: "f1", farmerId: "f1", farmerPin: FARM_A },
-      { key: "f2", farmerId: "f2", farmerPin: FARM_B },
+      { key: "f2", farmerId: "f2", farmerPin: FARM_FAR },
     ],
     buyerPin: BUYER,
-    getDistanceKm,
   });
   assert.equal(out.length, 2);
   const ok = out.find((r) => r.key === "f1");
-  const bad = out.find((r) => r.key === "f2");
+  const manual = out.find((r) => r.key === "f2");
   assert.equal(ok.success, true);
-  assert.equal(ok.deliveryFee, 50); // 6.1 km -> 5.1–10 km tier
-  assert.equal(bad.success, false);
-  assert.equal(bad.code, "NO_ROUTE");
+  assert.equal(ok.deliveryFee, 75);
+  assert.equal(ok.feeStatus, "ok");
+  assert.equal(manual.success, true);
+  assert.equal(manual.feeStatus, "needs_manual_fee");
+  assert.equal(manual.deliveryFee, null);
 });
 
-test("batch without buyer pin fails every farm with ADDRESS_MISSING_PIN", async () => {
-  const out = await resolveDeliveryBatch({
-    db: fakeDb(),
+test("batch without buyer pin fails every farm with ADDRESS_MISSING_PIN", () => {
+  const out = resolveDeliveryBatch({
     pairs: [{ key: "f1", farmerId: "f1", farmerPin: FARM_A }],
     buyerPin: null,
-    getDistanceKm: async () => { throw new Error("must not be called"); },
   });
   assert.equal(out[0].success, false);
   assert.equal(out[0].code, "ADDRESS_MISSING_PIN");
+});
+
+test("batch without farm pin fails with FARM_MISSING_PICKUP", () => {
+  const out = resolveDeliveryBatch({
+    pairs: [{ key: "f1", farmerId: "f1", farmerPin: null }],
+    buyerPin: BUYER,
+  });
+  assert.equal(out[0].success, false);
+  assert.equal(out[0].code, "FARM_MISSING_PICKUP");
 });
 
 test("quote rate limit: 30/min allowed, 31st blocked with retry hint", () => {
