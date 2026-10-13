@@ -2990,6 +2990,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`Firebase configured: ${!!getEnv("FIREBASE_PROJECT_ID")}`);
   console.log(`Xendit configured: ${!!getEnv("XENDIT_SECRET_KEY")}`);
   console.log(`Xendit webhook configured: ${!!getEnv("XENDIT_WEBHOOK_TOKEN")}`);
+  console.log(`Email (SMTP) configured: ${isSmtpConfigured()}`);
   console.log(`PUBLIC_BASE_URL: ${getEnv("PUBLIC_BASE_URL") || "NOT SET"}`);
   console.log("========================================");
 });

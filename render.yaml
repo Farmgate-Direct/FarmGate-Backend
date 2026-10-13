@@ -39,3 +39,9 @@ services:
       # Update after the first deploy to the new onrender URL, then redeploy.
       - key: PUBLIC_BASE_URL
         value: https://farmgate-backend-vofv.onrender.com
+      # Branded verification/rejection emails via Gmail SMTP.
+      # Values are entered in the Render dashboard (never committed).
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
