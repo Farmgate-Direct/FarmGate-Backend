@@ -20,6 +20,12 @@ const { getAuth } = require("firebase-admin/auth");
 
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
+const {
+  isSmtpConfigured,
+  sendVerificationEmail,
+  sendRejectionEmail,
+} = require("./emailService");
+
 const app = express();
 
 app.use(cors());
@@ -1523,7 +1529,57 @@ app.post("/delete-image", async (req, res) => {
 });
 
 /* =========================================================
+   AUTH: SEND BRANDED VERIFICATION EMAIL (authenticated)
+   - Gumagawa ng Firebase verification link (Admin SDK) at
+     sine-send gamit ang FarmGate design via Gmail SMTP.
+   - Kapag walang SMTP config, { sent: false } — ang mobile
+     app ang magfa-fallback sa default Firebase email.
+========================================================= */
+
+app.post("/auth/send-verification", async (req, res) => {
+  try {
+    const decoded = await verifyFirebaseUser(req);
+
+    const target = await auth.getUser(decoded.uid);
+
+    if (!target.email) {
+      return res.status(400).json({
+        success: false,
+        error: "Account has no email address.",
+      });
+    }
+
+    if (target.emailVerified) {
+      return res.json({ success: true, sent: true, alreadyVerified: true });
+    }
+
+    if (!isSmtpConfigured()) {
+      return res.json({ success: true, sent: false, reason: "smtp-missing" });
+    }
+
+    const link = await auth.generateEmailVerificationLink(target.email);
+
+    const userSnap = await db.collection("users").doc(decoded.uid).get();
+    const fullName = userSnap.exists
+      ? String((userSnap.data() || {}).fullName || "")
+      : String(target.displayName || "");
+
+    const sent = await sendVerificationEmail(target.email, fullName, link);
+
+    return res.json({ success: true, sent });
+  } catch (error) {
+    console.error("SEND VERIFICATION ERROR:", error);
+
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to send verification email.",
+    });
+  }
+});
+
+/* =========================================================
    ADMIN: REJECT REGISTRATION (authenticated, admin-only)
+   - Nagse-send muna ng branded rejection email (best-effort).
    - Deletes the Firestore doc (users/{uid}) so the request
      disappears from the approvals list.
    - Deletes the Firebase Auth account so the email can be
@@ -1557,6 +1613,20 @@ app.delete("/admin/users/:uid", async (req, res) => {
         success: false,
         error: "Invalid user id.",
       });
+    }
+
+    // Kunin muna ang email/pangalan (kailangan sa rejection email),
+    // saka burahin. Best-effort ang email — hindi ito humahadlang
+    // sa pagbura kahit mag-fail.
+    const targetSnap = await db.collection("users").doc(uid).get();
+    const targetData = targetSnap.exists ? targetSnap.data() || {} : {};
+
+    if (targetData.email) {
+      await sendRejectionEmail(
+        String(targetData.email),
+        String(targetData.fullName || ""),
+        []
+      );
     }
 
     await db.collection("users").doc(uid).delete();
