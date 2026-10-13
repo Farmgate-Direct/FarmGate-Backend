@@ -24,6 +24,7 @@ const {
   isSmtpConfigured,
   sendVerificationEmail,
   sendRejectionEmail,
+  sendApprovalEmail,
 } = require("./emailService");
 
 const app = express();
@@ -1830,6 +1831,74 @@ app.delete("/admin/users/:uid", async (req, res) => {
     return res.status(error.status || 500).json({
       success: false,
       error: error.message || "Unable to reject this registration.",
+    });
+  }
+});
+
+/* =========================================================
+   ADMIN: APPROVE REGISTRATION (authenticated, admin-only)
+   - Sine-set ang Firestore doc (users/{uid}) to approved +
+     approvedAt, tapos nagse-send ng branded approval email
+     (best-effort, hindi humahadlang sa approval kahit mag-fail).
+========================================================= */
+
+app.post("/admin/users/:uid/approve", async (req, res) => {
+  try {
+    const decoded = await verifyFirebaseUser(req);
+
+    const adminSnap = await db.collection("admins").doc(decoded.uid).get();
+    let isAdmin =
+      adminSnap.exists && (adminSnap.data() || {}).status === "Active";
+
+    if (!isAdmin) {
+      const userSnap = await db.collection("users").doc(decoded.uid).get();
+      isAdmin =
+        userSnap.exists && (userSnap.data() || {}).role === "admin";
+    }
+
+    if (!isAdmin) {
+      throw httpError(403, "Only admin accounts can approve registrations.");
+    }
+
+    const uid = String(req.params.uid || "").trim();
+
+    if (!uid || uid.length > 128) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid user id.",
+      });
+    }
+
+    const targetSnap = await db.collection("users").doc(uid).get();
+    if (!targetSnap.exists) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found.",
+      });
+    }
+    const targetData = targetSnap.data() || {};
+
+    await db.collection("users").doc(uid).update({
+      status: "approved",
+      approvedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Best-effort ang approval email — approved na kahit mag-fail ito.
+    if (targetData.email) {
+      await sendApprovalEmail(
+        String(targetData.email),
+        String(targetData.fullName || "")
+      );
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("APPROVE USER ERROR:", error);
+
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to approve this registration.",
     });
   }
 });

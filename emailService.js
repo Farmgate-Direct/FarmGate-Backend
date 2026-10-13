@@ -142,6 +142,28 @@ const buildRejection = (fullName, reasons) => {
   };
 };
 
+/* ---------- Approval email (manual approve) ---------- */
+
+const buildApproval = (fullName) => {
+  const name = escapeHtml(fullName || "ka-FarmGate");
+  return {
+    subject: "FarmGate Direct: naaprubahan ang iyong registration",
+    text:
+      `Hi ${fullName || "ka-FarmGate"},\n\n` +
+      `Magandang balita! Naaprubahan na ang iyong FarmGate Direct registration.\n\n` +
+      `Maaari ka nang mag-sign in gamit ang iyong email at password.\n\n` +
+      `Salamat,\nFarmGate Direct`,
+    html: wrapBranded({
+      preheader: "Naaprubahan na ang iyong FarmGate Direct registration.",
+      title: `Hi ${name},`,
+      bodyHtml:
+        `<p style="margin:0;">Magandang balita! <strong>Naaprubahan</strong> na ang iyong FarmGate Direct registration.</p>` +
+        `<p style="margin:16px 0 0;">Maaari ka nang mag-sign in gamit ang iyong email at password.</p>` +
+        `<p style="margin:12px 0 0;">Salamat,<br><strong>FarmGate Direct</strong></p>`,
+    }),
+  };
+};
+
 /* ---------- Senders ---------- */
 
 const sendMail = async ({ to, subject, text, html }) => {
@@ -183,8 +205,22 @@ const sendRejectionEmail = async (toEmail, fullName, reasons) => {
   }
 };
 
+const sendApprovalEmail = async (toEmail, fullName) => {
+  try {
+    const { subject, text, html } = buildApproval(fullName);
+    const sent = await sendMail({ to: toEmail, subject, text, html });
+    if (sent) console.log(`[EMAIL] Approval sent to ${toEmail}.`);
+    else console.log("[EMAIL] Approval skipped (walang SMTP config).");
+    return sent;
+  } catch (error) {
+    console.error(`[EMAIL] Approval failed: ${error?.message || error}`);
+    return false;
+  }
+};
+
 module.exports = {
   isSmtpConfigured,
   sendVerificationEmail,
   sendRejectionEmail,
+  sendApprovalEmail,
 };
