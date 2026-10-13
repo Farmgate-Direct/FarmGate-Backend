@@ -1,27 +1,36 @@
-// FarmGate delivery fee — barangay-level distance (Bulacan only).
-// Distance = haversine(barangay centroid, barangay centroid) × ROAD_DISTANCE_FACTOR,
-// rounded to 0.1 km. No municipality-center fallback for new orders.
-// Client preview is NEVER trusted; the server recomputes in /delivery/quote,
-// /accept (COD) and /create-payment (validateOrderForPayment, GCash).
+// FarmGate delivery fee — OSRM road distance (Bulacan only, pins only).
+//
+// Distance comes from the self-hosted OSRM instance (see osrm/README.md),
+// converted to km and rounded to 0.1 km BEFORE the tier lookup below.
+// This module is pure: feeForDistance(distanceKm) -> { fee, tier }.
+// It never estimates, never geocodes, never calls the network.
+// Client preview is NEVER trusted; the server recomputes in
+// /delivery/quote, /accept (COD) and /create-payment
+// (validateOrderForPayment, GCash).
 "use strict";
 
-const { BARANGAY_COORDS, CITIES } = require("./data/bulacanBarangays");
+// Bulacan bounding box (must match the OSM extract bbox in osrm/README.md).
+// Pins outside this box are rejected — delivery is Bulacan-only.
+const BULACAN_BBOX = { minLat: 14.4, maxLat: 15.4, minLng: 120.5, maxLng: 121.4 };
 
-const DEFAULT_ROAD_FACTOR = 1.3;
-const MIN_ROAD_FACTOR = 1;
-const MAX_ROAD_FACTOR = 2;
-
-// Inclusive upper bounds. 3.0 km => ₱25, 3.1 km => ₱35.
+// Rate table, INCLUSIVE upper bounds, in data (no if-else chain).
+// Distance must already be rounded to 0.1 km: 3.0 => ₱25, 3.1 => ₱35.
+// Over 70 km: blocked (TOO_FAR). Same pin (0 km): ₱25.
 const FEE_TIERS = [
-  { maxKm: 3.0, fee: 25, label: "0–3 km" },
-  { maxKm: 6.0, fee: 35, label: "3.1–6 km" },
-  { maxKm: 10.0, fee: 50, label: "6.1–10 km" },
-  { maxKm: 15.0, fee: 65, label: "10.1–15 km" },
-  { maxKm: 20.0, fee: 80, label: "15.1–20 km" },
-  { maxKm: Infinity, fee: 100, label: "20.1 km+" },
+  { maxKm: 3, fee: 25, label: "0–3 km" },
+  { maxKm: 5, fee: 35, label: "3.1–5 km" },
+  { maxKm: 10, fee: 50, label: "5.1–10 km" },
+  { maxKm: 15, fee: 70, label: "10.1–15 km" },
+  { maxKm: 20, fee: 90, label: "15.1–20 km" },
+  { maxKm: 25, fee: 110, label: "20.1–25 km" },
+  { maxKm: 30, fee: 130, label: "25.1–30 km" },
+  { maxKm: 40, fee: 160, label: "30.1–40 km" },
+  { maxKm: 50, fee: 190, label: "40.1–50 km" },
+  { maxKm: 60, fee: 220, label: "50.1–60 km" },
+  { maxKm: 70, fee: 250, label: "60.1–70 km" },
 ];
 
-const BULACAN = "bulacan";
+const MAX_DELIVERY_KM = 70;
 
 class DeliveryFeeError extends Error {
   constructor(code, message) {
@@ -31,293 +40,139 @@ class DeliveryFeeError extends Error {
   }
 }
 
-const normalizeName = (value) =>
-  String(value ?? "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-
-const normalizeCity = (value) =>
-  normalizeName(value).replace(/^(city|municipality) of\s+/i, "");
-
-const normalizeProvince = (value) => normalizeName(value);
-
-function getRoadFactor(env = process.env) {
-  const raw = env.FARMGATE_ROAD_DISTANCE_FACTOR;
-  if (raw === undefined || raw === null || String(raw).trim() === "") {
-    return DEFAULT_ROAD_FACTOR;
-  }
-  const num = Number(String(raw).trim());
-  if (!Number.isFinite(num) || num < MIN_ROAD_FACTOR || num > MAX_ROAD_FACTOR) {
-    return DEFAULT_ROAD_FACTOR;
-  }
-  return num;
-}
-
-function haversineKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
+// Pure lookup over the FEE_TIERS data above (no if-else chain).
+// Throws DeliveryFeeError TOO_FAR when distanceKm > 70,
+// INVALID_DISTANCE for non-numeric/negative input.
 function feeForDistance(distanceKm) {
+  if (
+    distanceKm === null ||
+    distanceKm === undefined ||
+    (typeof distanceKm === "string" && distanceKm.trim() === "")
+  ) {
+    throw new DeliveryFeeError(
+      "INVALID_DISTANCE",
+      "Invalid delivery distance. Please try quoting again."
+    );
+  }
+  const km = Number(distanceKm);
+  if (!Number.isFinite(km) || km < 0) {
+    throw new DeliveryFeeError(
+      "INVALID_DISTANCE",
+      "Invalid delivery distance. Please try quoting again."
+    );
+  }
   for (const tier of FEE_TIERS) {
-    if (distanceKm <= tier.maxKm) {
+    if (km <= tier.maxKm) {
       return { fee: tier.fee, tier: tier.label };
     }
   }
-  const last = FEE_TIERS[FEE_TIERS.length - 1];
-  return { fee: last.fee, tier: last.label };
+  throw new DeliveryFeeError(
+    "TOO_FAR",
+    `This delivery is ${km.toFixed(1)} km — over the 70 km Bulacan delivery limit.`
+  );
 }
 
-function findCityDisplay(normalizedCity) {
-  return CITIES.find((c) => normalizeCity(c) === normalizedCity) || null;
+// Round an OSRM meter value to 0.1 km (single place this happens).
+function roundDistanceKm(meters) {
+  const km = Number(meters) / 1000;
+  if (!Number.isFinite(km) || km < 0) {
+    throw new DeliveryFeeError(
+      "INVALID_DISTANCE",
+      "Invalid delivery distance. Please try quoting again."
+    );
+  }
+  return Math.round(km * 10) / 10;
 }
 
-function lookupCoords(nCity, nBrgy) {
-  return BARANGAY_COORDS[`${nCity}|${nBrgy}`] || null;
-}
-
-function cityHasAnyBarangay(nCity) {
-  const prefix = `${nCity}|`;
-  return Object.keys(BARANGAY_COORDS).some((k) => k.startsWith(prefix));
-}
-
-// farm, buyer: { province, city, barangay }
-// dataOverride (tests only): { "ncity|nbrgy": { city, barangay, lat, lng } }
-// Returns { distanceKm, fee, tier }. Throws DeliveryFeeError.
-function quoteDeliveryFee(farm, buyer, opts = {}) {
-  const data = opts.data || BARANGAY_COORDS;
-  const roadFactor =
-    opts.roadFactor !== undefined ? opts.roadFactor : getRoadFactor();
-
-  const farmProvince = normalizeProvince(farm?.province);
-  const buyerProvince = normalizeProvince(buyer?.province);
-
-  if (farmProvince !== BULACAN) {
-    throw new DeliveryFeeError(
-      "INVALID_PROVINCE",
-      `Farm province "${farm?.province || ""}" is outside the Bulacan-only delivery area.`
-    );
-  }
-  if (buyerProvince !== BULACAN) {
-    throw new DeliveryFeeError(
-      "INVALID_PROVINCE",
-      `Delivery address province "${buyer?.province || ""}" is outside the Bulacan-only delivery area.`
-    );
-  }
-
-  const farmCity = normalizeCity(farm?.city);
-  const buyerCity = normalizeCity(buyer?.city);
-  const farmBrgy = normalizeName(farm?.barangay);
-  const buyerBrgy = normalizeName(buyer?.barangay);
-
-  if (!farmCity || !findCityDisplayIn(farmCity, opts)) {
-    throw new DeliveryFeeError(
-      "UNKNOWN_CITY",
-      `Unknown farm city/municipality "${farm?.city || ""}". Pick a Bulacan city from the list.`
-    );
-  }
-  if (!buyerCity || !findCityDisplayIn(buyerCity, opts)) {
-    throw new DeliveryFeeError(
-      "UNKNOWN_CITY",
-      `Unknown delivery city/municipality "${buyer?.city || ""}". Pick a Bulacan city from the list.`
-    );
-  }
-  if (!farmBrgy) {
-    throw new DeliveryFeeError(
-      "UNKNOWN_BARANGAY",
-      `Farm barangay is missing. Ask the farmer to set their barangay in Farm Profile.`
-    );
-  }
-  if (!buyerBrgy) {
-    throw new DeliveryFeeError(
-      "UNKNOWN_BARANGAY",
-      `Delivery barangay is missing. Pick a barangay from the list.`
-    );
-  }
-
-  // Same barangay (exact normalized city + barangay match) = 0 km, ₱25.
-  // No coordinates needed — same place means no travel.
-  if (farmCity === buyerCity && farmBrgy === buyerBrgy) {
-    const base = feeForDistance(0);
-    return { distanceKm: 0, fee: base.fee, tier: base.tier, approximate: false };
-  }
-
-  const farmHit = (data || {})[`${farmCity}|${farmBrgy}`] || null;
-  const buyerHit = (data || {})[`${buyerCity}|${buyerBrgy}`] || null;
-
-  if (!farmHit) {
-    // Distinguish "barangay name does not exist in this city" from
-    // "exists in CSV but has no trusted coords yet".
-    if (!barangayExistsInCity(farmCity, farmBrgy, opts)) {
-      throw new DeliveryFeeError(
-        "UNKNOWN_BARANGAY",
-        `Unknown farm barangay "${farm?.barangay || ""}" in ${farm?.city || ""}. Check the spelling and pick from the list (no guessing).`
-      );
-    }
-    throw new DeliveryFeeError(
-      "BARANGAY_NOT_SERVICEABLE",
-      `Farm barangay "${farm?.barangay || ""}" in ${farm?.city || ""} has no verified coordinates yet, so delivery is blocked until it is field-verified.`
-    );
-  }
-  if (!buyerHit) {
-    if (!barangayExistsInCity(buyerCity, buyerBrgy, opts)) {
-      throw new DeliveryFeeError(
-        "UNKNOWN_BARANGAY",
-        `Unknown barangay "${buyer?.barangay || ""}" in ${buyer?.city || ""}. Check the spelling and pick from the list (no guessing).`
-      );
-    }
-    throw new DeliveryFeeError(
-      "BARANGAY_NOT_SERVICEABLE",
-      `Barangay "${buyer?.barangay || ""}" in ${buyer?.city || ""} has no verified coordinates yet, so delivery is blocked until it is field-verified.`
-    );
-  }
-
+// Validate a dropped map pin. Returns { lat, lng } as numbers.
+// Throws INVALID_PIN (non-numeric or out of world range) or
+// PIN_OUT_OF_AREA (outside the Bulacan bbox).
+function validatePin(pin, who = "Pin") {
+  const rawLat = pin?.lat;
+  const rawLng = pin?.lng;
   if (
-    !Number.isFinite(farmHit.lat) ||
-    !Number.isFinite(farmHit.lng) ||
-    !Number.isFinite(buyerHit.lat) ||
-    !Number.isFinite(buyerHit.lng)
+    rawLat === null || rawLat === undefined || rawLng === null || rawLng === undefined ||
+    (typeof rawLat === "string" && rawLat.trim() === "") ||
+    (typeof rawLng === "string" && rawLng.trim() === "")
   ) {
     throw new DeliveryFeeError(
-      "BARANGAY_NOT_SERVICEABLE",
-      `Missing coordinates for the selected barangays, so delivery is blocked until they are field-verified.`
+      "INVALID_PIN",
+      `${who}: missing or invalid coordinates. Please drop the map pin again.`
     );
   }
-
-  const straight = haversineKm(farmHit.lat, farmHit.lng, buyerHit.lat, buyerHit.lng);
-  const distanceKm = Math.round(straight * roadFactor * 10) / 10;
-  const { fee, tier } = feeForDistance(distanceKm);
-  // Approximate centers (city/village fallback for unmapped barangays):
-  // routable per owner decision, but CLEARLY flagged — farmer is final gate.
-  const approximate = farmHit.approximate === true || buyerHit.approximate === true;
-  return {
-    distanceKm,
-    fee,
-    tier: approximate ? `${tier} (approx.)` : tier,
-    approximate,
-  };
-
-  function findCityDisplayIn(nCity, o) {
-    if (o.data) {
-      // Test-injected dataset: derive city list from keys
-      if (Object.keys(o.data).some((k) => k.split("|")[0] === nCity)) return true;
-    }
-    if (o.cities) return o.cities.some((c) => normalizeCity(c) === nCity);
-    return !!findCityDisplay(nCity) || cityHasAnyBarangay(nCity);
+  const lat = Number(rawLat);
+  const lng = Number(rawLng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    throw new DeliveryFeeError(
+      "INVALID_PIN",
+      `${who}: missing or invalid coordinates. Please drop the map pin again.`
+    );
   }
-
-  function barangayExistsInCity(nCity, nBrgy, o) {
-    if (o.data) return !!o.data[`${nCity}|${nBrgy}`];
-    // Production: check generated BARANGAYS_BY_CITY (includes rows without coords)
-    try {
-      const { BARANGAYS_BY_CITY } = require("./data/bulacanBarangays");
-      const disp = findCityDisplay(nCity);
-      const list = (disp && BARANGAYS_BY_CITY[disp]) || [];
-      // Also try matching by normalized city across all display names
-      if (list.length === 0) {
-        for (const [d, arr] of Object.entries(BARANGAYS_BY_CITY)) {
-          if (normalizeCity(d) === nCity) {
-            return arr.some((r) => normalizeName(r.barangay) === nBrgy);
-          }
-        }
-        return false;
-      }
-      return list.some((r) => normalizeName(r.barangay) === nBrgy);
-    } catch {
-      return !!lookupCoords(nCity, nBrgy);
-    }
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    throw new DeliveryFeeError(
+      "INVALID_PIN",
+      `${who}: coordinates are out of range. Please drop the map pin again.`
+    );
   }
+  if (
+    lat < BULACAN_BBOX.minLat ||
+    lat > BULACAN_BBOX.maxLat ||
+    lng < BULACAN_BBOX.minLng ||
+    lng > BULACAN_BBOX.maxLng
+  ) {
+    throw new DeliveryFeeError(
+      "PIN_OUT_OF_AREA",
+      `${who} is outside the Bulacan delivery area. Please drop the pin inside Bulacan.`
+    );
+  }
+  return { lat, lng };
 }
 
-module.exports = {
-  quoteDeliveryFee,
-  DeliveryFeeError,
-  getRoadFactor,
-  feeForDistance,
-  haversineKm,
-  normalizeName,
-  normalizeCity,
-  farmLocationFromProfile,
-  buyerLocationFromAddress,
-  computeDeliveryForOrder,
-  FEE_TIERS,
-  DEFAULT_ROAD_FACTOR,
-};
+function hasPin(pin) {
+  return (
+    pin != null &&
+    Number.isFinite(Number(pin.lat)) &&
+    Number.isFinite(Number(pin.lng))
+  );
+}
 
 // ---- Firestore-shape helpers (pure, no db access) ----
 
-function farmLocationFromProfile(profile) {
+// Farm pin from users/{farmerId}. Stored as farmLat/farmLng
+// (legacy aliases lat/lng also accepted). Returns a pin or null.
+function farmPinFromProfile(profile) {
   const p = profile || {};
-  return {
-    province: p.province || "",
-    city: p.municipality || p.city || "",
-    barangay: p.barangay || "",
-  };
+  const lat = p.farmLat ?? p.lat ?? null;
+  const lng = p.farmLng ?? p.lng ?? null;
+  if (lat === null || lat === undefined || lng === null || lng === undefined) {
+    return null;
+  }
+  if (String(lat) === "" || String(lng) === "") return null;
+  return { lat: Number(lat), lng: Number(lng) };
 }
 
-function buyerLocationFromAddress(address) {
+// Buyer pin from the order's saved address. Text fields (street/city/
+// barangay) are kept for the courier only and are NEVER geocoded.
+function buyerPinFromAddress(address) {
   const a = address || {};
-  return {
-    province: a.province || "",
-    city: a.city || a.municipality || "",
-    barangay: a.barangay || "",
-  };
+  const lat = a.lat ?? null;
+  const lng = a.lng ?? null;
+  if (lat === null || lat === undefined || lng === null || lng === undefined) {
+    return null;
+  }
+  if (String(lat) === "" || String(lng) === "") return null;
+  return { lat: Number(lat), lng: Number(lng) };
 }
 
-// Decides the delivery money fields for an order WITHOUT trusting the client.
-// - pickup => { deliveryFee: 0, distanceKm: 0, tier: null }
-// - legacy order with no barangay (farm or buyer) => keep fee already written.
-// - new order with missing/unknown barangay => throws DeliveryFeeError (blocked).
-function computeDeliveryForOrder({ farmerProfile, order }, opts = {}) {
-  const delivery = order?.delivery;
-  if (delivery !== "delivery") {
-    return { deliveryFee: 0, distanceKm: 0, tier: null, legacy: false };
-  }
-  const farm = farmLocationFromProfile(farmerProfile);
-  const buyer = buyerLocationFromAddress(order?.address);
-
-  const farmMissing =
-    !String(farm.city || "").trim() || !String(farm.barangay || "").trim();
-  const buyerMissing =
-    !String(buyer.city || "").trim() || !String(buyer.barangay || "").trim();
-
-  if (farmMissing || buyerMissing) {
-    const stored = Number(order?.deliveryFee);
-    if (Number.isFinite(stored) && stored >= 0) {
-      // Legacy order written before barangays were required: do not recompute.
-      return {
-        deliveryFee: stored,
-        distanceKm:
-          Number.isFinite(Number(order?.distanceKm)) &&
-          Number(order?.distanceKm) >= 0
-            ? Number(order.distanceKm)
-            : null,
-        tier: order?.deliveryTier || order?.tier || "legacy",
-        legacy: true,
-      };
-    }
-    if (farmMissing) {
-      throw new DeliveryFeeError(
-        "UNKNOWN_BARANGAY",
-        "This farm has no barangay set yet. Ask the farmer to pick their City and Barangay in Farm Profile before delivery."
-      );
-    }
-    throw new DeliveryFeeError(
-      "UNKNOWN_BARANGAY",
-      "The delivery address has no barangay. Pick a Bulacan City and Barangay from the list."
-    );
-  }
-
-  const q = quoteDeliveryFee(farm, buyer, opts);
-  return { deliveryFee: q.fee, distanceKm: q.distanceKm, tier: q.tier, legacy: false, approximate: q.approximate === true };
-}
+module.exports = {
+  DeliveryFeeError,
+  feeForDistance,
+  roundDistanceKm,
+  validatePin,
+  hasPin,
+  farmPinFromProfile,
+  buyerPinFromAddress,
+  FEE_TIERS,
+  MAX_DELIVERY_KM,
+  BULACAN_BBOX,
+};

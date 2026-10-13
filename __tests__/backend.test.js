@@ -1,21 +1,19 @@
-// Backend contract tests with a fake Firestore (no network).
+// Backend contract tests with a fake Firestore + mocked OSRM (no network).
 // Run: node --test __tests__/backend.test.js
 //
 // Covers:
-// - GCash total = subtotal + barangay fee (server recomputed, client ignored)
+// - GCash total = subtotal + OSRM fee (server recomputed, client ignored)
 // - second /deliver press does not double-credit (idempotent guard)
 // - COD adds no wallet credit (delivery fee is cash the farmer already holds)
 // - pickup has no fee
-// - out-of-Bulacan address is blocked at accept (order stays pending)
+// - a blocked address (NO_ROUTE) is rejected at accept (order stays pending)
+// - legacy orders without pins keep the fee already written (no recompute)
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const {
-  computeDeliveryForOrder,
-  quoteDeliveryFee,
-  DeliveryFeeError,
-} = require("../deliveryFee");
+const { resolveDeliveryForOrder } = require("../deliveryService");
+const { OsrmError } = require("../osrmClient");
 
 // ---- Stub heavy deps so walletRoutes loads without node_modules ----
 const Module = require("node:module");
@@ -42,42 +40,59 @@ Module._load = function (request, parent, isMain) {
 };
 const walletRoutes = require("../walletRoutes");
 
-const FARM = { province: "Bulacan", city: "Malolos", barangay: "Santo Niño (Pob.)" };
-const BUYER_BULIHAN = { province: "Bulacan", city: "Malolos", barangay: "Bulihan" };
-
 // ---- Minimal fake Firestore ----
-// Refs carry { _collection, _id }. transaction.get(ref) returns { exists, data() }.
-function fakeDb({ products = {}, users = {} } = {}) {
-  const getDoc = (collection, id) => {
-    const store = collection === "products" ? products : users;
-    const doc = store[id];
-    return doc === undefined
-      ? { exists: false, data: () => ({}) }
-      : { exists: true, data: () => doc };
-  };
+function fakeDb({ products = {}, users = {}, cache = {} } = {}) {
+  const store = { products, users, deliveryDistanceCache: cache };
+  const ref = (collection, id) => ({
+    _collection: collection,
+    _id: String(id),
+    get: async () => {
+      const doc = (store[collection] || {})[String(id)];
+      return doc === undefined
+        ? { exists: false, data: () => ({}) }
+        : { exists: true, data: () => doc };
+    },
+    set: async (record) => {
+      store[collection] = store[collection] || {};
+      store[collection][String(id)] = record;
+    },
+  });
   const db = {
     collection: (name) => ({
-      doc: (id) => ({ _collection: name, _id: String(id) }),
+      doc: (id) => ref(name, id),
       where: () => ({ get: async () => ({ docs: [], empty: true }) }),
     }),
   };
   const transaction = {
-    get: async (ref) => {
-      if (ref && ref._collection) return getDoc(ref._collection, ref._id);
+    get: async (r) => {
+      if (r && r._collection) return r.get();
       throw new Error("fake transaction.get: unknown ref");
     },
+    set: async (r, record) => r.set(record),
   };
-  return { db, transaction };
+  return { db, transaction, store };
 }
 
-test("GCash total = subtotal (server prices) + barangay fee; client fee ignored", async () => {
+const FARM_PROFILE = { farmLat: 14.841, farmLng: 120.8107, farmName: "Test Farm" };
+const BUYER_PIN = { lat: 14.8298, lng: 120.8798 };
+const buyerAddress = () => ({
+  fullName: "Buyer",
+  street: "123 Street",
+  barangay: "Poblacion",
+  city: "Guiguinto",
+  province: "Bulacan",
+  phone: "09123456789",
+  ...BUYER_PIN,
+});
+
+const mockKm = (km, version = "test-v1") => async () => ({ distanceKm: km, osrmDataVersion: version });
+
+test("GCash total = subtotal (server prices) + OSRM fee; client fee ignored", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
     p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
   };
-  const users = {
-    f1: { province: "Bulacan", municipality: "Malolos", barangay: "Santo Niño (Pob.)" },
-  };
+  const users = { f1: { ...FARM_PROFILE } };
   const { db, transaction } = fakeDb({ products, users });
   const order = {
     farmerId: "f1",
@@ -85,53 +100,81 @@ test("GCash total = subtotal (server prices) + barangay fee; client fee ignored"
     // Client tried to lie about the fee — server must ignore it.
     deliveryFee: 1,
     distanceKm: 999,
-    address: { province: "Bulacan", city: "Malolos", barangay: "Bulihan" },
+    address: buyerAddress(),
     products: [{ productId: "p1", quantity: 2, name: "Rice", price: 1, unit: "kg" }],
   };
-  const priced = await priceOrderOnServer(transaction, db, order);
-  const expected = quoteDeliveryFee(FARM, BUYER_BULIHAN);
+  // 4.2 km -> ₱35 tier (3.1–5 km).
+  const priced = await priceOrderOnServer(transaction, db, order, { getDistanceKm: mockKm(4.2) });
   assert.equal(priced.subtotal, 200);
-  assert.equal(priced.deliveryFee, expected.fee);
-  assert.equal(priced.distanceKm, expected.distanceKm);
-  assert.equal(priced.total, 200 + expected.fee);
+  assert.equal(priced.deliveryFee, 35);
+  assert.equal(priced.distanceKm, 4.2);
+  assert.equal(priced.deliveryTier, "3.1–5 km");
+  assert.equal(priced.osrmDataVersion, "test-v1");
+  assert.equal(priced.deliveryMethod, "osrm");
+  assert.equal(priced.total, 235);
   assert.notEqual(priced.deliveryFee, 1);
 });
 
-test("pickup has no fee and no distance", () => {
-  const out = computeDeliveryForOrder({
-    farmerProfile: { province: "Bulacan", municipality: "Malolos", barangay: "Santo Niño (Pob.)" },
+test("pickup has no fee and no distance", async () => {
+  const out = await resolveDeliveryForOrder({
+    db: fakeDb().db,
+    farmerProfile: FARM_PROFILE,
     order: { delivery: "pickup", address: null, deliveryFee: 35 },
+    getDistanceKm: async () => { throw new Error("must not call OSRM for pickup"); },
   });
   assert.equal(out.deliveryFee, 0);
   assert.equal(out.distanceKm, 0);
 });
 
-test("out-of-Bulacan address is blocked at accept (INVALID_PROVINCE, stays pending)", () => {
-  assert.throws(
-    () =>
-      computeDeliveryForOrder({
-        farmerProfile: { province: "Bulacan", municipality: "Malolos", barangay: "Santo Niño (Pob.)" },
-        order: {
-          delivery: "delivery",
-          status: "pending",
-          address: { province: "Pampanga", city: "Angeles City", barangay: "Balibago" },
-        },
-      }),
-    (e) => e instanceof DeliveryFeeError && e.code === "INVALID_PROVINCE"
+test("blocked address (NO_ROUTE) is rejected at accept — order stays pending", async () => {
+  const noRoute = async () => { throw new OsrmError("NO_ROUTE", "No driving route."); };
+  await assert.rejects(
+    resolveDeliveryForOrder({
+      db: fakeDb().db,
+      farmerProfile: FARM_PROFILE,
+      order: { delivery: "delivery", status: "pending", address: buyerAddress() },
+      getDistanceKm: noRoute,
+    }),
+    (e) => e.code === "NO_ROUTE"
   );
-  // The /accept transaction aborts on DeliveryFeeError, so status stays "pending".
-  // (Accept handler does all reads before any write; see walletRoutes accept.)
+  // The accept transaction aborts on this error, so status stays "pending".
   const orderStatus = "pending";
   assert.equal(orderStatus, "pending");
 });
 
-test("legacy order with no barangay keeps the fee already written (no recompute)", () => {
-  const out = computeDeliveryForOrder({
-    farmerProfile: { province: "Bulacan", municipality: "", barangay: "" },
-    order: { delivery: "delivery", address: { province: "Bulacan", city: "", barangay: "" }, deliveryFee: 35, distanceKm: 5, deliveryTier: "legacy" },
+test("over-70 km is blocked (TOO_FAR), never priced", async () => {
+  await assert.rejects(
+    resolveDeliveryForOrder({
+      db: fakeDb().db,
+      farmerProfile: FARM_PROFILE,
+      order: { delivery: "delivery", address: buyerAddress() },
+      getDistanceKm: mockKm(70.1),
+    }),
+    (e) => e.code === "TOO_FAR"
+  );
+});
+
+test("legacy order without pins keeps the fee already written (no recompute)", async () => {
+  const out = await resolveDeliveryForOrder({
+    db: fakeDb().db,
+    farmerProfile: { farmName: "Old Farm" },
+    order: { delivery: "delivery", address: { street: "old" }, deliveryFee: 35, distanceKm: 5, deliveryTier: "legacy" },
+    getDistanceKm: async () => { throw new Error("must not call OSRM for legacy"); },
   });
   assert.equal(out.legacy, true);
   assert.equal(out.deliveryFee, 35);
+});
+
+test("missing farm pin blocks with FARM_MISSING_PIN (no stored fee)", async () => {
+  await assert.rejects(
+    resolveDeliveryForOrder({
+      db: fakeDb().db,
+      farmerProfile: { farmName: "Pin-less Farm" },
+      order: { delivery: "delivery", address: buyerAddress() },
+      getDistanceKm: mockKm(4.2),
+    }),
+    (e) => e.code === "FARM_MISSING_PIN"
+  );
 });
 
 test("/deliver is idempotent: settled orders return early, no double credit", () => {

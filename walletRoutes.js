@@ -2,9 +2,18 @@ const express = require("express");
 const crypto = require("crypto");
 const { FieldValue } = require("firebase-admin/firestore");
 const {
-  computeDeliveryForOrder,
   DeliveryFeeError,
+  farmPinFromProfile,
+  buyerPinFromAddress,
 } = require("./deliveryFee");
+
+const {
+  resolveDeliveryForOrder,
+  resolveDeliveryBatch,
+  pinsEqual,
+} = require("./deliveryService");
+
+const { checkQuoteRateLimit } = require("./quoteRateLimit");
 
 const {
   normalizeEggVariant,
@@ -24,7 +33,6 @@ const DEFAULT_COMMISSION_RATE = 0.03;
 const DEFAULT_MIN_COMMISSION_DEPOSIT = 100;
 const MAX_COMMISSION_DEPOSIT = 100000;
 const DEFAULT_MIN_WITHDRAWAL = 1;
-const DEFAULT_DELIVERY_FEE = 35;
 const TRANSACTION_LIMIT = 50;
 
 /*
@@ -98,13 +106,6 @@ const getMinimumWithdrawal = () => {
     getEnv("FARMER_MIN_WITHDRAWAL") || DEFAULT_MIN_WITHDRAWAL
   );
   return Number.isFinite(value) && value > 0 ? value : DEFAULT_MIN_WITHDRAWAL;
-};
-
-const getDeliveryFee = () => {
-  const value = normalizeAmount(
-    getEnv("FARMGATE_DELIVERY_FEE") || DEFAULT_DELIVERY_FEE
-  );
-  return Number.isFinite(value) && value >= 0 ? value : DEFAULT_DELIVERY_FEE;
 };
 
 const createIdempotencyKey = (prefix) =>
@@ -476,12 +477,14 @@ const getExpectedFarmerEarning = (order) => {
 
 /*
   Re-prices an order from the products collection (never trusts the client).
-  Delivery fee is recomputed from barangay centroids:
-  farm barangay from users/{farmerId}, buyer barangay from order.address.
-  Legacy orders with no barangay keep the fee already written.
+  Delivery is OSRM pin-based: the caller resolves it BEFORE the transaction
+  (network must not run inside it) and passes opts.precomputedDelivery
+  { farmPin, buyerPin, result }. Pins are re-verified against the
+  transaction-fresh reads here; on mismatch an error is thrown and the
+  order stays pending. Tests may pass opts.getDistanceKm instead.
   MUST be called inside a transaction BEFORE any transaction write.
 */
-const priceOrderOnServer = async (transaction, db, order) => {
+const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
   const items = Array.isArray(order.products) ? order.products : [];
 
   if (items.length === 0) {
@@ -573,24 +576,53 @@ const priceOrderOnServer = async (transaction, db, order) => {
 
   subtotal = roundMoney(subtotal);
 
-  // Barangay-level delivery fee. Reads the farm profile inside the same
+  // OSRM pin delivery fee. Reads the farm profile inside the same
   // transaction (read-before-write) and NEVER uses client-sent fee/distance.
-  // Throws DeliveryFeeError when the address can't be delivered to — the
-  // caller must keep the order pending and return a clear error.
+  // Throws when the address can't be delivered to — the caller must keep
+  // the order pending and return a clear error. /deliver settlement below
+  // is untouched.
   let deliveryFee = 0;
   let distanceKm = 0;
   let deliveryTier = null;
+  let osrmDataVersion = null;
+  let deliveryMethod = null;
   let deliveryLegacy = false;
 
   if (order.delivery === "delivery") {
     const farmerRef = db.collection("users").doc(String(order.farmerId));
     const farmerSnap = await transaction.get(farmerRef);
     const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
-    const computed = computeDeliveryForOrder({ farmerProfile, order });
-    deliveryFee = computed.deliveryFee;
-    distanceKm = computed.distanceKm;
-    deliveryTier = computed.tier;
-    deliveryLegacy = computed.legacy === true;
+    const pre = opts.precomputedDelivery || null;
+    if (
+      pre &&
+      pinsEqual(farmPinFromProfile(farmerProfile), pre.farmPin) &&
+      pinsEqual(buyerPinFromAddress(order.address), pre.buyerPin)
+    ) {
+      deliveryFee = pre.result.deliveryFee;
+      distanceKm = pre.result.distanceKm;
+      deliveryTier = pre.result.tier;
+      osrmDataVersion = pre.result.osrmDataVersion || null;
+      deliveryMethod = pre.result.method || null;
+      deliveryLegacy = pre.result.legacy === true;
+    } else if (pre) {
+      throw new Error("The delivery address changed. Please re-quote delivery and try again.");
+    } else if (opts.getDistanceKm) {
+      const computed = await resolveDeliveryForOrder({
+        db,
+        transaction,
+        farmerProfile,
+        order,
+        getDistanceKm: opts.getDistanceKm,
+      });
+      deliveryFee = computed.deliveryFee;
+      distanceKm = computed.distanceKm;
+      deliveryTier = computed.tier;
+      osrmDataVersion = computed.osrmDataVersion || null;
+      deliveryMethod = computed.method || null;
+      deliveryLegacy = computed.legacy === true;
+    } else {
+      throw new Error("Delivery must be resolved before the transaction (no estimate allowed).");
+    }
   }
 
   return {
@@ -599,6 +631,8 @@ const priceOrderOnServer = async (transaction, db, order) => {
     deliveryFee,
     distanceKm,
     deliveryTier,
+    osrmDataVersion,
+    deliveryMethod,
     deliveryLegacy,
     total: roundMoney(subtotal + deliveryFee),
   };
@@ -2448,13 +2482,51 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   // GCash: nothing is held; stock is deducted when payment is captured.
   // ------------------------------------------------------------
   router.post("/orders/:orderId/accept", async (req, res) => {
-    try {
-      const { decoded } = await requireFarmer(req, auth, db);
+  try {
+    const { decoded } = await requireFarmer(req, auth, db);
 
-      const orderRef = db.collection("orders").doc(String(req.params.orderId));
-      const walletRef = db.collection("farmerWallets").doc(decoded.uid);
+    const orderRef = db.collection("orders").doc(String(req.params.orderId));
+    const walletRef = db.collection("farmerWallets").doc(decoded.uid);
 
-      const result = await db.runTransaction(async (transaction) => {
+    // Resolve OSRM delivery BEFORE the transaction (network must not run
+    // inside it). Pins are re-verified against transaction-fresh reads;
+    // on mismatch the accept aborts and the order stays pending.
+    // Failure here returns 400 before any write happens.
+    const preSnap = await orderRef.get();
+    const preOrder = preSnap.exists ? preSnap.data() : null;
+    let precomputedDelivery = null;
+    if (preOrder && preOrder.delivery === "delivery" && preOrder.status === "pending") {
+      const preFarmerSnap = await db
+        .collection("users")
+        .doc(String(preOrder.farmerId))
+        .get();
+      const preFarmerProfile = preFarmerSnap.exists ? preFarmerSnap.data() : {};
+      const farmPin = farmPinFromProfile(preFarmerProfile);
+      const buyerPin = buyerPinFromAddress(preOrder.address);
+      try {
+        const r = await resolveDeliveryForOrder({ db, farmerProfile: preFarmerProfile, order: preOrder });
+        precomputedDelivery = {
+          farmPin,
+          buyerPin,
+          result: {
+            deliveryFee: r.deliveryFee,
+            distanceKm: r.distanceKm,
+            tier: r.tier,
+            osrmDataVersion: r.osrmDataVersion || null,
+            method: r.method || null,
+            legacy: r.legacy === true,
+          },
+        };
+      } catch (e) {
+        return res.status(400).json({
+          success: false,
+          error: e.message,
+          ...(e?.code ? { code: e.code } : {}),
+        });
+      }
+    }
+
+    const result = await db.runTransaction(async (transaction) => {
         // ---------- READS ----------
         const [orderSnap, walletSnap] = await Promise.all([
           transaction.get(orderRef),
@@ -2496,7 +2568,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
             throw new Error("Stock was already deducted for this order.");
           }
 
-          pricing = await priceOrderOnServer(transaction, db, order);
+          pricing = await priceOrderOnServer(transaction, db, order, { precomputedDelivery });
 
           reservationAmount = roundMoney(pricing.subtotal * rate);
           commissionAmount = reservationAmount;
@@ -2553,21 +2625,28 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           // at accept and the order stays pending with a clear error.
           commissionAmount = roundMoney(getOrderSubtotal(order) * rate);
           if (order.delivery === "delivery") {
-            const farmerSnap = await transaction.get(
-              db.collection("users").doc(String(order.farmerId))
-            );
-            const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
-            // Throws DeliveryFeeError when undeliverable -> transaction aborts,
-            // order stays pending, caller returns 400 with the message.
-            const dq = computeDeliveryForOrder({ farmerProfile, order });
+            // Precomputed BEFORE the transaction above; verified here so a
+            // changed address aborts accept and the order stays pending.
+            if (
+              !precomputedDelivery ||
+              !pinsEqual(farmPinFromProfile((await transaction.get(
+                db.collection("users").doc(String(order.farmerId))
+              )).data() || {}), precomputedDelivery.farmPin) ||
+              !pinsEqual(buyerPinFromAddress(order.address), precomputedDelivery.buyerPin)
+            ) {
+              throw new Error("The delivery address changed. Please re-quote delivery and try again.");
+            }
+            const r = precomputedDelivery.result;
             pricing = {
               products: order.products,
               subtotal: getOrderSubtotal(order),
-              deliveryFee: dq.deliveryFee,
-              distanceKm: dq.distanceKm,
-              deliveryTier: dq.tier,
-              deliveryLegacy: dq.legacy === true,
-              total: roundMoney(getOrderSubtotal(order) + dq.deliveryFee),
+              deliveryFee: r.deliveryFee,
+              distanceKm: r.distanceKm,
+              deliveryTier: r.tier,
+              osrmDataVersion: r.osrmDataVersion || null,
+              deliveryMethod: r.method || null,
+              deliveryLegacy: r.legacy === true,
+              total: roundMoney(getOrderSubtotal(order) + r.deliveryFee),
             };
           }
         }
@@ -2587,6 +2666,8 @@ const createWalletRouter = ({ db, auth, inventory }) => {
                   deliveryFee: pricing.deliveryFee,
                   distanceKm: pricing.distanceKm ?? null,
                   deliveryTier: pricing.deliveryTier ?? null,
+                  osrmDataVersion: pricing.osrmDataVersion ?? null,
+                  deliveryMethod: pricing.deliveryMethod ?? null,
                   total: pricing.total,
                   serverValidated: true,
                   serverValidatedAt: now,
@@ -2600,6 +2681,8 @@ const createWalletRouter = ({ db, auth, inventory }) => {
                   deliveryFee: pricing.deliveryFee,
                   distanceKm: pricing.distanceKm ?? null,
                   deliveryTier: pricing.deliveryTier ?? null,
+                  osrmDataVersion: pricing.osrmDataVersion ?? null,
+                  deliveryMethod: pricing.deliveryMethod ?? null,
                   total: pricing.total,
                   inventoryFulfilled: false,
                   fulfillmentStatus: "pending",
@@ -2633,13 +2716,13 @@ const createWalletRouter = ({ db, auth, inventory }) => {
     } catch (error) {
       console.error("ACCEPT ORDER ERROR:", error);
 
-      // DeliveryFeeError keeps the order pending with a clear, actionable message.
+      // Delivery errors keep the order pending with a clear, actionable message.
       return res
         .status(error.code === "STOCK_UNAVAILABLE" ? 409 : 400)
         .json({
           success: false,
           error: error.message,
-          ...(error?.name === "DeliveryFeeError" && error?.code
+          ...((error?.name === "DeliveryFeeError" || error?.name === "OsrmError") && error?.code
             ? { code: error.code }
             : {}),
         });
@@ -2648,61 +2731,102 @@ const createWalletRouter = ({ db, auth, inventory }) => {
 
   // ------------------------------------------------------------
   // DELIVERY QUOTE (authoritative preview, never trusts client fee/distance)
-  // POST /wallet/delivery/quote { farmerId, address: {province,city,barangay}, delivery? }
-  // Farm barangay is read from users/{farmerId}; buyer barangay from address.
+  // POST /wallet/delivery/quote { items: [{ farmerId, key? }], buyerPin, delivery? }
+  // Farm pins are read from users/{farmerId}; buyer pin from the saved
+  // address pin. One call quotes all farms; distances resolve in parallel.
   // ------------------------------------------------------------
   router.post("/delivery/quote", async (req, res) => {
     try {
-      await getAuthUser(req, auth);
+      const decoded = await getAuthUser(req, auth);
+      const quota = checkQuoteRateLimit(decoded?.uid);
+      if (!quota.allowed) {
+        res.set("Retry-After", String(Math.ceil(quota.retryAfterMs / 1000)));
+        return res.status(429).json({
+          success: false,
+          code: "RATE_LIMITED",
+          error: "Too many delivery quotes. Please wait a moment and tap Try again.",
+        });
+      }
 
+      const delivery = req.body?.delivery || "delivery";
+      if (delivery !== "delivery") {
+        return res.json({ success: true, quotes: [], deliveryFee: 0, distanceKm: 0, tier: null });
+      }
+
+      const items = Array.isArray(req.body?.items) ? req.body.items : null;
+      const buyerPinRaw = req.body?.buyerPin || null;
+
+      // ---- Batch path ----
+      if (items) {
+        if (items.length === 0) return res.json({ success: true, quotes: [] });
+        if (items.length > 20) {
+          return res.status(400).json({ success: false, error: "Too many farms in one quote (max 20)." });
+        }
+        const buyer =
+          buyerPinRaw && (buyerPinRaw.lat !== undefined || buyerPinRaw.lng !== undefined)
+            ? { lat: Number(buyerPinRaw.lat), lng: Number(buyerPinRaw.lng) }
+            : null;
+        const pairs = [];
+        for (let i = 0; i < items.length; i++) {
+          const farmerId = String(items[i]?.farmerId || "").trim();
+          if (!farmerId) {
+            return res.status(400).json({ success: false, error: `items[${i}].farmerId is missing.` });
+          }
+          pairs.push({ key: items[i]?.key || farmerId, farmerId, farmerPin: null });
+        }
+        const snaps = await Promise.all(
+          pairs.map((p) => db.collection("users").doc(p.farmerId).get())
+        );
+        for (let i = 0; i < pairs.length; i++) {
+          if (!snaps[i].exists) pairs[i].missingFarm = true;
+          else pairs[i].farmerPin = farmPinFromProfile(snaps[i].data() || {});
+        }
+        const results = await resolveDeliveryBatch({
+          db,
+          pairs: pairs.filter((p) => !p.missingFarm),
+          buyerPin: buyer,
+        });
+        const byKey = new Map(results.map((r) => [r.key, r]));
+        return res.json({
+          success: true,
+          quotes: pairs.map((p) =>
+            p.missingFarm
+              ? { key: p.key, farmerId: p.farmerId, success: false, code: "FARM_NOT_FOUND", error: "Farm not found." }
+              : byKey.get(p.key)
+          ),
+        });
+      }
+
+      // ---- Single-farm path (compatibility) ----
       const farmerId = String(req.body?.farmerId || "").trim();
       const address = req.body?.address || null;
-      const delivery = req.body?.delivery || "delivery";
-
       if (!farmerId) {
         return res.status(400).json({ success: false, error: "Missing farmerId." });
       }
-      if (delivery !== "delivery") {
-        return res.json({
-          success: true,
-          deliveryFee: 0,
-          distanceKm: 0,
-          tier: null,
-          total: null,
-        });
-      }
-      if (!address || !address.city || !address.barangay) {
-        return res.status(400).json({
-          success: false,
-          error: "Pick a delivery City and Barangay first.",
-        });
-      }
+      const singleBuyerPin =
+        buyerPinRaw && (buyerPinRaw.lat !== undefined || buyerPinRaw.lng !== undefined)
+          ? { lat: Number(buyerPinRaw.lat), lng: Number(buyerPinRaw.lng) }
+          : address
+            ? buyerPinFromAddress(address)
+            : null;
 
       const farmerSnap = await db.collection("users").doc(farmerId).get();
       if (!farmerSnap.exists) {
         return res.status(404).json({ success: false, error: "Farm not found." });
       }
-      const { farmLocationFromProfile, buyerLocationFromAddress, quoteDeliveryFee } =
-        require("./deliveryFee");
-      const farm = farmLocationFromProfile(farmerSnap.data() || {});
-      const buyer = buyerLocationFromAddress(address);
-
-      if (!String(farm.city || "").trim() || !String(farm.barangay || "").trim()) {
-        return res.status(400).json({
-          success: false,
-          code: "FARM_MISSING_BARANGAY",
-          error:
-            "This farm has no barangay set yet. Ask the farmer to pick their City and Barangay in Farm Profile before delivery.",
-        });
-      }
-
       try {
-        const q = quoteDeliveryFee(farm, buyer);
+        const r = await resolveDeliveryForOrder({
+          db,
+          farmerProfile: farmerSnap.data() || {},
+          order: { delivery: "delivery", address: { lat: singleBuyerPin?.lat, lng: singleBuyerPin?.lng } },
+        });
         return res.json({
           success: true,
-          deliveryFee: q.fee,
-          distanceKm: q.distanceKm,
-          tier: q.tier,
+          deliveryFee: r.deliveryFee,
+          distanceKm: r.distanceKm,
+          tier: r.tier,
+          osrmDataVersion: r.osrmDataVersion || null,
+          method: r.method || null,
         });
       } catch (e) {
         return res.status(400).json({

@@ -58,12 +58,17 @@ const getCommissionRate = () => {
 };
 
 const {
-  computeDeliveryForOrder,
-  farmLocationFromProfile,
-  buyerLocationFromAddress,
-  quoteDeliveryFee,
   DeliveryFeeError,
+  farmPinFromProfile,
+  buyerPinFromAddress,
 } = require("./deliveryFee");
+
+const {
+  resolveDeliveryForOrder,
+  resolveDeliveryBatch,
+} = require("./deliveryService");
+
+const { checkQuoteRateLimit } = require("./quoteRateLimit");
 
 const {
   normalizeEggVariant,
@@ -71,13 +76,8 @@ const {
   roundStock6,
 } = require("./eggVariants");
 
-// Legacy flat-fee fallback (kept ONLY for old orders with no barangay).
-// New orders always use barangay-level quoteDeliveryFee. Must match walletRoutes.js
-const getDeliveryFee = () => {
-  const configured = Number(getEnv("FARMGATE_DELIVERY_FEE") || 35);
-
-  return Number.isFinite(configured) && configured >= 0 ? configured : 35;
-};
+// No flat-fee fallback: new orders always use OSRM road distance.
+// Old orders that already have a fee keep the written fee (legacy keep).
 
 const escapeHtml = (value) =>
   String(value ?? "")
@@ -372,6 +372,46 @@ const findOrderFromWebhook = async (data) => {
 ========================================================= */
 
 const validateOrderForPayment = async (orderRef) => {
+  // Resolve the OSRM delivery BEFORE the transaction: network calls
+  // (OSRM + cache) must not run inside it. The pins used are re-checked
+  // against the transaction-fresh order below; on mismatch the buyer
+  // must re-quote (400, order untouched).
+  const preOrderSnap = await orderRef.get();
+  const preOrder = preOrderSnap.exists ? preOrderSnap.data() : null;
+  let precomputedDelivery = null;
+  let precomputedPins = null;
+  if (preOrder && preOrder.delivery === "delivery") {
+    const preFarmerSnap = await db
+      .collection("users")
+      .doc(String(preOrder.farmerId))
+      .get();
+    const preFarmerProfile = preFarmerSnap.exists ? preFarmerSnap.data() : {};
+    precomputedPins = {
+      farm: farmPinFromProfile(preFarmerProfile),
+      buyer: buyerPinFromAddress(preOrder.address),
+    };
+    try {
+      const r = await resolveDeliveryForOrder({
+        db,
+        farmerProfile: preFarmerProfile,
+        order: preOrder,
+      });
+      precomputedDelivery = {
+        deliveryFee: r.deliveryFee,
+        distanceKm: r.distanceKm,
+        tier: r.tier,
+        osrmDataVersion: r.osrmDataVersion || null,
+        method: r.method || null,
+        legacy: r.legacy === true,
+      };
+    } catch (e) {
+      if (e?.name === "DeliveryFeeError" || e?.name === "OsrmError") {
+        throw httpError(400, e.message);
+      }
+      throw e;
+    }
+  }
+
   return await db.runTransaction(async (transaction) => {
     const orderSnap = await transaction.get(orderRef);
 
@@ -552,29 +592,39 @@ const validateOrderForPayment = async (orderRef) => {
 
     const validatedProducts = validatedByIndex;
 
-    // ---- Barangay-level delivery fee (never trusts client fee/distance) ----
-    // Farm barangay from users/{farmerId}, buyer barangay from order.address.
-    // Legacy orders with no barangay keep the fee already written.
-    // Undeliverable addresses throw DeliveryFeeError -> order stays pending.
+    // ---- OSRM pin delivery fee (never trusts client fee/distance) ----
+    // Farm pin from users/{farmerId}, buyer pin from order.address.
+    // Resolved BEFORE the transaction above; the pins are re-verified
+    // here so the written fee/distance/total stay fixed after payment.
+    // Legacy orders with no pins keep the fee already written.
+    // Undeliverable addresses throw -> order stays as-is.
     let deliveryFee = 0;
     let distanceKm = 0;
     let deliveryTier = null;
+    let osrmDataVersion = null;
+    let deliveryMethod = null;
 
     if (order.delivery === "delivery") {
       const farmerRef = db.collection("users").doc(String(order.farmerId));
       const farmerSnap = await transaction.get(farmerRef);
       const farmerProfile = farmerSnap.exists ? farmerSnap.data() : {};
-      try {
-        const computed = computeDeliveryForOrder({ farmerProfile, order });
-        deliveryFee = computed.deliveryFee;
-        distanceKm = computed.distanceKm;
-        deliveryTier = computed.tier;
-      } catch (e) {
-        if (e?.name === "DeliveryFeeError") {
-          throw httpError(400, e.message);
-        }
-        throw e;
+      const freshPins = {
+        farm: farmPinFromProfile(farmerProfile),
+        buyer: buyerPinFromAddress(order.address),
+      };
+      const { pinsEqual } = require("./deliveryService");
+      const samePins =
+        precomputedDelivery &&
+        pinsEqual(freshPins.farm, precomputedPins?.farm) &&
+        pinsEqual(freshPins.buyer, precomputedPins?.buyer);
+      if (!samePins) {
+        throw httpError(400, "The delivery address changed. Please re-quote delivery and try again.");
       }
+      deliveryFee = precomputedDelivery.deliveryFee;
+      distanceKm = precomputedDelivery.distanceKm;
+      deliveryTier = precomputedDelivery.tier;
+      osrmDataVersion = precomputedDelivery.osrmDataVersion;
+      deliveryMethod = precomputedDelivery.method;
     }
 
     const finalSubtotal = roundMoney(computedSubtotal);
@@ -600,6 +650,8 @@ const validateOrderForPayment = async (orderRef) => {
       deliveryFee,
       distanceKm: distanceKm ?? null,
       deliveryTier: deliveryTier ?? null,
+      osrmDataVersion: osrmDataVersion ?? null,
+      deliveryMethod: deliveryMethod ?? null,
       total: finalTotal,
 
       commissionRate,
@@ -626,6 +678,8 @@ const validateOrderForPayment = async (orderRef) => {
       deliveryFee,
       distanceKm: distanceKm ?? null,
       deliveryTier: deliveryTier ?? null,
+      osrmDataVersion: osrmDataVersion ?? null,
+      deliveryMethod: deliveryMethod ?? null,
       products: validatedProducts,
     };
   });
@@ -1215,62 +1269,121 @@ app.get("/health", (req, res) => {
 });
 
 /* =========================================================
-   DELIVERY QUOTE (authoritative, Bulacan barangay-level)
-   POST /delivery/quote { farmerId, address: {province,city,barangay}, delivery? }
-   - Farm barangay is read from users/{farmerId}, never from the client.
-   - Buyer barangay comes from the address object (order address at checkout).
-   - Client fee/distance preview is never trusted; callers must use this.
+   DELIVERY QUOTE (authoritative, OSRM pins, Bulacan only)
+   POST /delivery/quote { items: [{ farmerId, key? }], buyerPin: {lat,lng}, delivery? }
+   - Farm pins are read from users/{farmerId}, never from the client.
+   - Buyer pin comes from the saved address pin (text fields are for
+     the courier only and are never geocoded).
+   - One call quotes ALL farms in the cart; distances resolve in
+     parallel on the server. Client fee/distance preview is never trusted.
+   - Single-farm shape { farmerId, address } is still accepted for
+     compatibility (address may carry lat/lng).
    ========================================================= */
 
 app.post("/delivery/quote", async (req, res) => {
   try {
-    await verifyFirebaseUser(req);
-
-    const farmerId = String(req.body?.farmerId || "").trim();
-    const address = req.body?.address || null;
-    const delivery = req.body?.delivery || "delivery";
-
-    if (!farmerId) {
-      return res.status(400).json({ success: false, error: "Missing farmerId." });
+    const decoded = await verifyFirebaseUser(req);
+    const quota = checkQuoteRateLimit(decoded?.uid);
+    if (!quota.allowed) {
+      res.set("Retry-After", String(Math.ceil(quota.retryAfterMs / 1000)));
+      return res.status(429).json({
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many delivery quotes. Please wait a moment and tap Try again.",
+      });
     }
+
+    const delivery = req.body?.delivery || "delivery";
     if (delivery !== "delivery") {
       return res.json({
         success: true,
         deliveryFee: 0,
         distanceKm: 0,
         tier: null,
+        quotes: [],
       });
     }
-    if (!address || !address.city || !address.barangay) {
-      return res.status(400).json({
-        success: false,
-        error: "Pick a delivery City and Barangay first.",
+
+    const items = Array.isArray(req.body?.items) ? req.body.items : null;
+    const buyerPin = req.body?.buyerPin || null;
+
+    // ---- Batch path: one call for all farms in the cart ----
+    if (items) {
+      if (items.length === 0) {
+        return res.json({ success: true, quotes: [] });
+      }
+      if (items.length > 20) {
+        return res.status(400).json({ success: false, error: "Too many farms in one quote (max 20)." });
+      }
+      const buyer =
+        buyerPin && (buyerPin.lat !== undefined || buyerPin.lng !== undefined)
+          ? { lat: Number(buyerPin.lat), lng: Number(buyerPin.lng) }
+          : null;
+      const pairs = [];
+      for (let i = 0; i < items.length; i++) {
+        const farmerId = String(items[i]?.farmerId || "").trim();
+        if (!farmerId) {
+          return res.status(400).json({ success: false, error: `items[${i}].farmerId is missing.` });
+        }
+        pairs.push({ key: items[i]?.key || farmerId, farmerId, farmerPin: null });
+      }
+      const snaps = await Promise.all(
+        pairs.map((p) => db.collection("users").doc(p.farmerId).get())
+      );
+      for (let i = 0; i < pairs.length; i++) {
+        if (!snaps[i].exists) {
+          pairs[i].missingFarm = true;
+        } else {
+          pairs[i].farmerPin = farmPinFromProfile(snaps[i].data() || {});
+        }
+      }
+      const missing = pairs.filter((p) => p.missingFarm);
+      const results = await resolveDeliveryBatch({
+        db,
+        pairs: pairs.filter((p) => !p.missingFarm),
+        buyerPin: buyer,
+      });
+      const byKey = new Map(results.map((r) => [r.key, r]));
+      return res.json({
+        success: true,
+        quotes: pairs.map((p) =>
+          p.missingFarm
+            ? { key: p.key, farmerId: p.farmerId, success: false, code: "FARM_NOT_FOUND", error: "Farm not found." }
+            : byKey.get(p.key)
+        ),
       });
     }
+
+    // ---- Single-farm path (compatibility) ----
+    const farmerId = String(req.body?.farmerId || "").trim();
+    const address = req.body?.address || null;
+    if (!farmerId) {
+      return res.status(400).json({ success: false, error: "Missing farmerId." });
+    }
+    const singleBuyerPin =
+      buyerPin && (buyerPin.lat !== undefined || buyerPin.lng !== undefined)
+        ? { lat: Number(buyerPin.lat), lng: Number(buyerPin.lng) }
+        : address
+          ? buyerPinFromAddress(address)
+          : null;
 
     const farmerSnap = await db.collection("users").doc(farmerId).get();
     if (!farmerSnap.exists) {
       return res.status(404).json({ success: false, error: "Farm not found." });
     }
-    const farm = farmLocationFromProfile(farmerSnap.data() || {});
-    const buyer = buyerLocationFromAddress(address);
-
-    if (!String(farm.city || "").trim() || !String(farm.barangay || "").trim()) {
-      return res.status(400).json({
-        success: false,
-        code: "FARM_MISSING_BARANGAY",
-        error:
-          "This farm has no barangay set yet. Ask the farmer to pick their City and Barangay in Farm Profile before delivery.",
-      });
-    }
-
     try {
-      const q = quoteDeliveryFee(farm, buyer);
+      const r = await resolveDeliveryForOrder({
+        db,
+        farmerProfile: farmerSnap.data() || {},
+        order: { delivery: "delivery", address: { lat: singleBuyerPin?.lat, lng: singleBuyerPin?.lng } },
+      });
       return res.json({
         success: true,
-        deliveryFee: q.fee,
-        distanceKm: q.distanceKm,
-        tier: q.tier,
+        deliveryFee: r.deliveryFee,
+        distanceKm: r.distanceKm,
+        tier: r.tier,
+        osrmDataVersion: r.osrmDataVersion || null,
+        method: r.method || null,
       });
     } catch (e) {
       return res.status(400).json({

@@ -1,0 +1,12 @@
+# Self-hosted OSRM for FarmGate delivery fees.
+# Localhost bind ONLY — coordinates must never leave our infrastructure.
+services:
+  osrm:
+    image: osrm/osrm-backend:v6
+    container_name: farmgate-osrm
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    command: osrm-routed --algorithm mld /data/bulacan.osrm
+    ports:
+      - "127.0.0.1:5000:5000"

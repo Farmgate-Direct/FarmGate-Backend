@@ -1,137 +1,61 @@
-// Unit tests for deliveryFee (barangay-level, Bulacan only).
+// Unit tests for deliveryFee (OSRM pins, data-driven rate table).
 // Run: node --test __tests__/deliveryFee.test.js
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const {
-  quoteDeliveryFee,
-  DeliveryFeeError,
-  getRoadFactor,
-} = require("../deliveryFee");
+const { feeForDistance, DeliveryFeeError, FEE_TIERS } = require("../deliveryFee");
 
-// Real verified rows from data/bulacanBarangays.js
-const farmMalolosPob = {
-  province: "Bulacan",
-  city: "Malolos",
-  barangay: "Santo Niño (Pob.)",
-};
-const buyerMalolosBulihan = {
-  province: "Bulacan",
-  city: "Malolos",
-  barangay: "Bulihan",
-};
-const buyerGuiguintoPob = {
-  province: "Bulacan",
-  city: "Guiguinto",
-  barangay: "Poblacion",
-};
-
-test("same barangay = 0 km, ₱25 (exact match, case/space-insensitive)", () => {
-  const q = quoteDeliveryFee(
-    { province: "  BULACAN ", city: " Malolos ", barangay: "Santo Niño (Pob.)" },
-    { province: "bulacan", city: "malolos", barangay: "  santo niño (pob.) " }
-  );
-  assert.equal(q.distanceKm, 0);
-  assert.equal(q.fee, 25);
+test("rate table is data (array), not an if-else chain", () => {
+  assert.ok(Array.isArray(FEE_TIERS));
+  assert.equal(FEE_TIERS.length, 11);
 });
 
-test("adjacent barangays: Malolos Pob -> Bulihan is small non-zero distance, fee ₱25", () => {
-  const q = quoteDeliveryFee(farmMalolosPob, buyerMalolosBulihan);
-  assert.ok(q.distanceKm > 0 && q.distanceKm <= 3.0, `got ${q.distanceKm}`);
-  assert.equal(q.fee, 25);
+test("0 km (same pin) = ₱25", () => {
+  assert.deepEqual(feeForDistance(0), { fee: 25, tier: "0–3 km" });
 });
 
-test("adjacent cities: Malolos Pob -> Guiguinto Poblacion costs more than intra-city", () => {
-  const near = quoteDeliveryFee(farmMalolosPob, buyerMalolosBulihan);
-  const far = quoteDeliveryFee(farmMalolosPob, buyerGuiguintoPob);
-  assert.ok(far.distanceKm > near.distanceKm, `${far.distanceKm} vs ${near.distanceKm}`);
-  assert.ok(far.fee >= near.fee);
-});
+const BOUNDARIES = [
+  [3.0, 25, "0–3 km", 3.1, 35, "3.1–5 km"],
+  [5.0, 35, "3.1–5 km", 5.1, 50, "5.1–10 km"],
+  [10.0, 50, "5.1–10 km", 10.1, 70, "10.1–15 km"],
+  [15.0, 70, "10.1–15 km", 15.1, 90, "15.1–20 km"],
+  [20.0, 90, "15.1–20 km", 20.1, 110, "20.1–25 km"],
+  [25.0, 110, "20.1–25 km", 25.1, 130, "25.1–30 km"],
+  [30.0, 130, "25.1–30 km", 30.1, 160, "30.1–40 km"],
+  [40.0, 160, "30.1–40 km", 40.1, 190, "40.1–50 km"],
+  [50.0, 190, "40.1–50 km", 50.1, 220, "50.1–60 km"],
+  [60.0, 220, "50.1–60 km", 60.1, 250, "60.1–70 km"],
+];
 
-test("tier boundary: 3.0 km = ₱25, 3.1 km = ₱35 (inclusive upper bounds)", () => {
-  // Synthetic injection: farm at origin; buyers placed so road distance
-  // (haversine × 1.3, rounded to 0.1) lands exactly on 3.0 and 3.1.
-  // haversine needed: 3.0/1.3 = 2.30769 km; 3.1/1.3 = 2.38462 km.
-  // At lat 14.8, 1 deg lat ≈ 110.6 km.
-  const farm = { province: "Bulacan", city: "TestCity", barangay: "FarmBrgy" };
-  const b30 = { province: "Bulacan", city: "TestCity", barangay: "Buyer30" };
-  const b31 = { province: "Bulacan", city: "TestCity", barangay: "Buyer31" };
-  const data = {
-    "testcity|farmbrgy": { city: "TestCity", barangay: "FarmBrgy", lat: 14.8, lng: 120.81 },
-    "testcity|buyer30": { city: "TestCity", barangay: "Buyer30", lat: 14.8 + 2.30769 / 110.6, lng: 120.81 },
-    "testcity|buyer31": { city: "TestCity", barangay: "Buyer31", lat: 14.8 + 2.38462 / 110.6, lng: 120.81 },
-  };
-  const q30 = quoteDeliveryFee(farm, b30, { data, roadFactor: 1.3 });
-  const q31 = quoteDeliveryFee(farm, b31, { data, roadFactor: 1.3 });
-  assert.equal(q30.distanceKm, 3.0);
-  assert.equal(q30.fee, 25);
-  assert.equal(q31.distanceKm, 3.1);
-  assert.equal(q31.fee, 35);
-});
+for (const [low, lowFee, lowTier, high, highFee, highTier] of BOUNDARIES) {
+  test(`tier boundary: ${low} km = ₱${lowFee}, ${high} km = ₱${highFee}`, () => {
+    assert.deepEqual(feeForDistance(low), { fee: lowFee, tier: lowTier });
+    assert.deepEqual(feeForDistance(high), { fee: highFee, tier: highTier });
+  });
+}
 
-test("non-Bulacan province is blocked with INVALID_PROVINCE", () => {
+test("70.0 km is allowed (₱250); 70.1 km is blocked", () => {
+  assert.deepEqual(feeForDistance(70.0), { fee: 250, tier: "60.1–70 km" });
   assert.throws(
-    () =>
-      quoteDeliveryFee(
-        farmMalolosPob,
-        { province: "Pampanga", city: "Angeles City", barangay: "Balibago" }
-      ),
-    (e) => e instanceof DeliveryFeeError && e.code === "INVALID_PROVINCE"
+    () => feeForDistance(70.1),
+    (e) => e instanceof DeliveryFeeError && e.code === "TOO_FAR"
   );
 });
 
-test("typo in barangay name is UNKNOWN_BARANGAY (no fuzzy match)", () => {
+test("over 70 km is blocked (no fee returned)", () => {
   assert.throws(
-    () =>
-      quoteDeliveryFee(farmMalolosPob, {
-        province: "Bulacan",
-        city: "Malolos",
-        barangay: "Santo Nino (Pob)", // missing ñ + period -> typo
-      }),
-    (e) => e instanceof DeliveryFeeError && e.code === "UNKNOWN_BARANGAY"
+    () => feeForDistance(120),
+    (e) => e instanceof DeliveryFeeError && e.code === "TOO_FAR"
   );
 });
 
-test("same barangay name in another city resolves by (city, barangay) key", () => {
-  // "San Agustin" exists in both Hagonoy and Malolos — different places,
-  // so the same farm must quote DIFFERENT distances (never confused).
-  const hagonoyPob = { province: "Bulacan", city: "Hagonoy", barangay: "Santo Niño (Pob.)" };
-  const hagonoyAgustin = { province: "Bulacan", city: "Hagonoy", barangay: "San Agustin" };
-  const malolosAgustin = { province: "Bulacan", city: "Malolos", barangay: "San Agustin" };
-  const dSameCity = quoteDeliveryFee(hagonoyPob, hagonoyAgustin);
-  const dCrossCity = quoteDeliveryFee(hagonoyPob, malolosAgustin);
-  assert.ok(dSameCity.distanceKm > 0);
-  assert.ok(dCrossCity.distanceKm > 0);
-  assert.notEqual(dSameCity.distanceKm, dCrossCity.distanceKm);
-  // And a typo'd variant of a real name is still UNKNOWN_BARANGAY (no fuzzy).
-  assert.throws(
-    () =>
-      quoteDeliveryFee(hagonoyPob, {
-        province: "Bulacan",
-        city: "Hagonoy",
-        barangay: "San Agustinn",
-      }),
-    (e) => e instanceof DeliveryFeeError && e.code === "UNKNOWN_BARANGAY"
-  );
-});
-
-test("unknown city is blocked with UNKNOWN_CITY", () => {
-  assert.throws(
-    () =>
-      quoteDeliveryFee(farmMalolosPob, {
-        province: "Bulacan",
-        city: "Quezon City",
-        barangay: "Commonwealth",
-      }),
-    (e) => e instanceof DeliveryFeeError && e.code === "UNKNOWN_CITY"
-  );
-});
-
-test("road factor env: default 1.3, clamped to [1,2]", () => {
-  assert.equal(getRoadFactor({}), 1.3);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "1.5" }), 1.5);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "99" }), 1.3);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "0.5" }), 1.3);
-  assert.equal(getRoadFactor({ FARMGATE_ROAD_DISTANCE_FACTOR: "abc" }), 1.3);
+test("invalid distances throw INVALID_DISTANCE (never a fee)", () => {
+  for (const bad of [NaN, -1, "abc", undefined, null]) {
+    assert.throws(
+      () => feeForDistance(bad),
+      (e) => e instanceof DeliveryFeeError && e.code === "INVALID_DISTANCE",
+      `input ${String(bad)}`
+    );
+  }
 });

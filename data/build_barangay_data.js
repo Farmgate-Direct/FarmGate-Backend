@@ -1,34 +1,28 @@
 // Turns bulacan_barangays.csv (city,barangay,lat,lng) into a JS module.
-// - (city, barangay) key must be unique (normalized: trim + lowercase + collapse spaces).
-// - Flags MISSING (empty/non-numeric lat/lng) and SUSPICIOUS coordinates
-//   (outside Bulacan bbox, 0/0, duplicates) and does NOT guess.
-// - Writes bulacanBarangays.js with: BARANGAY_COORDS, CITIES, BARANGAYS_BY_CITY.
+// STRICT (Bulacan-only, complete dataset required):
+// - FAILS (exit 1) if row count is not 569.
+// - FAILS if any coordinate is missing/non-numeric.
+// - FAILS if any coordinate is outside Bulacan's bounding box (or 0,0).
+// - FAILS if any normalized (city, barangay) key is duplicated.
+// - No guessing, no city-center substitution, no approximate fallback.
+//   If any barangay cannot be sourced with reliable coordinates, stop and
+//   report the exact names instead of shipping a partial dataset.
+//
+// Writes bulacanBarangays.js with: BARANGAY_COORDS, CITIES, BARANGAYS_BY_CITY.
 //
 // Usage:
 //   node data/build_barangay_data.js [--check-only]
-//
-// Exit code 1 on duplicate keys or malformed CSV. Missing coords are reported
-// but do not fail the build (delivery is blocked at runtime for those rows).
+"use strict";
 const fs = require("fs");
 const path = require("path");
 
 const CSV_PATH = path.join(__dirname, "bulacan_barangays.csv");
 const OUT_PATH = path.join(__dirname, "bulacanBarangays.js");
 
-// Generous Bulacan bounding box (Luzon, Central Luzon). Anything outside is SUSPICIOUS.
-const BBOX = { minLat: 14.4, maxLat: 15.4, minLng: 120.5, maxLng: 121.4 };
+const EXPECTED_ROWS = 569;
 
-// Last-resort approximate centers for barangays with ZERO map presence.
-// Owner decision: everything must work; the farmer is the final gate on far
-// orders. These are CLEARLY marked approximate (fee tier gets " (approx.)")
-// and listed separately — never silently treated as verified.
-const FALLBACK = {
-  "dona remedios trinidad|kabayunan": { lat: 14.9706, lng: 121.0648, why: "DRT town center (no OSM presence)" },
-  "san miguel|baritan": { lat: 15.1405, lng: 120.9771, why: "San Miguel town center (no OSM presence)" },
-  "san miguel|batasan bata": { lat: 15.1439, lng: 120.941, why: "Batasan village center shared with Matanda half" },
-  "san miguel|batasan matanda": { lat: 15.1439, lng: 120.941, why: "Batasan village center shared with Bata half" },
-  "san miguel|mandile": { lat: 15.1405, lng: 120.9771, why: "San Miguel town center (only OSM hit is in Pampanga)" },
-};
+// Bulacan bounding box (Central Luzon). Anything outside is rejected.
+const BBOX = { minLat: 14.4, maxLat: 15.4, minLng: 120.5, maxLng: 121.4 };
 
 const normalize = (s) =>
   String(s || "")
@@ -78,13 +72,17 @@ function parseCsv(text) {
   return rows.filter((r) => r.some((f) => String(f).trim() !== ""));
 }
 
+function fail(msg) {
+  console.error(msg);
+  process.exit(1);
+}
+
 function main() {
   const checkOnly = process.argv.includes("--check-only");
   const raw = fs.readFileSync(CSV_PATH, "utf8");
   const rows = parseCsv(raw);
   if (rows.length < 2) {
-    console.error("CSV is empty or missing header.");
-    process.exit(1);
+    fail("CSV is empty or missing header.");
   }
   const header = rows[0].map((h) => h.trim().toLowerCase());
   const ci = header.indexOf("city");
@@ -92,8 +90,15 @@ function main() {
   const la = header.indexOf("lat");
   const ln = header.indexOf("lng");
   if (ci < 0 || bi < 0 || la < 0 || ln < 0) {
-    console.error("CSV header must be: city,barangay,lat,lng");
-    process.exit(1);
+    fail("CSV header must be: city,barangay,lat,lng");
+  }
+
+  const dataRows = rows.length - 1;
+  if (dataRows !== EXPECTED_ROWS) {
+    fail(
+      `Row count mismatch: expected ${EXPECTED_ROWS} barangays, found ${dataRows}. ` +
+        `Do not ship a partial dataset — source every Bulacan barangay first.`
+    );
   }
 
   const seen = new Map(); // normalized key -> line number
@@ -102,10 +107,8 @@ function main() {
   const byCity = new Map(); // normalized city -> [{ barangay, lat, lng, hasCoords }]
 
   const missing = [];
-  const suspicious = [];
+  const outOfBox = [];
   const duplicates = [];
-  const approximate = [];
-  const coordSeen = new Map(); // "lat,lng" -> first key (detect copy-paste dupes)
 
   for (let i = 1; i < rows.length; i++) {
     const line = i + 1;
@@ -115,8 +118,7 @@ function main() {
     const lngRaw = String(rows[i][ln] || "").trim();
 
     if (!cityDisp || !brgyDisp) {
-      console.error(`Line ${line}: empty city or barangay.`);
-      process.exit(1);
+      fail(`Line ${line}: empty city or barangay.`);
     }
     const nCity = normalize(cityDisp);
     const nBrgy = normalize(brgyDisp);
@@ -137,22 +139,6 @@ function main() {
     const lng = lngRaw === "" ? NaN : Number(lngRaw);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      const fb = FALLBACK[key];
-      if (
-        fb &&
-        Number.isFinite(fb.lat) &&
-        Number.isFinite(fb.lng) &&
-        fb.lat >= BBOX.minLat && fb.lat <= BBOX.maxLat &&
-        fb.lng >= BBOX.minLng && fb.lng <= BBOX.maxLng
-      ) {
-        const cl = `${fb.lat},${fb.lng}`;
-        const shared = coordSeen.has(cl) ? ` (shared center with ${coordSeen.get(cl)})` : "";
-        if (!coordSeen.has(cl)) coordSeen.set(cl, `${cityDisp} | ${brgyDisp}`);
-        approximate.push(`${cityDisp} | ${brgyDisp} (${fb.lat},${fb.lng}) — ${fb.why}${shared} (line ${line})`);
-        coords[key] = { city: cityDisp, barangay: brgyDisp, lat: fb.lat, lng: fb.lng, approximate: true, why: fb.why };
-        byCity.get(nCity).push({ barangay: brgyDisp, lat: fb.lat, lng: fb.lng, hasCoords: true, approximate: true });
-        continue;
-      }
       missing.push(`${cityDisp} | ${brgyDisp} (line ${line})`);
       byCity.get(nCity).push({ barangay: brgyDisp, lat: null, lng: null, hasCoords: false });
       continue;
@@ -161,20 +147,44 @@ function main() {
     const reasons = [];
     if (lat === 0 && lng === 0) reasons.push("0,0 null island");
     if (lat < BBOX.minLat || lat > BBOX.maxLat || lng < BBOX.minLng || lng > BBOX.maxLng)
-      reasons.push(`outside Bulacan bbox (${lat},${lng})`);
-    const cl = `${lat},${lng}`;
-    if (coordSeen.has(cl)) reasons.push(`duplicate coords with ${coordSeen.get(cl)}`);
-    else coordSeen.set(cl, `${cityDisp} | ${brgyDisp}`);
+      reasons.push(`outside Bulacan bbox (${lat},${lng}) — bbox lat [${BBOX.minLat},${BBOX.maxLat}] lng [${BBOX.minLng},${BBOX.maxLng}]`);
 
     if (reasons.length > 0) {
-      suspicious.push(`${cityDisp} | ${brgyDisp} (${lat},${lng}) — ${reasons.join("; ")} (line ${line})`);
-      // Suspicious rows are NOT trusted: excluded from coords, kept in list as unserviceable.
-      byCity.get(nCity).push({ barangay: brgyDisp, lat, lng, hasCoords: false, suspicious: true });
+      outOfBox.push(`${cityDisp} | ${brgyDisp} (${lat},${lng}) — ${reasons.join("; ")} (line ${line})`);
+      byCity.get(nCity).push({ barangay: brgyDisp, lat, lng, hasCoords: false });
       continue;
     }
 
     coords[key] = { city: cityDisp, barangay: brgyDisp, lat, lng };
     byCity.get(nCity).push({ barangay: brgyDisp, lat, lng, hasCoords: true });
+  }
+
+  console.log(`Parsed ${seen.size} rows from bulacan_barangays.csv`);
+  console.log(`  with coords: ${Object.keys(coords).length}`);
+  console.log(`  missing coords: ${missing.length}`);
+  console.log(`  outside bbox: ${outOfBox.length}`);
+  console.log(`  duplicate keys: ${duplicates.length}`);
+
+  let failed = false;
+  if (duplicates.length > 0) {
+    console.error("\nDUPLICATE (city,barangay) KEYS — fix CSV, keys must be unique:");
+    for (const d of duplicates) console.error("  " + d);
+    failed = true;
+  }
+  if (missing.length > 0) {
+    console.error("\nMISSING coordinates — build FAILED. Source reliable coordinates, do not guess:");
+    for (const m of missing.slice(0, 100)) console.error("  " + m);
+    if (missing.length > 100) console.error(`  ... and ${missing.length - 100} more`);
+    failed = true;
+  }
+  if (outOfBox.length > 0) {
+    console.error("\nCOORDINATES OUTSIDE BULACAN BBOX — build FAILED. Verify in the field:");
+    for (const s of outOfBox) console.error("  " + s);
+    failed = true;
+  }
+  if (failed) {
+    console.error("\nBUILD FAILED: dataset is incomplete or invalid. No JS module was written.");
+    process.exit(1);
   }
 
   // Sort cities and barangays for stable output
@@ -186,39 +196,14 @@ function main() {
     barangaysByCity[disp] = list;
   }
 
-  console.log(`Parsed ${seen.size} rows from bulacan_barangays.csv`);
-  console.log(`  with coords: ${Object.keys(coords).length}`);
-  console.log(`  approximate (fallback, works but flagged): ${approximate.length}`);
-  console.log(`  missing coords: ${missing.length}`);
-  console.log(`  suspicious: ${suspicious.length}`);
-  console.log(`  duplicate keys: ${duplicates.length}`);
-
-  if (duplicates.length > 0) {
-    console.error("\nDUPLICATE (city,barangay) KEYS — fix CSV, keys must be unique:");
-    for (const d of duplicates) console.error("  " + d);
-    process.exit(1);
-  }
-  if (approximate.length > 0) {
-    console.log("\nAPPROXIMATE fallback centers (routable, fee tier marked approx.):");
-    for (const a of approximate) console.log("  " + a);
-  }
-  if (missing.length > 0) {
-    console.log("\nMISSING coordinates (delivery BLOCKED for these until field-verified — not guessed):");
-    for (const m of missing.slice(0, 50)) console.log("  " + m);
-    if (missing.length > 50) console.log(`  ... and ${missing.length - 50} more`);
-  }
-  if (suspicious.length > 0) {
-    console.log("\nSUSPICIOUS coordinates (excluded from routing — verify in the field):");
-    for (const s of suspicious) console.log("  " + s);
+  if (checkOnly) {
+    console.log(`\nCHECK OK: ${seen.size} rows, all with valid in-bbox coordinates, no duplicates.`);
+    return;
   }
 
-  if (checkOnly) return;
-
-  const approxCount = Object.values(coords).filter((c) => c.approximate).length;
   const out =
     `// AUTO-GENERATED by data/build_barangay_data.js — do not edit by hand.\n` +
-    `// Source: data/bulacan_barangays.csv (${seen.size} rows, ${Object.keys(coords).length} routable, ${approxCount} approximate).\n` +
-    `// Approximate entries carry { approximate: true } and get an "(approx.)" fee tier.\n` +
+    `// Source: data/bulacan_barangays.csv (${seen.size} rows, ${Object.keys(coords).length} routable, 0 approximate).\n` +
     `"use strict";\n\n` +
     `const BARANGAY_COORDS = ${JSON.stringify(coords, null, 2)};\n\n` +
     `const CITIES = ${JSON.stringify(cities, null, 2)};\n\n` +

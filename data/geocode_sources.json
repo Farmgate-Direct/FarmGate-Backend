@@ -547,5 +547,10 @@
   "San Rafael | Talacsan": "OSM relation/19570924 (high)",
   "San Rafael | Tambubong": "OSM relation/19570925 (high)",
   "San Rafael | Tukod": "OSM relation/19570926 (high)",
-  "San Rafael | Ulingao": "OSM relation/19570927 (high)"
+  "San Rafael | Ulingao": "OSM relation/19570927 (high)",
+  "Dona Remedios Trinidad | Kabayunan": "PhilAtlas 14.9440,121.2688 (high, cross-checked Wikimapia 14°55'38\"N 121°15'20\"E)",
+  "San Miguel | Baritan": "PhilAtlas 15.2149,120.9876 (high, cross-checked paintmaps 15.21695,120.98523)",
+  "San Miguel | Batasan Bata": "PhilAtlas 15.1410,120.9454 (high, cross-checked paintmaps 15.14442,120.94077)",
+  "San Miguel | Batasan Matanda": "PhilAtlas 15.1493,120.9333 (high)",
+  "San Miguel | Mandile": "PhilAtlas 15.1627,120.9200 (high, cross-checked Mandile Barangay Hall 15.165311,120.920077)"
 }
