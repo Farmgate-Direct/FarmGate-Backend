@@ -1687,6 +1687,79 @@ app.post("/auth/check-email-status", async (req, res) => {
 });
 
 /* =========================================================
+   AUTH: RESEND VERIFICATION BY EMAIL (public, no auth required)
+   - Para sa natigil na registration (nawala ang session pag
+     nag-close ng app): makahingi ulit ng verification link
+     gamit lang ang email, walang password, walang session.
+   - 60s rate limit kada email para hindi ma-spam.
+   - Kung verified na, { alreadyVerified: true } — ituloy na
+     sa sign-in/finish, huwag nang mag-send.
+========================================================= */
+const resendVerificationLimits = new Map();
+
+app.post("/auth/resend-verification", async (req, res) => {
+  try {
+    const rawEmail = String(req.body?.email || "").trim();
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail) ||
+      rawEmail.length > 254
+    ) {
+      return res.status(400).json({ success: false, error: "Invalid email." });
+    }
+    const emailLower = rawEmail.toLowerCase();
+
+    const now = Date.now();
+    const lastSent = resendVerificationLimits.get(emailLower) || 0;
+    if (now - lastSent < 60000) {
+      return res.status(429).json({
+        success: false,
+        error: "Please wait a minute before requesting a new link.",
+        retryAfterSecs: Math.ceil((60000 - (now - lastSent)) / 1000),
+      });
+    }
+
+    let target;
+    try {
+      target = await auth.getUserByEmail(emailLower);
+    } catch (e) {
+      if (e?.code === "auth/user-not-found") {
+        return res.json({ success: true, sent: false, exists: false });
+      }
+      throw e;
+    }
+
+    if (target.emailVerified) {
+      return res.json({ success: true, sent: false, alreadyVerified: true });
+    }
+
+    if (!isSmtpConfigured()) {
+      return res.json({ success: true, sent: false, reason: "smtp-missing" });
+    }
+
+    const link = await auth.generateEmailVerificationLink(target.email);
+
+    let fullName = String(target.displayName || "");
+    try {
+      const userSnap = await db.collection("users").doc(target.uid).get();
+      if (userSnap.exists) fullName = String((userSnap.data() || {}).fullName || fullName);
+    } catch {
+      // Best-effort lang ang pangalan — hindi hadlang sa send.
+    }
+
+    await sendVerificationEmail(target.email, fullName, link);
+    resendVerificationLimits.set(emailLower, Date.now());
+
+    return res.json({ success: true, sent: true });
+  } catch (error) {
+    console.error("RESEND VERIFICATION ERROR:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to resend verification email.",
+    });
+  }
+});
+
+/* =========================================================
    ADMIN: REJECT REGISTRATION (authenticated, admin-only)
    - Nagse-send muna ng branded rejection email (best-effort).
    - Deletes the Firestore doc (users/{uid}) so the request
