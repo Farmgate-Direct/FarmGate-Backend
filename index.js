@@ -1560,9 +1560,12 @@ app.post("/auth/send-verification", async (req, res) => {
     const link = await auth.generateEmailVerificationLink(target.email);
 
     const userSnap = await db.collection("users").doc(decoded.uid).get();
-    const fullName = userSnap.exists
-      ? String((userSnap.data() || {}).fullName || "")
-      : String(target.displayName || "");
+    // Pangalan: unahin ang galing sa registration form (body), sunod ang
+    // Firestore doc, huli ang Auth displayName.
+    const fullName =
+      String(req.body?.fullName || "").trim() ||
+      (userSnap.exists ? String((userSnap.data() || {}).fullName || "") : "") ||
+      String(target.displayName || "");
 
     const sent = await sendVerificationEmail(target.email, fullName, link);
 
@@ -1573,6 +1576,112 @@ app.post("/auth/send-verification", async (req, res) => {
     return res.status(error.status || 500).json({
       success: false,
       error: error.message || "Unable to send verification email.",
+    });
+  }
+});
+
+/* =========================================================
+   AUTH: CHECK EMAIL STATUS (public, no auth required)
+   - Email-based duplicate check para hindi na kailangan ng password
+     para malaman kung pending / approved / banned ang email.
+   - Returns { exists, status, emailVerified }.
+   - status: "pending" | "approved" | "banned" | "rejected"
+     | "no-doc" (Auth exists, walang Firestore doc)
+     | "no-auth" (walang Auth account).
+   - Rejected docs are auto-deleted, so "rejected" rarely occurs;
+     frontend treats it as non-blocking (allow fresh).
+   - Safe vs enumeration: Firebase Auth `email-already-in-use`
+     already reveals existence on register, so this adds no new
+     signal beyond status already shown in-app.
+========================================================= */
+app.post("/auth/check-email-status", async (req, res) => {
+  try {
+    const rawEmail = String(req.body?.email || "").trim();
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail) ||
+      rawEmail.length > 254
+    ) {
+      return res.status(400).json({ success: false, error: "Invalid email." });
+    }
+    const emailLower = rawEmail.toLowerCase();
+
+    let authUser = null;
+    try {
+      authUser = await auth.getUserByEmail(emailLower);
+    } catch (e) {
+      if (e?.code !== "auth/user-not-found") throw e;
+      authUser = null;
+    }
+
+    // Auth exists — basahin ang Firestore doc by uid (source of truth).
+    if (authUser) {
+      const snap = await db.collection("users").doc(authUser.uid).get();
+      if (snap.exists) {
+        const data = snap.data() || {};
+        const status = String(data.status ?? "pending").trim().toLowerCase() || "pending";
+        return res.json({
+          success: true,
+          exists: true,
+          status,
+          emailVerified: !!authUser.emailVerified,
+        });
+      }
+      // Auth exists pero walang doc — posibleng rejected (deleted)
+      // o hindi pa tapos ang registration.
+      // Fallback: hanapin din by email field (ibang uid, case variants).
+      const byEmail =
+        (await db.collection("users").where("email", "==", rawEmail).limit(1).get().catch(() => null)) ||
+        null;
+      let fallback = byEmail && !byEmail.empty ? byEmail.docs[0].data() || {} : null;
+      if (!fallback && emailLower !== rawEmail) {
+        const lowerSnap = await db
+          .collection("users")
+          .where("email", "==", emailLower)
+          .limit(1)
+          .get()
+          .catch(() => null);
+        if (lowerSnap && !lowerSnap.empty) fallback = lowerSnap.docs[0].data() || {};
+      }
+      if (fallback) {
+        const status = String(fallback.status ?? "pending").trim().toLowerCase() || "pending";
+        return res.json({
+          success: true,
+          exists: true,
+          status,
+          emailVerified: !!authUser.emailVerified,
+        });
+      }
+      return res.json({
+        success: true,
+        exists: true,
+        status: "no-doc",
+        emailVerified: !!authUser.emailVerified,
+      });
+    }
+
+    // Walang Auth — baka may Firestore doc pa rin (edge). Check by email.
+    const snap = await db.collection("users").where("email", "==", rawEmail).limit(1).get().catch(() => null);
+    let found = snap && !snap.empty ? snap.docs[0].data() || {} : null;
+    if (!found && emailLower !== rawEmail) {
+      const lowerSnap = await db
+        .collection("users")
+        .where("email", "==", emailLower)
+        .limit(1)
+        .get()
+        .catch(() => null);
+      if (lowerSnap && !lowerSnap.empty) found = lowerSnap.docs[0].data() || {};
+    }
+    if (found) {
+      const status = String(found.status ?? "pending").trim().toLowerCase() || "pending";
+      return res.json({ success: true, exists: true, status, emailVerified: false });
+    }
+
+    return res.json({ success: true, exists: false, status: "no-auth", emailVerified: false });
+  } catch (error) {
+    console.error("CHECK EMAIL STATUS ERROR:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to check email status.",
     });
   }
 });
