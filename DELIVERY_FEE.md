@@ -57,5 +57,5 @@ Google Maps before changing it.
 
 ## Tests
 
-Backend: `node --test __tests__/distance.test.js __tests__/deliveryFee.test.js __tests__/deliveryService.test.js __tests__/pinValidation.test.js __tests__/backend.test.js`
+Backend: `npm test` (`node --test __tests__/*.test.js` — distance, deliveryFee, deliveryService, barangayData, backend)
 App tier mirror: `node --test utils/__tests__/deliveryFee.test.ts` (from `client/mobile`)

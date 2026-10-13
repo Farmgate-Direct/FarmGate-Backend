@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "test": "node --test __tests__/",
+    "test": "node --test __tests__/*.test.js",
     "build:barangays": "node data/build_barangay_data.js",
     "check:barangays": "node data/build_barangay_data.js --check-only",
     "list:farms-missing-barangay": "node scripts/list-farms-missing-barangay.js"
@@ -23,6 +23,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "firebase-admin": "^14.3.0"
+    "firebase-admin": "^14.3.0",
+    "nodemailer": "^6.10.1"
   }
 }
