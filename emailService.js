@@ -29,8 +29,19 @@ const escapeHtml = (value) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+// Ang Gmail App Password ay pinapakita ng Google na may spaces
+// ("abcd efgh ijkl mnop") — kapag kinopya ng may spaces, ni-re-reject
+// ng Gmail ang auth. Tanggalin ang lahat ng whitespace bago gamitin.
+// Logic lang, walang email design na binabago.
+const getSmtpPassword = () => {
+  const raw = getEnv("GMAIL_APP_PASSWORD");
+  if (!raw) return undefined;
+  const normalized = raw.replace(/\s+/g, "");
+  return normalized || undefined;
+};
+
 const isSmtpConfigured = () =>
-  Boolean(nodemailer && getEnv("GMAIL_USER") && getEnv("GMAIL_APP_PASSWORD"));
+  Boolean(nodemailer && getEnv("GMAIL_USER") && getSmtpPassword());
 
 let cachedTransporter = null;
 
@@ -39,7 +50,7 @@ const getTransporter = () => {
   if (!cachedTransporter) {
     cachedTransporter = nodemailer.createTransport({
       service: "gmail",
-      auth: { user: getEnv("GMAIL_USER"), pass: getEnv("GMAIL_APP_PASSWORD") },
+      auth: { user: getEnv("GMAIL_USER"), pass: getSmtpPassword() },
     });
   }
   return cachedTransporter;

@@ -1799,18 +1799,13 @@ app.delete("/admin/users/:uid", async (req, res) => {
     }
 
     // Kunin muna ang email/pangalan (kailangan sa rejection email),
-    // saka burahin. Best-effort ang email — hindi ito humahadlang
-    // sa pagbura kahit mag-fail.
+    // saka burahin. Email ay background best-effort — hindi na hinihintay
+    // para mabilis mag-toast ang admin at mawala agad sa listahan nang
+    // walang refresh. Same response shape, walang UI na binabago.
     const targetSnap = await db.collection("users").doc(uid).get();
     const targetData = targetSnap.exists ? targetSnap.data() || {} : {};
-
-    if (targetData.email) {
-      await sendRejectionEmail(
-        String(targetData.email),
-        String(targetData.fullName || ""),
-        []
-      );
-    }
+    const targetEmail = targetData.email ? String(targetData.email) : "";
+    const targetName = String(targetData.fullName || "");
 
     await db.collection("users").doc(uid).delete();
 
@@ -1822,6 +1817,12 @@ app.delete("/admin/users/:uid", async (req, res) => {
       if (authError?.code !== "auth/user-not-found") {
         throw authError;
       }
+    }
+
+    // Background lang ang email — huwag nang i-await para hindi
+    // mag-"Please wait..." nang matagal ang admin.
+    if (targetEmail) {
+      sendRejectionEmail(targetEmail, targetName, []).catch(() => {});
     }
 
     return res.json({ success: true });
@@ -1884,12 +1885,14 @@ app.post("/admin/users/:uid/approve", async (req, res) => {
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    // Best-effort ang approval email — approved na kahit mag-fail ito.
+    // Background lang ang approval email — huwag nang i-await para hindi
+    // mag-"Please wait..." nang matagal ang admin. Approved na agad,
+    // mag-toast + mawawala sa listahan nang walang refresh.
     if (targetData.email) {
-      await sendApprovalEmail(
+      sendApprovalEmail(
         String(targetData.email),
         String(targetData.fullName || "")
-      );
+      ).catch(() => {});
     }
 
     return res.json({ success: true });
