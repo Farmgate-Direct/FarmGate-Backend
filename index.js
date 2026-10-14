@@ -1807,7 +1807,6 @@ app.delete("/admin/users/:uid", async (req, res) => {
     const targetData = targetSnap.exists ? targetSnap.data() || {} : {};
     const targetEmail = targetData.email ? String(targetData.email) : "";
     const targetName = String(targetData.fullName || "");
-    console.log(`[ADMIN] reject ${uid} doc:${targetSnap.exists} email:${targetEmail ? "yes" : "no"}`);
 
     await db.collection("users").doc(uid).delete();
 
@@ -1880,7 +1879,6 @@ app.post("/admin/users/:uid/approve", async (req, res) => {
       });
     }
     const targetData = targetSnap.data() || {};
-    console.log(`[ADMIN] approve ${uid} email:${targetData.email ? "yes" : "no"}`);
 
     await db.collection("users").doc(uid).update({
       status: "approved",
