@@ -1220,6 +1220,7 @@ app.get("/health", (req, res) => {
     xendit: !!getEnv("XENDIT_SECRET_KEY"),
     xenditWebhook: !!getEnv("XENDIT_WEBHOOK_TOKEN"),
     firebase: !!getEnv("FIREBASE_PROJECT_ID"),
+    email: isSmtpConfigured(),
   });
 });
 
