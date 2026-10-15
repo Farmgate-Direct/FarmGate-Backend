@@ -3821,14 +3821,16 @@ const createWalletRouter = ({ db, auth, inventory }) => {
     try {
       await requireAdmin(req, auth, db);
 
-      // Quiet auto-heal: stuck admin withdrawals reconcile against
-      // Xendit before the balance is read. Capped and never fails
-      // the request.
-      await reconcileStuckWithdrawals({
+      // Heal stuck withdrawals in the background so reads stay fast.
+      // (Xendit calls can take seconds; never block the wallet open.
+      // Manual heal is also available via POST /admin/withdrawals/sync.)
+      void reconcileStuckWithdrawals({
         db,
         collectionName: "adminWithdrawals",
         applyFn: applyAdminWithdrawalWebhook,
-      });
+      }).catch((e) =>
+        console.log("RECONCILE adminWithdrawals background error:", e?.message || e)
+      );
 
       const ref = db.collection("adminWallets").doc(ADMIN_WALLET_ID);
       const snap = await ref.get();
@@ -3847,6 +3849,73 @@ const createWalletRouter = ({ db, auth, inventory }) => {
       });
     } catch (error) {
       console.error("GET ADMIN WALLET ERROR:", error);
+
+      return sendWalletError(res, error, 500);
+    }
+  });
+
+  // ------------------------------------------------------------
+  // ADMIN OVERVIEW (single roundtrip: 1 auth, wallet + payout +
+  // history in parallel — same fast pattern as farmer /overview.
+  // No Xendit reconcile here so wallet opens fast; stuck
+  // withdrawals heal via POST /admin/withdrawals/sync.)
+  // ------------------------------------------------------------
+  router.get("/admin/overview", async (req, res) => {
+    try {
+      await requireAdmin(req, auth, db);
+
+      const walletRef = db.collection("adminWallets").doc(ADMIN_WALLET_ID);
+      const payoutRef = db
+        .collection("adminPayoutAccounts")
+        .doc(ADMIN_WALLET_ID);
+
+      const [walletSnap, payoutSnap, transactions] = await Promise.all([
+        walletRef.get(),
+        payoutRef.get(),
+        loadFarmerTransactions(ADMIN_LEDGER_ID),
+      ]);
+
+      const wallet = sanitizeAdminWallet(
+        walletSnap.exists ? walletSnap.data() : {}
+      );
+
+      if (!walletSnap.exists) {
+        await walletRef.set({
+          ...wallet,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
+      let payoutAccount = null;
+      if (payoutSnap.exists) {
+        const data = payoutSnap.data() || {};
+        payoutAccount = {
+          accountName: data.accountName || "",
+          postalCode: data.postalCode || "",
+          city: data.city || "",
+          province: data.province || "",
+          street: data.street || "",
+          accountNumberMasked: safeMaskGcashNumber(
+            data.accountNumberMasked,
+            data.accountNumber
+          ),
+          status: data.status || "active",
+          createdAt: data.createdAt || null,
+          updatedAt: data.updatedAt || null,
+        };
+      }
+
+      return res.json({
+        success: true,
+        wallet,
+        payoutAccount,
+        transactions,
+        withdrawableAmount: getAdminWithdrawableAmount(wallet),
+        minimumWithdrawal: getMinimumWithdrawal(),
+      });
+    } catch (error) {
+      console.error("GET ADMIN OVERVIEW ERROR:", error);
 
       return sendWalletError(res, error, 500);
     }
