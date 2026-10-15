@@ -1805,14 +1805,8 @@ app.delete("/admin/users/:uid", async (req, res) => {
     // walang refresh. Same response shape, walang UI na binabago.
     const targetSnap = await db.collection("users").doc(uid).get();
     const targetData = targetSnap.exists ? targetSnap.data() || {} : {};
-    const targetEmail = targetData.email ? String(targetData.email).trim() : "";
+    const targetEmail = targetData.email ? String(targetData.email) : "";
     const targetName = String(targetData.fullName || "");
-
-    // Visible diagnostics: pag walang email field, dito pa lang klaro na
-    // kaya walang [EMAIL] line na sumusunod.
-    console.log(
-      `REJECT ${uid}: email=${targetEmail ? targetEmail : "MISSING"}, smtp=${isSmtpConfigured()}`
-    );
 
     await db.collection("users").doc(uid).delete();
 
@@ -1829,16 +1823,10 @@ app.delete("/admin/users/:uid", async (req, res) => {
     // Background lang ang email — huwag nang i-await para hindi
     // mag-"Please wait..." nang matagal ang admin.
     if (targetEmail) {
-      sendRejectionEmail(targetEmail, targetName, []).then((sent) =>
-        console.log(`REJECT ${uid}: rejection email sent=${!!sent}`)
-      ).catch((e) =>
-        console.error(`REJECT ${uid}: rejection email error:`, e?.message || e)
-      );
-    } else {
-      console.log(`REJECT ${uid}: skipped email (missing email field).`);
+      sendRejectionEmail(targetEmail, targetName, []).catch(() => {});
     }
 
-    return res.json({ success: true, emailSent: !!targetEmail });
+    return res.json({ success: true });
   } catch (error) {
     console.error("REJECT USER ERROR:", error);
 
@@ -1891,11 +1879,6 @@ app.post("/admin/users/:uid/approve", async (req, res) => {
       });
     }
     const targetData = targetSnap.data() || {};
-    const targetEmail = targetData.email ? String(targetData.email).trim() : "";
-
-    console.log(
-      `APPROVE ${uid}: email=${targetEmail ? targetEmail : "MISSING"}, smtp=${isSmtpConfigured()}`
-    );
 
     await db.collection("users").doc(uid).update({
       status: "approved",
@@ -1906,17 +1889,11 @@ app.post("/admin/users/:uid/approve", async (req, res) => {
     // Background lang ang approval email — huwag nang i-await para hindi
     // mag-"Please wait..." nang matagal ang admin. Approved na agad,
     // mag-toast + mawawala sa listahan nang walang refresh.
-    if (targetEmail) {
+    if (targetData.email) {
       sendApprovalEmail(
-        targetEmail,
+        String(targetData.email),
         String(targetData.fullName || "")
-      ).then((sent) =>
-        console.log(`APPROVE ${uid}: approval email sent=${!!sent}`)
-      ).catch((e) =>
-        console.error(`APPROVE ${uid}: approval email error:`, e?.message || e)
-      );
-    } else {
-      console.log(`APPROVE ${uid}: skipped email (missing email field).`);
+      ).catch(() => {});
     }
 
     return res.json({ success: true });
