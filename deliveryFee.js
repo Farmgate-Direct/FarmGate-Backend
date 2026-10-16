@@ -1,11 +1,6 @@
-// FarmGate delivery fee — barangay-centroid distance (Bulacan only, no GPS).
-//
-// Distance comes ONLY from city + barangay: same barangay on both sides is
-// 0 km (₱25); otherwise haversine between the two barangay centroids ×
-// ROAD_FACTOR (default 1.3), rounded to 0.1 km, then the tier lookup in
-// distance.js (single config point). No municipality-center fallback for
-// new orders. Client preview is NEVER trusted — the server recomputes in
-// /delivery/quote, order creation, /accept (COD) and /create-payment (GCash).
+// Delivery fee from barangay-centroid distance (Bulacan only, no GPS).
+// Same barangay is 0 km. Client preview is never trusted, the server
+// recomputes the fee on quote, order creation, accept, and payment.
 "use strict";
 
 const {
@@ -46,12 +41,8 @@ function checkProvince(province, who) {
   }
 }
 
-// Farm + buyer locations are { province?, city, barangay } (text only).
-// Returns { distanceKm, adjustedDistanceKm, deliveryFee, tier, feeStatus,
-//           roadFactor, tierVersion, method }.
-// Same barangay (exact normalized city + barangay match) = 0 km, ₱25.
-// Throws INVALID_PROVINCE / UNKNOWN_CITY / UNKNOWN_BARANGAY /
-// BARANGAY_NOT_SERVICEABLE (never guesses, never substitutes).
+// Quote a fee from farm + buyer locations (city + barangay text).
+// Same barangay is 0 km. Throws on unknown places, never guesses.
 function quoteDeliveryFee(farm, buyer, opts = {}) {
   const farmCity = farm?.city;
   const farmBarangay = farm?.barangay;

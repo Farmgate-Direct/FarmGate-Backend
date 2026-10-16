@@ -1628,9 +1628,7 @@ app.post("/auth/check-email-status", async (req, res) => {
           emailVerified: !!authUser.emailVerified,
         });
       }
-      // Auth exists pero walang doc — posibleng rejected (deleted)
-      // o hindi pa tapos ang registration.
-      // Fallback: hanapin din by email field (ibang uid, case variants).
+      // Auth exists but no doc. Fall back to lookup by email field.
       const byEmail =
         (await db.collection("users").where("email", "==", rawEmail).limit(1).get().catch(() => null)) ||
         null;
@@ -1661,7 +1659,7 @@ app.post("/auth/check-email-status", async (req, res) => {
       });
     }
 
-    // Walang Auth — baka may Firestore doc pa rin (edge). Check by email.
+    // No Auth user, a Firestore doc may still exist. Check by email.
     const snap = await db.collection("users").where("email", "==", rawEmail).limit(1).get().catch(() => null);
     let found = snap && !snap.empty ? snap.docs[0].data() || {} : null;
     if (!found && emailLower !== rawEmail) {
@@ -1745,7 +1743,7 @@ app.post("/auth/resend-verification", async (req, res) => {
       const userSnap = await db.collection("users").doc(target.uid).get();
       if (userSnap.exists) fullName = String((userSnap.data() || {}).fullName || fullName);
     } catch {
-      // Best-effort lang ang pangalan — hindi hadlang sa send.
+      // Name is best-effort only, never blocks sending.
     }
 
     await sendVerificationEmail(target.email, fullName, link);
@@ -1799,10 +1797,8 @@ app.delete("/admin/users/:uid", async (req, res) => {
       });
     }
 
-    // Kunin muna ang email/pangalan (kailangan sa rejection email),
-    // saka burahin. Email ay background best-effort — hindi na hinihintay
-    // para mabilis mag-toast ang admin at mawala agad sa listahan nang
-    // walang refresh. Same response shape, walang UI na binabago.
+    // Read email/name first, then delete. Email is background
+    // best-effort so the admin list updates without refresh.
     const targetSnap = await db.collection("users").doc(uid).get();
     const targetData = targetSnap.exists ? targetSnap.data() || {} : {};
     const targetEmail = targetData.email ? String(targetData.email) : "";
@@ -1813,15 +1809,13 @@ app.delete("/admin/users/:uid", async (req, res) => {
     try {
       await auth.deleteUser(uid);
     } catch (authError) {
-      // Kapag wala nang Auth account (nabura na ng auto-screen),
-      // success pa rin — ang mahalaga ay malinis ang Firestore.
+      // Missing Auth account still counts as success.
       if (authError?.code !== "auth/user-not-found") {
         throw authError;
       }
     }
 
-    // Background lang ang email — huwag nang i-await para hindi
-    // mag-"Please wait..." nang matagal ang admin.
+    // Send email in the background, do not block the admin.
     if (targetEmail) {
       sendRejectionEmail(targetEmail, targetName, []).catch(() => {});
     }
@@ -1886,9 +1880,7 @@ app.post("/admin/users/:uid/approve", async (req, res) => {
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    // Background lang ang approval email — huwag nang i-await para hindi
-    // mag-"Please wait..." nang matagal ang admin. Approved na agad,
-    // mag-toast + mawawala sa listahan nang walang refresh.
+    // Send approval email in the background, do not block the admin.
     if (targetData.email) {
       sendApprovalEmail(
         String(targetData.email),

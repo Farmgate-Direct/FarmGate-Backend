@@ -1,10 +1,5 @@
-// Delivery orchestration shared by /delivery/quote, order creation,
-// /accept (COD) and /create-payment (validateOrderForPayment, GCash).
-//
-// Barangay-centroid distance (Haversine × road factor), computed locally
-// and synchronously — no network, no GPS. Text city/barangay only; exact
-// normalized match, never fuzzy, never a municipality-center fallback.
-// Client-sent fee/distance is never read here.
+// Shared delivery quoting for quote, order creation, accept, and payment.
+// Local compute only, no network. Client-sent fees are never read.
 "use strict";
 
 const {

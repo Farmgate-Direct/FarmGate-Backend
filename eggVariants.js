@@ -1,18 +1,6 @@
-// Shared egg half-tray / full-tray pricing + stock conversion.
-// MUST match client/mobile/constants/productCatalog.ts egg-variant helpers.
-//
-// Farmer lists in ONE base unit (half tray OR per tray). Buyer may pick
-// EITHER variant:
-//   - Half Tray = 15 pcs
-//   - Full Tray (per tray) = 30 pcs
-//
-// Prices are derived from the SERVER product price (never the client):
-//   - base "per tray" P300 -> half P150, full P300
-//   - base "half tray" P150 -> half P150, full P300
-//
-// Stock is always deducted in BASE units:
-//   - 1 half tray from a per-tray listing deducts 0.5
-//   - 1 full tray from a half-tray listing deducts 2
+// Egg half-tray (15 pcs) / full-tray (30 pcs) pricing and stock.
+// Matches the mobile productCatalog helpers. Prices come from the
+// server product price, stock is deducted in base units.
 
 const EGG_PRODUCT_PREFIXES = ["chicken egg", "duck egg", "quail egg", "itik egg"];
 

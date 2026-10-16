@@ -1,11 +1,6 @@
-/* =========================================================
-   FARMGATE BRANDED EMAILS (Gmail SMTP via nodemailer)
-   - GMAIL_USER + GMAIL_APP_PASSWORD env vars (same account as
-     the auto-reject script). Kapag wala, skip nang tahimik —
-     ang caller ang magfa-fallback (default Firebase email).
-   - Lahat ng emails ay HTML na naka-FarmGate design
-     (green #14532d header) + plain-text fallback.
-========================================================= */
+/* Branded emails via Gmail SMTP. Without GMAIL_USER +
+   GMAIL_APP_PASSWORD, sending is skipped and the caller falls back
+   to the default Firebase email. HTML plus plain-text fallback. */
 
 let nodemailer = null;
 
@@ -29,10 +24,8 @@ const escapeHtml = (value) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-// Ang Gmail App Password ay pinapakita ng Google na may spaces
-// ("abcd efgh ijkl mnop") — kapag kinopya ng may spaces, ni-re-reject
-// ng Gmail ang auth. Tanggalin ang lahat ng whitespace bago gamitin.
-// Logic lang, walang email design na binabago.
+// Google shows the App Password with spaces, Gmail rejects it that way.
+// Strip all whitespace before use.
 const getSmtpPassword = () => {
   const raw = getEnv("GMAIL_APP_PASSWORD");
   if (!raw) return undefined;
@@ -56,7 +49,7 @@ const getTransporter = () => {
   return cachedTransporter;
 };
 
-/* ---------- Shared branded wrapper (inline CSS para sa Gmail) ---------- */
+// Shared branded wrapper, inline CSS for Gmail.
 
 const wrapBranded = ({ preheader, title, bodyHtml }) => `
 <!DOCTYPE html>

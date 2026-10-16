@@ -1,15 +1,6 @@
-// FarmGate delivery distance — barangay-centroid Haversine × road factor.
-//
-// Single config point for delivery pricing (change values here, not logic):
-//   ROAD_FACTOR  (env FARMGATE_ROAD_DISTANCE_FACTOR, fallback
-//                 FARMGATE_ROAD_FACTOR; default 1.3, clamped 1–2)
-//   FEE_TIERS    (inclusive upper bounds on the ADJUSTED distance)
-//   TIER_VERSION (stamped on every order for auditability)
-//
-// Distance comes ONLY from city + barangay (no GPS, no municipality-center
-// fallback). Same barangay on both sides = 0 km. Otherwise: haversine
-// between the two barangay centroids × ROAD_FACTOR, rounded to 0.1 km,
-// then the tier lookup below. No external API calls.
+// Delivery distance: barangay-centroid Haversine x road factor.
+// Single config point for pricing. City + barangay only, no GPS.
+// Same barangay is 0 km. No external API calls.
 "use strict";
 
 const EARTH_RADIUS_KM = 6371;
