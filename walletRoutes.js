@@ -3529,6 +3529,10 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   // GCash: farmer earning (subtotal - commission) -> available balance.
   // COD  : commission is taken from the HELD reserve. COD product money
   //        is never credited to the wallet.
+  //
+  // paymentStatus: GCash orders are already "paid" before delivery.
+  // COD / pay-on-pickup orders are paid in cash by the buyer at hand-off,
+  // so they are marked "paid" here when delivered / claimed.
   // ------------------------------------------------------------
   router.post("/orders/:orderId/deliver", async (req, res) => {
     try {
@@ -3777,6 +3781,16 @@ const createWalletRouter = ({ db, auth, inventory }) => {
         transaction.update(orderRef, {
           status: finalStatus,
           deliveredAt: now,
+
+          // COD / pay-on-pickup: the buyer pays in cash at hand-off, so the
+          // order becomes "paid" once it is delivered / claimed. GCash orders
+          // were already "paid" (validated above), so they are left untouched.
+          ...(isGcash
+            ? {}
+            : {
+                paymentStatus: "paid",
+                paidAt: order.paidAt || now,
+              }),
 
           commissionRate: rate,
           commissionAmount,
