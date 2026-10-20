@@ -52,6 +52,10 @@ const TRANSACTION_LIMIT = 50;
   commissionReserveHeld    : COD commission held for accepted COD orders
 
   pendingBalance is NOT stored. It is computed from orders on demand.
+
+  GCash farmer earning = (subtotal - commission) + deliveryFee
+    - commission is charged on products only
+    - the delivery fee is credited to the farmer in full
 */
 
 /* =========================================================
@@ -472,9 +476,20 @@ const getCommissionForSubtotal = (subtotal) => {
 const getCodCommission = (order) =>
   getCommissionForSubtotal(getOrderSubtotal(order));
 
+// Delivery fee only counts for delivery orders (pickup = 0).
+const getOrderDeliveryFee = (order) =>
+  order?.delivery === "delivery"
+    ? roundMoney(Math.max(0, Number(order?.deliveryFee) || 0))
+    : 0;
+
 const getExpectedFarmerEarning = (order) => {
   const commission = getCommissionForSubtotal(getOrderSubtotal(order));
-  return roundMoney(Math.max(0, commission.subtotal - commission.amount));
+
+  // Commission is on products only. The delivery fee goes to the farmer in full.
+  return roundMoney(
+    Math.max(0, commission.subtotal - commission.amount) +
+      getOrderDeliveryFee(order)
+  );
 };
 
 /*
@@ -641,6 +656,21 @@ const sumPendingFromDocs = (docs) => {
 };
 
 const getPendingProductBalance = async (db, farmerId) => {
+  // "delivery" and "deliveryFee" are needed so the delivery fee is counted
+  // in the pending earnings.
+  const fields = [
+    "status",
+    "payment",
+    "paymentStatus",
+    "financialStatus",
+    "farmerWalletCredited",
+    "deliveredAt",
+    "subTotal",
+    "products",
+    "delivery",
+    "deliveryFee",
+  ];
+
   // Fast path: only pending statuses, only the fields needed for pricing.
   // Needs composite index: farmerId ASC + status ASC. Falls back below.
   try {
@@ -648,16 +678,7 @@ const getPendingProductBalance = async (db, farmerId) => {
       .collection("orders")
       .where("farmerId", "==", farmerId)
       .where("status", "in", PENDING_ORDER_STATUSES)
-      .select(
-        "status",
-        "payment",
-        "paymentStatus",
-        "financialStatus",
-        "farmerWalletCredited",
-        "deliveredAt",
-        "subTotal",
-        "products"
-      )
+      .select(...fields)
       .get();
 
     return sumPendingFromDocs(snapshot.docs);
@@ -675,16 +696,7 @@ const getPendingProductBalance = async (db, farmerId) => {
   const snapshot = await db
     .collection("orders")
     .where("farmerId", "==", farmerId)
-    .select(
-      "status",
-      "payment",
-      "paymentStatus",
-      "financialStatus",
-      "farmerWalletCredited",
-      "deliveredAt",
-      "subTotal",
-      "products"
-    )
+    .select(...fields)
     .get();
 
   return sumPendingFromDocs(snapshot.docs);
@@ -3526,9 +3538,11 @@ const createWalletRouter = ({ db, auth, inventory }) => {
   // ------------------------------------------------------------
   // DELIVER ORDER / FINANCIAL SETTLEMENT (idempotent)
   //
-  // GCash: farmer earning (subtotal - commission) -> available balance.
+  // GCash: farmer earning = (subtotal - commission) + delivery fee
+  //        -> available balance. Commission is on products only.
   // COD  : commission is taken from the HELD reserve. COD product money
-  //        is never credited to the wallet.
+  //        and the COD delivery fee are paid in cash directly to the
+  //        farmer, so neither is credited to the wallet.
   //
   // paymentStatus: GCash orders are already "paid" before delivery.
   // COD / pay-on-pickup orders are paid in cash by the buyer at hand-off,
@@ -3564,6 +3578,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           settlementResult = {
             alreadySettled: true,
             farmerEarning: roundMoney(order.farmerEarning),
+            deliveryFeeCredited: roundMoney(order.deliveryFeeCredited),
             commissionAmount: roundMoney(order.commissionAmount),
           };
           return;
@@ -3601,14 +3616,20 @@ const createWalletRouter = ({ db, auth, inventory }) => {
         let nextHeld = wallet.commissionReserveHeld;
         let commissionAmount;
         let farmerEarning = 0;
+        let deliveryFeeCredited = 0;
 
         if (order.payment === "gcash") {
           if (order.paymentStatus !== "paid") {
             throw new Error("This GCash order has not been paid.");
           }
 
+          // Commission is on products only. The delivery fee goes to the
+          // farmer in full (pickup orders have no delivery fee).
           commissionAmount = roundMoney(subtotal * rate);
-          farmerEarning = roundMoney(Math.max(0, subtotal - commissionAmount));
+          deliveryFeeCredited = getOrderDeliveryFee(order);
+          farmerEarning = roundMoney(
+            Math.max(0, subtotal - commissionAmount) + deliveryFeeCredited
+          );
           nextAvailable = roundMoney(wallet.availableBalance + farmerEarning);
         } else {
           const reservedAmount = roundMoney(order.codCommissionReserved);
@@ -3708,7 +3729,10 @@ const createWalletRouter = ({ db, auth, inventory }) => {
             orderId,
             orderNumber: order.orderNumber || null,
             status: "completed",
-            description: `Farmer earning from GCash order ${order.orderNumber || orderId}.`,
+            description:
+              deliveryFeeCredited > 0
+                ? `Farmer earning from GCash order ${order.orderNumber || orderId} (products + ₱${deliveryFeeCredited.toFixed(2)} delivery fee).`
+                : `Farmer earning from GCash order ${order.orderNumber || orderId}.`,
             createdAt: now,
             completedAt: now,
           });
@@ -3768,6 +3792,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           {
             totalCommission: FieldValue.increment(commissionAmount),
             totalFarmerEarnings: FieldValue.increment(farmerEarning),
+            totalDeliveryFees: FieldValue.increment(deliveryFeeCredited),
             updatedAt: now,
           },
           { merge: true }
@@ -3798,6 +3823,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           commissionChargedAt: now,
 
           farmerEarning,
+          deliveryFeeCredited,
           farmerWalletCredited: isGcash,
           farmerWalletCreditedAt: isGcash ? now : null,
 
@@ -3814,6 +3840,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
         settlementResult = {
           alreadySettled: false,
           farmerEarning,
+          deliveryFeeCredited,
           commissionAmount,
           commissionReserveBalance: nextReserve,
           commissionReserveHeld: nextHeld,
