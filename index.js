@@ -589,8 +589,9 @@ const validateOrderForPayment = async (orderRef) => {
 
     const commissionRate = getCommissionRate();
     const commissionAmount = roundMoney(finalSubtotal * commissionRate);
+    // Commission is on products only; the delivery fee goes to the farmer.
     const farmerEarning = roundMoney(
-      Math.max(0, finalSubtotal - commissionAmount)
+      Math.max(0, finalSubtotal - commissionAmount) + deliveryFee
     );
 
     transaction.update(orderRef, {
@@ -1469,7 +1470,11 @@ app.post("/orders", async (req, res) => {
       commissionRate,
       commissionAmount,
       commissionStatus: "pending",
-      farmerEarning: roundMoney(Math.max(0, subTotal - commissionAmount)),
+      // Commission is on products only; GCash delivery fee goes to the farmer.
+      farmerEarning: roundMoney(
+        Math.max(0, subTotal - commissionAmount) +
+          (payment === "gcash" ? deliveryFee || 0 : 0)
+      ),
       farmerWalletCredited: false,
       financialStatus: "pending",
       orderNumber,
