@@ -31,6 +31,52 @@ const app = express();
 
 app.use(cors());
 
+const USER_FACING_SERVER_ERROR =
+  "Something went wrong. Please try again in a moment.";
+
+app.use((req, res, next) => {
+  const sendJson = res.json.bind(res);
+
+  res.json = (body) => {
+    if (res.statusCode < 500) {
+      return sendJson(body);
+    }
+
+    const technicalMessage =
+      typeof body?.error === "string"
+        ? body.error
+        : typeof body?.message === "string"
+          ? body.message
+          : "Server request failed.";
+    console.error("API SERVER ERROR:", {
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      message: redactDiagnosticText(technicalMessage),
+    });
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return sendJson({
+        success: false,
+        error: USER_FACING_SERVER_ERROR,
+      });
+    }
+
+    const safeBody = Object.fromEntries(
+      Object.entries(body).filter(
+        ([key]) => !["error", "message", "details", "stack"].includes(key)
+      )
+    );
+    return sendJson({
+      ...safeBody,
+      success: false,
+      error: USER_FACING_SERVER_ERROR,
+    });
+  };
+
+  next();
+});
+
 app.use(
   express.json({
     limit: "2mb",
@@ -244,6 +290,58 @@ const verifyFirebaseUser = async (req) => {
     throw httpError(401, "Invalid or expired login session.");
   }
 };
+
+const clientErrorRateLimits = new Map();
+const redactDiagnosticText = (value) =>
+  String(value || "")
+    .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+    .replace(
+      /\b(password|token|secret|authorization)\s*[:=]\s*[^\s,;]+/gi,
+      "$1=[redacted]"
+    )
+    .replace(
+      /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
+      "[email]"
+    )
+    .replace(/\b(?:\+?63|0)9\d{9}\b/g, "[phone]")
+    .replace(/https?:\/\/\S+/gi, "[url]")
+    .slice(0, 1200);
+
+app.post("/client-errors", async (req, res) => {
+  let decoded;
+  try {
+    decoded = await verifyFirebaseUser(req);
+  } catch {
+    return res.status(401).json({
+      success: false,
+      error: "Please sign in again to continue.",
+    });
+  }
+
+  const now = Date.now();
+  const recent = clientErrorRateLimits.get(decoded.uid) || [];
+  const recentRequests = recent.filter((timestamp) => now - timestamp < 60000);
+
+  if (recentRequests.length >= 20) {
+    return res.status(429).json({
+      success: false,
+      error: "Please try again later.",
+    });
+  }
+
+  recentRequests.push(now);
+  clientErrorRateLimits.set(decoded.uid, recentRequests);
+  console.error("MOBILE CLIENT ERROR:", {
+    userId: decoded.uid,
+    context: redactDiagnosticText(req.body?.context),
+    name: redactDiagnosticText(req.body?.name),
+    code: redactDiagnosticText(req.body?.code),
+    message: redactDiagnosticText(req.body?.message),
+    stack: redactDiagnosticText(req.body?.stack),
+  });
+
+  return res.status(204).end();
+});
 
 /* =========================================================
    SAFE STRING COMPARISON
@@ -2974,7 +3072,7 @@ app.use((error, req, res, next) => {
 
   return res.status(500).json({
     success: false,
-    error: error.message || "Internal server error.",
+    error: USER_FACING_SERVER_ERROR,
   });
 });
 

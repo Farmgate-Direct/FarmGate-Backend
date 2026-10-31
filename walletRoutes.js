@@ -13,6 +13,7 @@ const {
 } = require("./deliveryService");
 
 const { checkQuoteRateLimit } = require("./quoteRateLimit");
+const { isExpiredPendingOrder } = require("./orderExpiry");
 
 const {
   normalizeEggVariant,
@@ -2490,6 +2491,12 @@ const createWalletRouter = ({ db, auth, inventory }) => {
 
         if (order.status !== "pending") {
           throw new Error("Only pending orders can be accepted.");
+        }
+
+        if (isExpiredPendingOrder(order)) {
+          throw new Error(
+            "This order expired because the farmer did not accept it within 2 days."
+          );
         }
 
         if (order.payment !== "cod" && order.payment !== "gcash") {
