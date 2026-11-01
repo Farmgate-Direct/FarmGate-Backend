@@ -16,9 +16,9 @@ const { checkQuoteRateLimit } = require("./quoteRateLimit");
 const { isExpiredPendingOrder } = require("./orderExpiry");
 
 const {
-  getProductVariations,
-  resolveLegacyVariation,
-} = require("./productVariations");
+  normalizeEggVariant,
+  resolveEggLine,
+} = require("./eggVariants");
 
 /* =========================================================
    CONSTANTS
@@ -507,30 +507,36 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
     throw new Error("Order contains no products.");
   }
 
-  const productIds = [...new Set(items.map((item) => {
+  // Same egg product may appear as half tray + full tray lines.
+  // Duplicate means SAME product AND SAME variant.
+  const seen = new Set();
+
+  const refs = items.map((item) => {
     const productId = String(item?.productId || "").trim();
+
     if (!productId) throw new Error("Order contains an invalid productId.");
-    const variationId = String(item?.variationId || "").trim();
-    if (!variationId) {
-      throw new Error(`Choose a variation for ${productId}.`);
+
+    const variantKey = normalizeEggVariant(item?.eggVariant) || "";
+    const lineKey = `${productId}|${variantKey}`;
+
+    if (seen.has(lineKey)) {
+      throw new Error(`Duplicate product in order: ${productId}`);
     }
-    return productId;
-  }))];
-  const refs = productIds.map((id) => db.collection("products").doc(id));
+
+    seen.add(lineKey);
+
+    return db.collection("products").doc(productId);
+  });
+
   const snaps = await Promise.all(refs.map((ref) => transaction.get(ref)));
-  const productById = new Map(
-    productIds.map((id, index) => [id, snaps[index]])
-  );
-  const requestedByVariation = new Map();
 
   let subtotal = 0;
 
-  const products = items.map((item) => {
-    const productId = String(item.productId);
-    const snap = productById.get(productId);
+  const products = items.map((item, index) => {
+    const snap = snaps[index];
 
     if (!snap.exists) {
-      throw new Error(`Product ${productId} not found.`);
+      throw new Error(`Product ${item.productId} not found.`);
     }
 
     const product = snap.data() || {};
@@ -546,49 +552,43 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
     }
 
     const quantity = Number(item.quantity);
+
     if (!Number.isFinite(quantity) || quantity <= 0) {
       throw new Error(`Invalid quantity for ${product.name || item.productId}.`);
     }
-    const resolved = resolveLegacyVariation(product, item.variationId);
-    if (!resolved) {
-      throw new Error(`Variation ${item.variationId} is no longer available.`);
+
+    // Egg-variant lines are priced from the SERVER base price
+    // (client price ignored). Normal lines keep server price.
+    const egg = resolveEggLine(product, item);
+
+    let price;
+    let unit;
+
+    if (egg) {
+      price = egg.variantPrice;
+      unit = egg.variantUnit;
+    } else {
+      price = Number(product.price);
+      unit = product.unit || item.unit || "";
+
+      if (!Number.isFinite(price) || price < 0) {
+        throw new Error(`Invalid price for ${product.name || item.productId}.`);
+      }
     }
-    const { variation } = resolved;
-    const price = Number(variation.price);
-    const stock = Number(variation.stock);
-    if (!Number.isFinite(price) || price < 0 || !Number.isFinite(stock) || stock < 0) {
-      throw new Error(`Invalid variation data for ${product.name || productId}.`);
-    }
-    if (variation.status === "Out of Stock" || stock <= 0) {
-      throw new Error(`${product.name || productId} (${variation.name}) is out of stock.`);
-    }
-    const key = `${productId}|${variation.id}`;
-    requestedByVariation.set(key, (requestedByVariation.get(key) || 0) + quantity);
+
     subtotal += roundMoney(price * quantity);
 
     return {
-      productId,
-      variationId: variation.id,
-      variationName: variation.name,
+      ...item,
       price,
       quantity,
       name: product.name || item.name || "",
-      unit: variation.unit,
-      image: product.image || item.image || "",
-      reviewed: Boolean(item.reviewed),
+      unit,
+      eggVariant: egg ? egg.variant : null,
+      baseUnit: egg ? egg.baseUnit : product.unit || "",
+      baseQuantity: egg ? egg.baseQty : quantity,
     };
   });
-
-  for (const [key, requested] of requestedByVariation) {
-    const [productId, variationId] = key.split("|");
-    const product = productById.get(productId).data() || {};
-    const resolved = resolveLegacyVariation(product, variationId);
-    if (!resolved || Number(resolved.variation.stock) < requested) {
-      throw new Error(
-        `Insufficient stock for ${product.name || productId} (${resolved?.variation.name || variationId}).`
-      );
-    }
-  }
 
   subtotal = roundMoney(subtotal);
 
