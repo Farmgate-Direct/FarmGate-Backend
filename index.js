@@ -124,10 +124,9 @@ const {
 const { checkQuoteRateLimit } = require("./quoteRateLimit");
 
 const {
-  normalizeEggVariant,
-  resolveEggLine,
-  roundStock6,
-} = require("./eggVariants");
+  getProductVariations,
+  resolveLegacyVariation,
+} = require("./productVariations");
 
 // No flat-fee fallback: new orders always use Haversine × road factor.
 // Old orders that already have a fee keep the written fee (legacy keep).
@@ -390,30 +389,6 @@ const toMillis = (value) => {
   return 0;
 };
 
-const getFreshnessLabel = (batch) => {
-  if (!batch?.weekEnd) {
-    return batch?.freshness || "";
-  }
-
-  const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-  const daysAgo = Math.floor((Date.now() - toMillis(batch.weekEnd)) / MS_PER_DAY);
-
-  return daysAgo <= 0 ? "Harvested this week" : `Harvested ${daysAgo}d ago`;
-};
-
-const getCurrentBatch = (snapshot) => {
-  const batches = snapshot.docs
-    .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
-    .filter((batch) => batch.archived !== true)
-    .sort(
-      (first, second) =>
-        Number(second.batchNumber || 0) - Number(first.batchNumber || 0)
-    );
-
-  return batches[0] || null;
-};
-
 const getCapturedAmount = (data) =>
   Number(
     data?.captures?.find((capture) => capture?.status === "SUCCEEDED")
@@ -511,152 +486,93 @@ const validateOrderForPayment = async (orderRef) => {
       throw httpError(400, "Order contains no products.");
     }
 
-    // Group lines by product. The same egg product may appear twice
-    // (half tray + full tray) — duplicate means SAME product AND SAME
-    // variant. Stock is checked against the COMBINED base quantity.
-    const productGroups = new Map();
-    const seenLineKeys = new Set();
-
-    orderProducts.forEach((orderProduct, index) => {
-      const productId = String(orderProduct.productId || "");
-
+    const productIds = [...new Set(orderProducts.map((item) => {
+      const productId = String(item.productId || "");
       if (!productId) {
         throw httpError(400, "Order contains an invalid productId.");
       }
+      return productId;
+    }))];
+    const productSnapshots = await Promise.all(
+      productIds.map((id) =>
+        transaction.get(db.collection("products").doc(id))
+      )
+    );
+    const productsById = new Map(
+      productIds.map((id, index) => [id, productSnapshots[index]])
+    );
+    const seenLineKeys = new Set();
+    const validatedByIndex = new Array(orderProducts.length);
+    const requestedByVariation = new Map();
+    let computedSubtotal = 0;
 
-      const variantKey = normalizeEggVariant(orderProduct.eggVariant) || "";
-      const lineKey = `${productId}|${variantKey}`;
-
-      if (seenLineKeys.has(lineKey)) {
-        throw httpError(400, `Duplicate product in order: ${productId}`);
+    orderProducts.forEach((orderProduct, index) => {
+      const productId = String(orderProduct.productId);
+      const variationId = String(orderProduct.variationId || "");
+      const lineKey = `${productId}|${variationId}`;
+      if (!variationId || seenLineKeys.has(lineKey)) {
+        throw httpError(400, `Choose one valid variation for ${productId}.`);
       }
-
       seenLineKeys.add(lineKey);
-
       const quantity = Number(orderProduct.quantity);
-
       if (!Number.isFinite(quantity) || quantity <= 0) {
         throw httpError(400, `Invalid quantity for ${productId}.`);
       }
-
-      if (!productGroups.has(productId)) productGroups.set(productId, []);
-      productGroups.get(productId).push({ orderProduct, index });
-    });
-
-    const validatedByIndex = new Array(orderProducts.length);
-
-    let computedSubtotal = 0;
-
-    for (const [productId, entries] of productGroups) {
-      const productRef = db.collection("products").doc(productId);
-      const productSnap = await transaction.get(productRef);
-
+      const productSnap = productsById.get(productId);
       if (!productSnap.exists) {
         throw httpError(400, `Product ${productId} not found.`);
       }
-
       const product = productSnap.data();
-
       if (product.farmerId !== order.farmerId) {
         throw httpError(400, `Product ${productId} does not belong to this farmer.`);
       }
-
       if (product.archived === true) {
         throw httpError(400, `Product ${product.name || productId} is archived.`);
       }
-
-      // Resolve each line against the SERVER product. Egg-variant lines
-      // are priced from the server base price (client price ignored);
-      // normal lines keep the server price as before.
-      const resolved = entries.map(({ orderProduct, index }) => {
-        const egg = resolveEggLine(product, orderProduct);
-        const quantity = Number(orderProduct.quantity);
-
-        if (egg) {
-          return {
-            orderProduct,
-            index,
-            egg,
-            price: egg.variantPrice,
-            unit: egg.variantUnit,
-            baseQty: egg.baseQty,
-          };
-        }
-
-        const price = Number(product.price);
-
-        if (!Number.isFinite(price) || price < 0) {
-          throw httpError(400, `Invalid price for ${product.name || productId}.`);
-        }
-
-        return {
-          orderProduct,
-          index,
-          egg: null,
-          price,
-          unit: product.unit || orderProduct.unit || "",
-          baseQty: quantity,
-        };
-      });
-
-      const batchSnapshot = await transaction.get(
-        db.collection("productBatches").where("productId", "==", productId)
+      const resolved = resolveLegacyVariation(product, variationId);
+      if (!resolved) {
+        throw httpError(400, `Variation ${variationId} is no longer available.`);
+      }
+      const variation = resolved.variation;
+      const price = Number(variation.price);
+      const stock = Number(variation.stock);
+      if (!Number.isFinite(price) || price < 0 || !Number.isFinite(stock) || stock < 0) {
+        throw httpError(400, `Invalid variation for ${product.name || productId}.`);
+      }
+      if (variation.status === "Out of Stock" || stock <= 0) {
+        throw new StockFulfillmentError(
+          `${product.name || productId} (${variation.name}) is out of stock.`
+        );
+      }
+      const stockKey = `${productId}|${variation.id}`;
+      requestedByVariation.set(
+        stockKey,
+        (requestedByVariation.get(stockKey) || 0) + quantity
       );
+      computedSubtotal += roundMoney(price * quantity);
+      validatedByIndex[index] = {
+        productId,
+        variationId: variation.id,
+        variationName: variation.name,
+        name: product.name || orderProduct.name || "",
+        image: product.image || orderProduct.image || "",
+        price,
+        quantity,
+        unit: variation.unit,
+        reviewed: orderProduct.reviewed || false,
+      };
+    });
 
-      const currentBatch = getCurrentBatch(batchSnapshot);
-
-      if (!currentBatch) {
+    for (const [stockKey, requested] of requestedByVariation) {
+      const [productId, variationId] = stockKey.split("|");
+      const product = productsById.get(productId).data();
+      const resolved = resolveLegacyVariation(product, variationId);
+      if (!resolved || Number(resolved.variation.stock) < requested) {
         throw new StockFulfillmentError(
-          `No current batch found for ${product.name || productId}.`
+          `Insufficient stock for ${product.name || productId} (${resolved?.variation.name || variationId}).`
         );
-      }
-
-      const currentStock = Number(currentBatch.stock);
-
-      if (
-        currentBatch.status !== "Available" ||
-        !Number.isFinite(currentStock) ||
-        currentStock <= 0
-      ) {
-        throw new StockFulfillmentError(
-          `${product.name || productId} is out of stock.`
-        );
-      }
-
-      const totalBase = roundStock6(
-        resolved.reduce((sum, r) => sum + Number(r.baseQty || 0), 0)
-      );
-
-      if (currentStock < totalBase) {
-        throw new StockFulfillmentError(
-          `Insufficient stock for ${product.name || productId}. Available: ${currentStock}, Requested: ${totalBase}.`
-        );
-      }
-
-      for (const r of resolved) {
-        const quantity = Number(r.orderProduct.quantity);
-
-        computedSubtotal += roundMoney(r.price * quantity);
-
-        validatedByIndex[r.index] = {
-          productId,
-          batchId: null,
-          batchNumber: null,
-          harvestRecordId: null,
-          contributions: [],
-          name: product.name || r.orderProduct.name || "",
-          image: product.image || r.orderProduct.image || "",
-          price: r.price,
-          quantity,
-          unit: r.unit,
-          eggVariant: r.egg ? r.egg.variant : null,
-          baseUnit: r.egg ? r.egg.baseUnit : product.unit || "",
-          baseQuantity: r.egg ? r.egg.baseQty : quantity,
-          reviewed: r.orderProduct.reviewed || false,
-        };
       }
     }
-
     const validatedProducts = validatedByIndex;
 
     // ---- Delivery fee: preview-only quote, fixed at creation ----
@@ -746,403 +662,165 @@ const validateOrderForPayment = async (orderRef) => {
    applyInventoryPlans -> WRITES ONLY
 ========================================================= */
 
-// Splits fulfillment contributions across same-product order lines
-// (ex. half tray + full tray of one egg product) proportionally to
-// each line's base quantity, so per-line restock restores exactly
-// what was deducted. Quantities stay in BASE units.
-const splitContributions = (contributions, baseQuantities) => {
-  const total = roundStock6(
-    baseQuantities.reduce((sum, q) => sum + Number(q || 0), 0)
-  );
-  const result = baseQuantities.map(() => []);
-
-  if (!(total > 0)) return result;
-
-  contributions.forEach((c) => {
-    let assigned = 0;
-
-    baseQuantities.forEach((share, i) => {
-      if (i === baseQuantities.length - 1) {
-        const rest = roundStock6(Number(c.quantity) - assigned);
-        if (rest > 0) result[i].push({ ...c, quantity: rest });
-      } else {
-        const part = roundStock6(
-          (Number(c.quantity) * Number(share || 0)) / total
-        );
-        assigned = roundStock6(assigned + part);
-        if (part > 0) result[i].push({ ...c, quantity: part });
-      }
-    });
-  });
-
-  return result;
-};
-
 const planInventory = async (transaction, order) => {
-  const orderProducts = Array.isArray(order.products) ? order.products : [];
+  const items = Array.isArray(order.products) ? order.products : [];
+  if (!items.length) throw new Error("Order contains no products.");
 
-  if (orderProducts.length === 0) {
-    throw new Error("Order contains no products.");
-  }
-
-  // Group lines by product. The same egg product may appear as half
-  // tray + full tray lines — duplicate means SAME product AND SAME
-  // variant. Stock is deducted ONCE per product using the combined
-  // BASE quantity (variant qty converted to farmer-listing units).
-  const productGroups = new Map();
-  const seenLineKeys = new Set();
-
-  orderProducts.forEach((orderProduct, index) => {
-    const productId = String(orderProduct.productId || "");
-    const quantity = Number(orderProduct.quantity);
-
-    if (!productId) {
-      throw new Error("Invalid product ID in order.");
-    }
-
-    const variantKey = normalizeEggVariant(orderProduct.eggVariant) || "";
-    const lineKey = `${productId}|${variantKey}`;
-
-    if (seenLineKeys.has(lineKey)) {
-      throw new Error(`Duplicate product in order: ${productId}`);
-    }
-
-    seenLineKeys.add(lineKey);
-
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      throw new Error(`Invalid quantity for ${productId}.`);
-    }
-
-    if (!productGroups.has(productId)) productGroups.set(productId, []);
-    productGroups.get(productId).push({ orderProduct, index });
+  const groups = new Map();
+  items.forEach((item, index) => {
+    const productId = String(item && item.productId || "");
+    const variationId = String(item && item.variationId || "");
+    const quantity = Number(item && item.quantity);
+    if (!productId || !variationId) throw new Error("Order contains an invalid product variation.");
+    if (!Number.isFinite(quantity) || quantity <= 0) throw new Error("Invalid quantity for " + productId + ".");
+    if (!groups.has(productId)) groups.set(productId, []);
+    groups.get(productId).push({ item, index, variationId, quantity });
   });
 
   const plans = [];
-  const updatedByIndex = new Array(orderProducts.length);
-
-  for (const [productId, entries] of productGroups) {
+  const updatedProducts = new Array(items.length);
+  for (const [productId, entries] of groups) {
     const productRef = db.collection("products").doc(productId);
-    const productSnap = await transaction.get(productRef);
+    const snapshot = await transaction.get(productRef);
+    if (!snapshot.exists) throw new Error("Product " + productId + " not found.");
+    const product = snapshot.data() || {};
+    if (product.farmerId !== order.farmerId) throw new Error("Product " + productId + " does not belong to the order farmer.");
 
-    if (!productSnap.exists) {
-      throw new Error(`Product ${productId} not found.`);
-    }
-
-    const product = productSnap.data();
-
-    if (product.farmerId !== order.farmerId) {
-      throw new Error(`Product ${productId} does not belong to the order farmer.`);
-    }
-
-    // Resolve egg variants against the SERVER product. Client price
-    // is display-only here; stock math always uses base quantities.
-    const resolved = entries.map(({ orderProduct, index }) => {
-      const egg = resolveEggLine(product, orderProduct);
-      const quantity = Number(orderProduct.quantity);
-      return {
-        orderProduct,
-        index,
-        baseQty: egg ? egg.baseQty : quantity,
+    const variations = getProductVariations(product).map((variation) => ({ ...variation }));
+    const requested = new Map();
+    let totalQuantity = 0;
+    for (const entry of entries) {
+      const resolved = resolveLegacyVariation(product, entry.variationId);
+      if (!resolved) throw new StockFulfillmentError("Variation " + entry.variationId + " is no longer available.");
+      const variation = resolved.variation;
+      requested.set(variation.id, (requested.get(variation.id) || 0) + entry.quantity);
+      totalQuantity += entry.quantity;
+      updatedProducts[entry.index] = {
+        productId,
+        variationId: variation.id,
+        variationName: variation.name,
+        name: product.name || entry.item.name || "",
+        image: product.image || entry.item.image || "",
+        price: Number(variation.price),
+        quantity: entry.quantity,
+        unit: variation.unit,
+        reviewed: Boolean(entry.item.reviewed),
       };
-    });
-
-    const totalBase = roundStock6(
-      resolved.reduce((sum, r) => sum + Number(r.baseQty || 0), 0)
-    );
-
-    if (!(totalBase > 0)) {
-      throw new Error(`Invalid quantity for ${productId}.`);
     }
 
-    const batchSnapshot = await transaction.get(
-      db.collection("productBatches").where("productId", "==", productId)
-    );
-
-    const currentBatch = getCurrentBatch(batchSnapshot);
-
-    if (!currentBatch) {
-      throw new StockFulfillmentError(
-        `No current batch found for ${product.name || productId}.`
-      );
-    }
-
-    const currentStock = Number(currentBatch.stock);
-
-    if (
-      currentBatch.status !== "Available" ||
-      !Number.isFinite(currentStock) ||
-      currentStock <= 0
-    ) {
-      throw new StockFulfillmentError(
-        `${product.name || productId} is out of stock.`
-      );
-    }
-
-    if (currentStock < totalBase) {
-      throw new StockFulfillmentError(
-        `Insufficient stock for ${product.name || productId}. Available: ${currentStock}, Requested: ${totalBase}.`
-      );
-    }
-
-    const harvestSnapshot = await transaction.get(
-      db.collection("harvestRecords").where("batchId", "==", currentBatch.id)
-    );
-
-    // FIFO: oldest harvest first
-    const harvestRecords = harvestSnapshot.docs
-      .map((harvestDoc) => ({ id: harvestDoc.id, ...harvestDoc.data() }))
-      .sort((first, second) => toMillis(first.harvestDate) - toMillis(second.harvestDate))
-      .filter((record) => Number(record.remainingQuantity || 0) > 0);
-
-    const contributions = [];
-    const harvestUpdates = [];
-
-    let remaining = totalBase;
-
-    for (const record of harvestRecords) {
-      if (remaining <= 0) break;
-
-      const available = Number(record.remainingQuantity || 0);
-      const take = Math.min(available, remaining);
-
-      harvestUpdates.push({
-        ref: db.collection("harvestRecords").doc(record.id),
-        remainingQuantity: Number((available - take).toFixed(6)),
-      });
-
-      contributions.push({
-        batchId: currentBatch.id,
-        batchNumber: currentBatch.batchNumber,
-        harvestRecordId: record.id,
-        quantity: take,
-      });
-
-      remaining -= take;
-    }
-
-    // Legacy fallback: batch stock without harvest records
-    if (remaining > 0) {
-      contributions.push({
-        batchId: currentBatch.id,
-        batchNumber: currentBatch.batchNumber,
-        harvestRecordId: null,
-        quantity: remaining,
-      });
-
-      remaining = 0;
-    }
-
-    const newStock = Number((currentStock - totalBase).toFixed(6));
-    const newStatus = newStock <= 0 ? "Out of Stock" : "Available";
-
-    plans.push({
-      productId,
-      quantity: totalBase,
-      batchRef: db.collection("productBatches").doc(currentBatch.id),
-      newStock,
-      newStatus,
-      freshness: getFreshnessLabel(currentBatch),
-      harvestUpdates,
-    });
-
-    // Split contributions across same-product lines so each line
-    // carries only its own share (restock-safe).
-    const split = splitContributions(
-      contributions,
-      resolved.map((r) => r.baseQty)
-    );
-
-    resolved.forEach((r, i) => {
-      const lineContribs = split[i] && split[i].length > 0 ? split[i] : [];
-      const primary = lineContribs[0] || contributions[0] || null;
-
-      updatedByIndex[r.index] = {
-        ...r.orderProduct,
-        batchId: primary?.batchId ?? null,
-        batchNumber: primary?.batchNumber ?? null,
-        harvestRecordId: primary?.harvestRecordId ?? null,
-        contributions: lineContribs,
+    for (const [variationId, quantity] of requested) {
+      const index = variations.findIndex((variation) => variation.id === variationId);
+      const variation = variations[index];
+      const stock = Number(variation && variation.stock);
+      if (!variation || !Number.isFinite(stock) || stock < quantity || variation.status === "Out of Stock") {
+        throw new StockFulfillmentError(
+          "Insufficient stock for " + (product.name || productId) + " (" + ((variation && variation.name) || variationId) + "). Available: " + (Number.isFinite(stock) ? stock : 0) + ", Requested: " + quantity + "."
+        );
+      }
+      const remaining = Number((stock - quantity).toFixed(6));
+      variations[index] = {
+        ...variation,
+        stock: remaining,
+        status: remaining > 0 ? "Available" : "Out of Stock",
+        totalSales: Number(variation.totalSales || 0) + quantity,
       };
-    });
+    }
+    plans.push({ productRef, productId, variations, totalQuantity });
   }
-
-  return { plans, updatedProducts: updatedByIndex };
+  return { plans, updatedProducts };
 };
 
 const applyInventoryPlans = (transaction, plans) => {
   for (const plan of plans) {
-    for (const harvestUpdate of plan.harvestUpdates) {
-      transaction.update(harvestUpdate.ref, {
-        remainingQuantity: harvestUpdate.remainingQuantity,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    }
-
-    transaction.update(plan.batchRef, {
-      stock: plan.newStock,
-      status: plan.newStatus,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-
-    const sellable = plan.newStock > 0 && plan.newStatus === "Available";
-
-    transaction.update(db.collection("products").doc(plan.productId), {
-      totalSales: FieldValue.increment(plan.quantity),
-      weeklySales: FieldValue.increment(plan.quantity),
-      monthlySales: FieldValue.increment(plan.quantity),
-      stock: plan.newStock,
-      status: sellable ? "Available" : "Out of Stock",
-      freshness: plan.freshness,
+    const stock = plan.variations.reduce((sum, variation) => sum + Number(variation.stock || 0), 0);
+    transaction.update(plan.productRef, {
+      variations: plan.variations,
+      stock,
+      price: Math.min(...plan.variations.map((variation) => Number(variation.price))),
+      unit: (plan.variations[0] && plan.variations[0].unit) || "unit",
+      status: stock > 0 ? "Available" : "Out of Stock",
+      totalSales: FieldValue.increment(plan.totalQuantity),
+      weeklySales: FieldValue.increment(plan.totalQuantity),
+      monthlySales: FieldValue.increment(plan.totalQuantity),
       updatedAt: FieldValue.serverTimestamp(),
     });
   }
 };
 
-/* =========================================================
-   RESTOCK (undo planInventory when an accepted COD order is cancelled)
-
-   planRestock  -> READS ONLY  (must run before any write)
-   applyRestock -> WRITES ONLY
-   Uses the batch / harvest "contributions" that were saved on each
-   order product when the stock was deducted.
-========================================================= */
-
-const round6 = (value) => Number(Number(value).toFixed(6));
-
 const planRestock = async (transaction, order) => {
   const items = Array.isArray(order.products) ? order.products : [];
-
-  const writes = [];
+  const requested = new Map();
   let skipped = false;
-
   for (const item of items) {
-    const productId = String(item?.productId || "");
-
-    const contributions = (
-      Array.isArray(item?.contributions) ? item.contributions : []
-    ).filter((c) => Number(c?.quantity) > 0);
-
-    // No trace of where the stock came from -> cannot restore automatically.
-    if (!productId || contributions.length === 0) {
+    const productId = String(item && item.productId || "");
+    const quantity = Number(item && item.quantity);
+    if (!productId || !Number.isFinite(quantity) || quantity <= 0) {
       skipped = true;
       continue;
     }
-
-    const byBatch = new Map();
-    const byHarvest = new Map();
-    let totalQuantity = 0;
-
-    for (const contribution of contributions) {
-      const quantity = Number(contribution.quantity);
-
-      totalQuantity += quantity;
-
-      if (contribution.batchId) {
-        const key = String(contribution.batchId);
-        byBatch.set(key, (byBatch.get(key) || 0) + quantity);
-      }
-
-      if (contribution.harvestRecordId) {
-        const key = String(contribution.harvestRecordId);
-        byHarvest.set(key, (byHarvest.get(key) || 0) + quantity);
-      }
-    }
-
-    const productRef = db.collection("products").doc(productId);
-    const harvestIds = Array.from(byHarvest.keys());
-
-    // ---------- READS ----------
-    const [productSnap, batchSnapshot, ...harvestSnaps] = await Promise.all([
-      transaction.get(productRef),
-      transaction.get(
-        db.collection("productBatches").where("productId", "==", productId)
-      ),
-      ...harvestIds.map((id) =>
-        transaction.get(db.collection("harvestRecords").doc(id))
-      ),
-    ]);
-
-    // ---------- BATCHES ----------
-    const batches = batchSnapshot.docs.map((docSnap) => {
-      const data = docSnap.data() || {};
-      const restoreQuantity = byBatch.get(docSnap.id) || 0;
-
-      const stock = Number(data.stock || 0);
-      const newStock = restoreQuantity > 0 ? round6(stock + restoreQuantity) : stock;
-
-      const newStatus =
-        restoreQuantity > 0 && data.status === "Out of Stock" && newStock > 0
-          ? "Available"
-          : data.status;
-
-      return {
-        id: docSnap.id,
-        ref: docSnap.ref,
-        data,
-        restoreQuantity,
-        stock: newStock,
-        status: newStatus,
-      };
-    });
-
-    for (const batch of batches) {
-      if (batch.restoreQuantity > 0) {
-        writes.push({
-          ref: batch.ref,
-          data: { stock: batch.stock, status: batch.status },
-        });
-      }
-    }
-
-    // ---------- HARVEST RECORDS ----------
-    harvestSnaps.forEach((harvestSnap, index) => {
-      if (!harvestSnap.exists) return;
-
-      const remaining = Number(harvestSnap.data()?.remainingQuantity || 0);
-
-      writes.push({
-        ref: harvestSnap.ref,
-        data: {
-          remainingQuantity: round6(
-            remaining + (byHarvest.get(harvestIds[index]) || 0)
-          ),
-        },
-      });
-    });
-
-    // ---------- PRODUCT (mirrors what planInventory/applyInventoryPlans wrote) ----------
-    if (productSnap.exists) {
-      const product = productSnap.data() || {};
-
-      const current = batches
-        .filter((batch) => batch.data.archived !== true)
-        .sort(
-          (first, second) =>
-            Number(second.data.batchNumber || 0) -
-            Number(first.data.batchNumber || 0)
-        )[0];
-
-      const productUpdate = {
-        totalSales: Math.max(0, Number(product.totalSales || 0) - totalQuantity),
-        weeklySales: Math.max(0, Number(product.weeklySales || 0) - totalQuantity),
-        monthlySales: Math.max(
-          0,
-          Number(product.monthlySales || 0) - totalQuantity
-        ),
-      };
-
-      if (current) {
-        const sellable = current.stock > 0 && current.status === "Available";
-
-        productUpdate.stock = current.stock;
-        productUpdate.status = sellable ? "Available" : "Out of Stock";
-        productUpdate.freshness = getFreshnessLabel(current.data);
-      }
-
-      writes.push({ ref: productRef, data: productUpdate });
-    }
+    const variationId = String(item && item.variationId || "");
+    const key = productId + "|" + variationId;
+    const entry = requested.get(key) || { productId, variationId, quantity: 0 };
+    entry.quantity += quantity;
+    requested.set(key, entry);
   }
 
+  const productIds = [...new Set([...requested.values()].map((item) => item.productId))];
+  const productRefs = productIds.map((id) => db.collection("products").doc(id));
+  const snapshots = await Promise.all(productRefs.map((ref) => transaction.get(ref)));
+  const snapshotsById = new Map(productIds.map((id, index) => [id, snapshots[index]]));
+  const variationsByProduct = new Map();
+  const soldByProduct = new Map();
+
+  for (const item of requested.values()) {
+    const snapshot = snapshotsById.get(item.productId);
+    if (!snapshot || !snapshot.exists) {
+      skipped = true;
+      continue;
+    }
+    const product = snapshot.data() || {};
+    const resolved = resolveLegacyVariation(product, item.variationId);
+    if (!resolved) {
+      skipped = true;
+      continue;
+    }
+    const variations = variationsByProduct.get(item.productId) || getProductVariations(product).map((variation) => ({ ...variation }));
+    const index = variations.findIndex((variation) => variation.id === resolved.variation.id);
+    if (index < 0) {
+      skipped = true;
+      continue;
+    }
+    const variation = variations[index];
+    const stock = Number((Number(variation.stock || 0) + item.quantity).toFixed(6));
+    variations[index] = {
+      ...variation,
+      stock,
+      status: stock > 0 ? "Available" : "Out of Stock",
+      totalSales: Math.max(0, Number(variation.totalSales || 0) - item.quantity),
+    };
+    variationsByProduct.set(item.productId, variations);
+    soldByProduct.set(item.productId, (soldByProduct.get(item.productId) || 0) + item.quantity);
+  }
+
+  const writes = [];
+  for (const [productId, variations] of variationsByProduct) {
+    const product = snapshotsById.get(productId).data() || {};
+    const stock = variations.reduce((sum, variation) => sum + Number(variation.stock || 0), 0);
+    const sold = soldByProduct.get(productId) || 0;
+    writes.push({
+      ref: productRefs[productIds.indexOf(productId)],
+      data: {
+        variations,
+        stock,
+        price: Math.min(...variations.map((variation) => Number(variation.price))),
+        unit: (variations[0] && variations[0].unit) || "unit",
+        status: stock > 0 ? "Available" : "Out of Stock",
+        totalSales: Math.max(0, Number(product.totalSales || 0) - sold),
+        weeklySales: Math.max(0, Number(product.weeklySales || 0) - sold),
+        monthlySales: Math.max(0, Number(product.monthlySales || 0) - sold),
+      },
+    });
+  }
   return { writes, skipped };
 };
 
@@ -1459,8 +1137,9 @@ app.post("/delivery/quote", async (req, res) => {
 /* =========================================================
    CREATE ORDER (server-side — fee recomputed, client fee ignored)
    POST /orders {
-     farmerId, farmName?, buyerName?, products: [{ productId, quantity,
-       unit?, name?, image?, eggVariant?, baseQuantity? }],
+     farmerId, farmName?, buyerName?, products: [{
+       productId, variationId, quantity, unit?, name?, image?
+     }],
      address | null, delivery: "delivery" | "pickup", payment: "gcash" | "cod",
      pickupDate?, pickupTime?, subTotal? (informational only)
    }
@@ -1497,8 +1176,11 @@ app.post("/orders", async (req, res) => {
       if (!String(item?.productId || "").trim()) {
         return res.status(400).json({ success: false, error: "Order contains an invalid productId." });
       }
+      if (!String(item?.variationId || "").trim()) {
+        return res.status(400).json({ success: false, error: "Order contains an invalid variationId." });
+      }
       const qty = Number(item?.quantity);
-      if (!Number.isFinite(qty) || qty <= 0) {
+      if (!Number.isSafeInteger(qty) || qty <= 0) {
         return res.status(400).json({ success: false, error: `Invalid quantity for ${item?.productId}.` });
       }
     }
@@ -1533,58 +1215,138 @@ app.post("/orders", async (req, res) => {
       }
     }
 
-    const subTotal = roundMoney(Number(body.subTotal) || 0);
     const deliveryFee = delivery === "delivery" ? quote.deliveryFee : 0;
     const orderNumber = generateOrderNumber();
     const commissionRate = getCommissionRate();
-    const commissionAmount = roundMoney(subTotal * commissionRate);
+    const orderRef = db.collection("orders").doc();
+    const record = await db.runTransaction(async (transaction) => {
+      const productIds = [...new Set(products.map((item) => String(item.productId)))];
+      const productRefs = productIds.map((id) => db.collection("products").doc(id));
+      const productSnapshots = await Promise.all(
+        productRefs.map((reference) => transaction.get(reference))
+      );
+      const productById = new Map(
+        productIds.map((id, index) => [id, productSnapshots[index]])
+      );
+      const requestedByVariation = new Map();
+      let subTotal = 0;
 
-    const record = {
-      buyerId: decoded.uid,
-      buyerName: String(body.buyerName || ""),
-      farmerId,
-      farmName: String(body.farmName || farmerProfile.farmName || ""),
-      products,
-      delivery,
-      payment,
-      address: body.address || null,
-      pickupDate: body.pickupDate || null,
-      pickupTime: body.pickupTime || null,
-      subTotal,
-      // Fee fields are SERVER-written. Clients cannot write them (rules).
-      deliveryFee,
-      distanceKm: delivery === "delivery" ? quote.distanceKm : 0,
-      adjustedDistanceKm: delivery === "delivery" ? quote.adjustedDistanceKm : 0,
-      deliveryTier: delivery === "delivery" ? quote.tier : null,
-      feeStatus: delivery === "delivery" ? quote.feeStatus : "ok",
-      roadFactor: delivery === "delivery" ? quote.roadFactor : null,
-      tierVersion: delivery === "delivery" ? quote.tierVersion : null,
-      deliveryMethod: delivery === "delivery" ? quote.method : null,
-      total: roundMoney(subTotal + (deliveryFee || 0)),
-      status: "pending",
-      paymentStatus: "pending",
-      inventoryFulfilled: false,
-      fulfillmentStatus: "pending",
-      commissionRate,
-      commissionAmount,
-      commissionStatus: "pending",
-      // Commission is on products only; GCash delivery fee goes to the farmer.
-      farmerEarning: roundMoney(
-        Math.max(0, subTotal - commissionAmount) +
-          (payment === "gcash" ? deliveryFee || 0 : 0)
-      ),
-      farmerWalletCredited: false,
-      financialStatus: "pending",
-      orderNumber,
-      serverValidated: false,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    };
+      const validatedProducts = products.map((item) => {
+        const productId = String(item.productId);
+        const snapshot = productById.get(productId);
+        if (!snapshot.exists) {
+          const error = new Error("Product " + productId + " not found.");
+          error.status = 404;
+          throw error;
+        }
+        const product = snapshot.data() || {};
+        if (product.farmerId !== farmerId || product.archived === true) {
+          const error = new Error("This product is no longer available from this farmer.");
+          error.status = 409;
+          throw error;
+        }
 
-    const docRef = await db.collection("orders").add(record);
+        const resolved = resolveLegacyVariation(product, item.variationId);
+        if (!resolved) {
+          const error = new Error("The selected product variation is no longer available.");
+          error.status = 409;
+          throw error;
+        }
+        const variation = resolved.variation;
+        const quantity = Number(item.quantity);
+        const price = Number(variation.price);
+        const stock = Number(variation.stock);
+        if (
+          !Number.isFinite(price) ||
+          price < 0 ||
+          !Number.isFinite(stock) ||
+          stock < quantity ||
+          variation.status === "Out of Stock"
+        ) {
+          const error = new Error(
+            "Insufficient stock for " + (product.name || productId) + " (" + variation.name + ")."
+          );
+          error.status = 409;
+          throw error;
+        }
+
+        const key = productId + "|" + variation.id;
+        requestedByVariation.set(key, (requestedByVariation.get(key) || 0) + quantity);
+        subTotal += roundMoney(price * quantity);
+        return {
+          productId,
+          variationId: variation.id,
+          variationName: variation.name,
+          name: product.name || item.name || "",
+          image: product.image || item.image || "",
+          price,
+          quantity,
+          unit: variation.unit,
+          reviewed: false,
+        };
+      });
+
+      for (const [key, quantity] of requestedByVariation) {
+        const [productId, variationId] = key.split("|");
+        const product = productById.get(productId).data() || {};
+        const variation = resolveLegacyVariation(product, variationId)?.variation;
+        if (!variation || Number(variation.stock) < quantity) {
+          const error = new Error(
+            "Insufficient stock for " + (product.name || productId) + " (" + (variation?.name || variationId) + ")."
+          );
+          error.status = 409;
+          throw error;
+        }
+      }
+
+      subTotal = roundMoney(subTotal);
+      const commissionAmount = roundMoney(subTotal * commissionRate);
+      const orderRecord = {
+        buyerId: decoded.uid,
+        buyerName: String(body.buyerName || ""),
+        farmerId,
+        farmName: String(body.farmName || farmerProfile.farmName || ""),
+        products: validatedProducts,
+        delivery,
+        payment,
+        address: body.address || null,
+        pickupDate: body.pickupDate || null,
+        pickupTime: body.pickupTime || null,
+        subTotal,
+        deliveryFee,
+        distanceKm: delivery === "delivery" ? quote.distanceKm : 0,
+        adjustedDistanceKm: delivery === "delivery" ? quote.adjustedDistanceKm : 0,
+        deliveryTier: delivery === "delivery" ? quote.tier : null,
+        feeStatus: delivery === "delivery" ? quote.feeStatus : "ok",
+        roadFactor: delivery === "delivery" ? quote.roadFactor : null,
+        tierVersion: delivery === "delivery" ? quote.tierVersion : null,
+        deliveryMethod: delivery === "delivery" ? quote.method : null,
+        total: roundMoney(subTotal + (deliveryFee || 0)),
+        status: "pending",
+        paymentStatus: "pending",
+        inventoryFulfilled: false,
+        fulfillmentStatus: "pending",
+        commissionRate,
+        commissionAmount,
+        commissionStatus: "pending",
+        farmerEarning: roundMoney(
+          Math.max(0, subTotal - commissionAmount) +
+            (payment === "gcash" ? deliveryFee || 0 : 0)
+        ),
+        farmerWalletCredited: false,
+        financialStatus: "pending",
+        orderNumber,
+        serverValidated: false,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+      transaction.create(orderRef, orderRecord);
+      return orderRecord;
+    });
+
     return res.json({
       success: true,
-      orderId: docRef.id,
+      orderId: orderRef.id,
       orderNumber,
       deliveryFee,
       distanceKm: record.distanceKm,
@@ -1599,6 +1361,89 @@ app.post("/orders", async (req, res) => {
     return res.status(error.status || 500).json({
       success: false,
       error: error.message || "Unable to create this order.",
+    });
+  }
+});
+
+app.post("/products/:productId/sales", async (req, res) => {
+  try {
+    const decoded = await verifyFirebaseUser(req);
+    const productId = String(req.params.productId || "").trim();
+    const variationId = String(req.body?.variationId || "").trim();
+    const quantity = Number(req.body?.quantity);
+
+    if (!productId || !variationId || !Number.isSafeInteger(quantity) || quantity <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: "A product variation and valid sale quantity are required.",
+      });
+    }
+
+    const farmerSnapshot = await db.collection("users").doc(decoded.uid).get();
+    const farmer = farmerSnapshot.data() || {};
+    if (!farmerSnapshot.exists || farmer.role !== "farmer" || farmer.status !== "approved") {
+      return res.status(403).json({ success: false, error: "An approved farmer account is required." });
+    }
+
+    const result = await db.runTransaction(async (transaction) => {
+      const productRef = db.collection("products").doc(productId);
+      const snapshot = await transaction.get(productRef);
+      if (!snapshot.exists) {
+        const error = new Error("Product not found.");
+        error.status = 404;
+        throw error;
+      }
+
+      const product = snapshot.data() || {};
+      if (product.farmerId !== decoded.uid) {
+        const error = new Error("You are not authorized to record a sale for this product.");
+        error.status = 403;
+        throw error;
+      }
+      if (product.archived === true) {
+        const error = new Error("Archived products cannot be sold.");
+        error.status = 400;
+        throw error;
+      }
+
+      const variations = getProductVariations(product).map((variation) => ({ ...variation }));
+      const index = variations.findIndex((variation) => variation.id === variationId);
+      const variation = variations[index];
+      const stock = Number(variation && variation.stock);
+      if (!variation || !Number.isFinite(stock) || stock < quantity || variation.status === "Out of Stock") {
+        const error = new Error("Insufficient stock for this variation.");
+        error.status = 409;
+        throw error;
+      }
+
+      const remaining = Number((stock - quantity).toFixed(6));
+      variations[index] = {
+        ...variation,
+        stock: remaining,
+        status: remaining > 0 ? "Available" : "Out of Stock",
+        totalSales: Number(variation.totalSales || 0) + quantity,
+      };
+      const totalStock = variations.reduce((sum, item) => sum + Number(item.stock || 0), 0);
+      transaction.update(productRef, {
+        variations,
+        stock: totalStock,
+        price: Math.min(...variations.map((item) => Number(item.price))),
+        unit: variations[0]?.unit || "unit",
+        status: totalStock > 0 ? "Available" : "Out of Stock",
+        totalSales: FieldValue.increment(quantity),
+        weeklySales: FieldValue.increment(quantity),
+        monthlySales: FieldValue.increment(quantity),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return { stock: remaining, status: variations[index].status };
+    });
+
+    return res.json({ success: true, productId, variationId, ...result });
+  } catch (error) {
+    console.error("RECORD WALK-IN SALE ERROR:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message || "Unable to record this sale.",
     });
   }
 });

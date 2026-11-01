@@ -85,7 +85,16 @@ const buyerAddress = () => ({
 test("total = subtotal (server prices) + stored creation fee", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
-    p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
+    p1: {
+      farmerId: "f1",
+      name: "Rice",
+      price: 100,
+      unit: "kg",
+      archived: false,
+      variations: [
+        { id: "rice-standard", name: "Standard", price: 100, stock: 10, unit: "kg", status: "Available" },
+      ],
+    },
   };
   const users = { f1: { ...FARM_PROFILE } };
   const { db, transaction } = fakeDb({ products, users });
@@ -102,7 +111,7 @@ test("total = subtotal (server prices) + stored creation fee", async () => {
     feeStatus: "ok",
     roadFactor: 1.3,
     address: buyerAddress(),
-    products: [{ productId: "p1", quantity: 2, name: "Rice", price: 1, unit: "kg" }],
+    products: [{ productId: "p1", variationId: "rice-standard", quantity: 2, name: "Rice", price: 1, unit: "kg" }],
   };
   const priced = await priceOrderOnServer(transaction, db, order);
   assert.equal(priced.subtotal, 200);
@@ -110,6 +119,70 @@ test("total = subtotal (server prices) + stored creation fee", async () => {
   assert.equal(priced.distanceKm, 2.5);
   assert.equal(priced.deliveryTier, "0–3 km");
   assert.equal(priced.total, 225);
+});
+
+test("variation prices and stock are resolved independently", async () => {
+  const { priceOrderOnServer } = walletRoutes._test;
+  const products = {
+    p1: {
+      farmerId: "f1",
+      name: "Eggplant",
+      archived: false,
+      variations: [
+        { id: "small", name: "Small", price: 30, stock: 3, unit: "pcs", status: "Available" },
+        { id: "large", name: "Large", price: 60, stock: 2, unit: "pcs", status: "Available" },
+      ],
+    },
+  };
+  const { db, transaction } = fakeDb({ products });
+  const priced = await priceOrderOnServer(transaction, db, {
+    farmerId: "f1",
+    delivery: "pickup",
+    products: [
+      { productId: "p1", variationId: "small", quantity: 2 },
+      { productId: "p1", variationId: "large", quantity: 1 },
+    ],
+  });
+
+  assert.equal(priced.subtotal, 120);
+  assert.deepEqual(
+    priced.products.map(({ variationId, variationName, price, quantity }) => ({
+      variationId,
+      variationName,
+      price,
+      quantity,
+    })),
+    [
+      { variationId: "small", variationName: "Small", price: 30, quantity: 2 },
+      { variationId: "large", variationName: "Large", price: 60, quantity: 1 },
+    ]
+  );
+  assert.equal(products.p1.variations[0].stock, 3);
+  assert.equal(products.p1.variations[1].stock, 2);
+});
+
+test("variation pricing rejects quantity above that variation's stock", async () => {
+  const { priceOrderOnServer } = walletRoutes._test;
+  const products = {
+    p1: {
+      farmerId: "f1",
+      name: "Eggplant",
+      archived: false,
+      variations: [
+        { id: "small", name: "Small", price: 30, stock: 3, unit: "pcs", status: "Available" },
+      ],
+    },
+  };
+  const { db, transaction } = fakeDb({ products });
+
+  await assert.rejects(
+    priceOrderOnServer(transaction, db, {
+      farmerId: "f1",
+      delivery: "pickup",
+      products: [{ productId: "p1", variationId: "small", quantity: 4 }],
+    }),
+    /Insufficient stock/
+  );
 });
 
 test("pickup has no fee and no distance", () => {
@@ -124,7 +197,16 @@ test("pickup has no fee and no distance", () => {
 test("stored fee is honored as-is (no recompute at pricing)", async () => {
   const { priceOrderOnServer } = walletRoutes._test;
   const products = {
-    p1: { farmerId: "f1", name: "Rice", price: 100, unit: "kg", archived: false },
+    p1: {
+      farmerId: "f1",
+      name: "Rice",
+      price: 100,
+      unit: "kg",
+      archived: false,
+      variations: [
+        { id: "rice-standard", name: "Standard", price: 100, stock: 10, unit: "kg", status: "Available" },
+      ],
+    },
   };
   const users = { f1: { ...FARM_PROFILE } };
   const { db, transaction } = fakeDb({ products, users });
@@ -138,7 +220,7 @@ test("stored fee is honored as-is (no recompute at pricing)", async () => {
     adjustedDistanceKm: 9,
     deliveryTier: "5.1–10 km",
     address: { ...buyerAddress(), city: "Angeles", province: "Pampanga" },
-    products: [{ productId: "p1", quantity: 1, name: "Rice", price: 100, unit: "kg" }],
+    products: [{ productId: "p1", variationId: "rice-standard", quantity: 1, name: "Rice", price: 100, unit: "kg" }],
   };
   const priced = await priceOrderOnServer(transaction, db, order);
   assert.equal(priced.subtotal, 100);
