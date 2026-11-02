@@ -16,9 +16,11 @@ const { checkQuoteRateLimit } = require("./quoteRateLimit");
 const { isExpiredPendingOrder } = require("./orderExpiry");
 
 const {
-  normalizeEggVariant,
-  resolveEggLine,
-} = require("./eggVariants");
+  parseOrderLines,
+  resolveVariant,
+  assertVariantStock,
+  getVariantPrice,
+} = require("./variantInventory");
 
 /* =========================================================
    CONSTANTS
@@ -507,88 +509,66 @@ const priceOrderOnServer = async (transaction, db, order, opts = {}) => {
     throw new Error("Order contains no products.");
   }
 
-  // Same egg product may appear as half tray + full tray lines.
-  // Duplicate means SAME product AND SAME variant.
-  const seen = new Set();
+  // One order line = one product variant. Duplicate means SAME product AND
+  // SAME variant. Price ALWAYS comes from the SERVER variant.
+  const lines = parseOrderLines(items);
+  const productIds = [...new Set(lines.map((line) => line.productId))];
 
-  const refs = items.map((item) => {
-    const productId = String(item?.productId || "").trim();
+  const productSnaps = await Promise.all(
+    productIds.map((productId) =>
+      transaction.get(db.collection("products").doc(productId))
+    )
+  );
 
-    if (!productId) throw new Error("Order contains an invalid productId.");
+  const productMap = new Map();
 
-    const variantKey = normalizeEggVariant(item?.eggVariant) || "";
-    const lineKey = `${productId}|${variantKey}`;
-
-    if (seen.has(lineKey)) {
-      throw new Error(`Duplicate product in order: ${productId}`);
-    }
-
-    seen.add(lineKey);
-
-    return db.collection("products").doc(productId);
-  });
-
-  const snaps = await Promise.all(refs.map((ref) => transaction.get(ref)));
-
-  let subtotal = 0;
-
-  const products = items.map((item, index) => {
-    const snap = snaps[index];
+  productIds.forEach((productId, i) => {
+    const snap = productSnaps[i];
 
     if (!snap.exists) {
-      throw new Error(`Product ${item.productId} not found.`);
+      throw new Error(`Product ${productId} not found.`);
     }
 
     const product = snap.data() || {};
 
     if (product.farmerId !== order.farmerId) {
-      throw new Error(
-        `Product ${item.productId} does not belong to this farmer.`
-      );
+      throw new Error(`Product ${productId} does not belong to this farmer.`);
     }
 
     if (product.archived === true) {
-      throw new Error(`Product ${product.name || item.productId} is archived.`);
+      throw new Error(`Product ${product.name || productId} is archived.`);
     }
 
-    const quantity = Number(item.quantity);
-
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      throw new Error(`Invalid quantity for ${product.name || item.productId}.`);
-    }
-
-    // Egg-variant lines are priced from the SERVER base price
-    // (client price ignored). Normal lines keep server price.
-    const egg = resolveEggLine(product, item);
-
-    let price;
-    let unit;
-
-    if (egg) {
-      price = egg.variantPrice;
-      unit = egg.variantUnit;
-    } else {
-      price = Number(product.price);
-      unit = product.unit || item.unit || "";
-
-      if (!Number.isFinite(price) || price < 0) {
-        throw new Error(`Invalid price for ${product.name || item.productId}.`);
-      }
-    }
-
-    subtotal += roundMoney(price * quantity);
-
-    return {
-      ...item,
-      price,
-      quantity,
-      name: product.name || item.name || "",
-      unit,
-      eggVariant: egg ? egg.variant : null,
-      baseUnit: egg ? egg.baseUnit : product.unit || "",
-      baseQuantity: egg ? egg.baseQty : quantity,
-    };
+    productMap.set(productId, product);
   });
+
+  let subtotal = 0;
+
+  const products = new Array(lines.length);
+
+  for (const line of lines) {
+    const product = productMap.get(line.productId);
+    const variant = resolveVariant(product, line.variantId);
+
+    // Throws STOCK_UNAVAILABLE (409) when the variant is out of stock.
+    assertVariantStock(product, variant, line.quantity);
+
+    const price = getVariantPrice(product, variant);
+
+    subtotal += roundMoney(price * line.quantity);
+
+    products[line.index] = {
+      ...line.orderProduct,
+      productId: line.productId,
+      variantId: variant.id,
+      variantName: variant.name,
+      name: product.name || line.orderProduct.name || "",
+      image: product.image || line.orderProduct.image || "",
+      price,
+      quantity: line.quantity,
+      unit: variant.unit,
+    };
+  }
 
   subtotal = roundMoney(subtotal);
 
@@ -2533,7 +2513,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
             );
           }
 
-          // Reads batches / harvest records and throws STOCK_UNAVAILABLE
+          // Reads the product variants and throws STOCK_UNAVAILABLE
           // if there is not enough stock. Still reads only.
           inventoryPlan = await planInventory(transaction, {
             ...order,
@@ -2996,7 +2976,7 @@ const createWalletRouter = ({ db, auth, inventory }) => {
           ...(restockPlan
             ? {
                 inventoryRestoredAt: now,
-                // True only if some product had no batch trace to restore.
+                // True only if some line could not be restored (legacy order without variantId).
                 restockNeedsManualReview: restockPlan.skipped === true,
               }
             : {}),
